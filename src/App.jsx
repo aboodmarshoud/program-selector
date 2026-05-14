@@ -661,6 +661,42 @@ function option(value, title, sub, icon = "▫️") {
   return { value, title, sub, icon };
 }
 
+function asArray(value) {
+  if (Array.isArray(value)) return value;
+  return value ? [value] : [];
+}
+
+function hasChoice(value, choice) {
+  return asArray(value).includes(choice);
+}
+
+function choiceRank(value, choice) {
+  return asArray(value).indexOf(choice);
+}
+
+function rankWeight(value, choice) {
+  const rank = choiceRank(value, choice);
+  if (rank < 0) return 0;
+  return [1, 0.74, 0.55, 0.4, 0.3, 0.22][rank] ?? 0.18;
+}
+
+function rankedReason(value, choice, reason) {
+  const rank = choiceRank(value, choice);
+  if (rank < 0) return reason;
+  if (rank === 0) return reason;
+  return `${reason} — أولوية رقم ${rank + 1}`;
+}
+
+function addRankedScore(scores, fieldValue, choice, id, points, reason) {
+  const weight = rankWeight(fieldValue, choice);
+  if (!weight) return;
+  addScore(scores, id, Math.round(points * weight), rankedReason(fieldValue, choice, reason));
+}
+
+function hasAnswer(value) {
+  return Array.isArray(value) ? value.length > 0 : Boolean(value);
+}
+
 const QUESTIONS = [
   {
     id: "forWhom",
@@ -706,7 +742,8 @@ const QUESTIONS = [
   {
     id: "needPattern",
     title: "أي وصف أقرب لاحتياجك الآن؟",
-    subtitle: "اختر العبارة التي تشبه حالتك، لا اسم البرنامج الذي تفكر فيه.",
+    subtitle: "يمكنك اختيار أكثر من إجابة؛ اختر أولًا الأهم عندك، ثم ما يليه. يكفي اختيار واحد إن كان واضحًا.",
+    multi: true,
     condition: (a) => a.age && a.age !== "10_12",
     options: (a) => {
       const base = [
@@ -726,7 +763,8 @@ const QUESTIONS = [
   {
     id: "learningShape",
     title: "أي شكل تعلّم يرفع فرص استمرارك؟",
-    subtitle: "هذا السؤال يفرّق بين البرنامج التعليمي الصرف والبيئة التربوية.",
+    subtitle: "رتّب أكثر من خيار إن كان أكثر من شكل يساعدك، والأول سيكون الأثقل في الترشيح.",
+    multi: true,
     condition: (a) => a.age && a.age !== "10_12",
     options: () => [
       option("curriculum", "مقررات واضحة وخطة دراسة", "أحب أن أعرف ماذا أدرس ومتى أختبر", "📝"),
@@ -782,7 +820,7 @@ const QUESTIONS = [
     id: "specializationFocus",
     title: "إن كنت تميل للتخصص أو العمق، فأي اتجاه أقرب؟",
     subtitle: "لا تختَر إجابة لأن اسم برنامج يعجبك؛ اختر المجال الأقرب لميولك الفعلية.",
-    condition: (a) => isAgeAtLeast15(a) && (a.needPattern === "specialized_track" || a.prioritySignal === "depth_priority"),
+    condition: (a) => isAgeAtLeast15(a) && (hasChoice(a.needPattern, "specialized_track") || a.prioritySignal === "depth_priority"),
     options: (a) => {
       const base = [
         option("hadith", "علوم الحديث والسنة", "أميل إلى الرواية والدراية وخدمة السنة", "📜"),
@@ -824,7 +862,7 @@ const QUESTIONS = [
     title: "بالنسبة للعمل الإصلاحي العملي، أين أنت؟",
     subtitle: "يظهر هذا السؤال لمن تميل إجاباته إلى العمل والمشاريع.",
     condition: (a) =>
-      isAgeAtLeast15(a) && (a.needPattern === "reform_project" || a.learningShape === "practice"),
+      isAgeAtLeast15(a) && (hasChoice(a.needPattern, "reform_project") || hasChoice(a.learningShape, "practice")),
     options: () => [
       option("not_now", "ليس هذا احتياجي الآن", "أحتاج بناءً قبل المشروع", "🧱"),
       option("interested", "مهتم ولم أدرس المواد القبلية بعد", "أحتاج أن أتهيأ أولًا", "🧭"),
@@ -835,7 +873,9 @@ const QUESTIONS = [
 
 function cleanAnswers(answers) {
   const next = { ...answers };
-  if (next.gender !== "female" && next.needPattern === "women_space") delete next.needPattern;
+  if (next.gender !== "female" && hasChoice(next.needPattern, "women_space")) {
+    next.needPattern = asArray(next.needPattern).filter((value) => value !== "women_space");
+  }
   if (next.gender !== "female" && next.prioritySignal === "women_priority") delete next.prioritySignal;
   if (!["15_16", "17_20", "21_22"].includes(next.age)) delete next.previousAcademy;
   if (!isAgeAtLeast15(next)) {
@@ -844,10 +884,10 @@ function cleanAnswers(answers) {
     delete next.prioritySignal;
     delete next.specializationFocus;
   }
-  if (!(isAgeAtLeast15(next) && (next.needPattern === "specialized_track" || next.prioritySignal === "depth_priority"))) {
+  if (!(isAgeAtLeast15(next) && (hasChoice(next.needPattern, "specialized_track") || next.prioritySignal === "depth_priority"))) {
     delete next.specializationFocus;
   }
-  if (!(isAgeAtLeast15(next) && (next.needPattern === "reform_project" || next.learningShape === "practice"))) {
+  if (!(isAgeAtLeast15(next) && (hasChoice(next.needPattern, "reform_project") || hasChoice(next.learningShape, "practice")))) {
     delete next.reformReadiness;
   }
   return next;
@@ -919,7 +959,7 @@ function academyCompleted(a) {
 }
 
 function chooseBinaTrack(a) {
-  if (["15", "30"].includes(a.dailyTime) || a.learningShape === "gentle_start" || a.prioritySignal === "gentle_priority") {
+  if (["15", "30"].includes(a.dailyTime) || hasChoice(a.learningShape, "gentle_start") || a.prioritySignal === "gentle_priority") {
     return "bina_muyassar";
   }
   return "bina_asasi";
@@ -936,14 +976,19 @@ function chooseAcademyTrack(a) {
 
 function applyDecisionRules(scores, a) {
   const femaleAdult = a.gender === "female" && isAgeAtLeast15(a);
-  const wantsWomenSpace = femaleAdult && (a.needPattern === "women_space" || a.prioritySignal === "women_priority");
-  const wantsCurriculum = a.needPattern === "structured_path" || a.learningShape === "curriculum" || a.prioritySignal === "curriculum_priority";
-  const wantsEnvironment = a.needPattern === "relational_growth" || a.learningShape === "community" || a.prioritySignal === "environment_priority";
-  const wantsGentle = a.learningShape === "gentle_start" || a.prioritySignal === "gentle_priority" || ["15", "30"].includes(a.dailyTime);
-  const wantsSpecialization = a.needPattern === "specialized_track" || a.prioritySignal === "depth_priority" || Boolean(a.specializationFocus);
-  const wantsReform = a.needPattern === "reform_project" || a.learningShape === "practice";
-  const highDoubt = a.doubtImpact === "high" || a.needPattern === "certainty";
-  const theoreticalDoubt = a.doubtImpact === "theoretical" || a.needPattern === "intellectual_depth";
+  const primaryNeed = asArray(a.needPattern)[0];
+  const primaryLearning = asArray(a.learningShape)[0];
+
+  // في الأسئلة الترتيبية: القاعدة الحاسمة تُبنى على الاختيار الأول غالبًا،
+  // أما الاختيارات اللاحقة فتؤثر بالنقاط وتظهر في ترتيب البدائل.
+  const wantsWomenSpace = femaleAdult && (primaryNeed === "women_space" || a.prioritySignal === "women_priority");
+  const wantsCurriculum = primaryNeed === "structured_path" || primaryLearning === "curriculum" || a.prioritySignal === "curriculum_priority";
+  const wantsEnvironment = primaryNeed === "relational_growth" || primaryLearning === "community" || a.prioritySignal === "environment_priority";
+  const wantsGentle = primaryLearning === "gentle_start" || a.prioritySignal === "gentle_priority" || ["15", "30"].includes(a.dailyTime);
+  const wantsSpecialization = primaryNeed === "specialized_track" || a.prioritySignal === "depth_priority" || Boolean(a.specializationFocus);
+  const wantsReform = primaryNeed === "reform_project" || primaryLearning === "practice";
+  const highDoubt = a.doubtImpact === "high" || primaryNeed === "certainty";
+  const theoreticalDoubt = a.doubtImpact === "theoretical" || primaryNeed === "intellectual_depth";
 
   // قواعد حاسمة: هذه ليست نقاطًا إضافية فقط، بل تمنع تزاحمًا غير منطقي بين برامج مختلفة الطبيعة.
   if (wantsWomenSpace) {
@@ -981,7 +1026,7 @@ function applyDecisionRules(scores, a) {
       ensurePriority(scores, "alim", "لأنك تميل إلى تكوين علمي طويل ومعك شرط قرآني داعم", 46);
       return;
     }
-    if (academyCompleted(a) && ["academy_specialization", "depth_priority", "specialized_track"].includes(a.specializationFocus || a.prioritySignal || a.needPattern)) {
+    if (academyCompleted(a) && (a.specializationFocus === "academy_specialization" || a.prioritySignal === "depth_priority" || hasChoice(a.needPattern, "specialized_track"))) {
       ensurePriority(scores, "ithmar", "لأنك مؤهل لمسار إثمار وتبحث عن انتقال من البناء العام إلى التخصص", 44);
       return;
     }
@@ -1076,63 +1121,49 @@ function calculateScorecard(a) {
     addScore(scores, "hadith", 16, "الوقت العالي مناسب للتخصص الحديثي");
   }
 
-  // 3) الاحتياج الأساسي: هذه أقوى إشارات الترشيح.
-  if (a.needPattern === "structured_path") {
-    addScore(scores, "bina_asasi", 44, "تحتاج مسارًا علميًا منهجيًا مرتبًا");
-    addScore(scores, "bina_muyassar", 34, "تحتاج ترتيبًا علميًا مع احتمال البداية الأخف");
-    addScore(scores, "hadith", 10, "المسارات المتخصصة المنظمة قد تناسبك لاحقًا");
-  }
-  if (a.needPattern === "relational_growth") {
-    addScore(scores, "ishraq", 38, "احتياجك بيئة تربوية وصحبة ومتابعة");
-    addScore(scores, "juthur", 34, "احتياجك بيئة تربوية خاصة");
-    addScore(scores, "ghiras", 30, "احتياجك بيئة آمنة عامة للناشئة");
-    addScore(scores, "khadija", 30, "البيئة التفاعلية قد تناسبك إن كنتِ ضمن شروط مدرسة خديجة");
-  }
-  if (a.needPattern === "certainty") {
-    addScore(scores, "bard_yaqin", 56, "احتياجك الأقرب هو اليقين والتزكية");
-    addScore(scores, "fikri", 8, "قد تحتاج لاحقًا لمعالجة فكرية أوسع");
-  }
-  if (a.needPattern === "intellectual_depth") {
-    addScore(scores, "fikri", 56, "احتياجك فهم فكري ونقد للتيارات");
-    addScore(scores, "bard_yaqin", 10, "قد تحتاج جانبًا يقينيًا وتزكويًا مساعدًا");
-  }
-  if (a.needPattern === "specialized_track") {
-    addScore(scores, "hadith", 28, "تميل إلى تخصص علمي واضح");
-    addScore(scores, "ithmar", 22, "التخصص الدقيق يناسبك إذا كنت من خريجي جذور أو إشراق");
-    addScore(scores, "alim", 14, "قد يناسبك مسار تكويني طويل إذا توفرت شروطه");
-  }
-  if (a.needPattern === "reform_project") {
-    addScore(scores, "kharitat_thughur", 58, "تريد معرفة ثغرك وتحويل التعلم إلى مشروع");
-    addScore(scores, "bina_asasi", 8, "قد تحتاج أساسًا شرعيًا قبل العمل الإصلاحي");
-  }
-  if (a.needPattern === "women_space") {
-    addScore(scores, "khadija", 86, "اخترتِ محضنًا نسائيًا تفاعليًا");
-  }
+  // 3) الاحتياج الأساسي: سؤال ترتيبي متعدد؛ الأول أثقل، ثم تنخفض النقاط تدريجيًا.
+  addRankedScore(scores, a.needPattern, "structured_path", "bina_asasi", 44, "تحتاج مسارًا علميًا منهجيًا مرتبًا");
+  addRankedScore(scores, a.needPattern, "structured_path", "bina_muyassar", 34, "تحتاج ترتيبًا علميًا مع احتمال البداية الأخف");
+  addRankedScore(scores, a.needPattern, "structured_path", "hadith", 10, "المسارات المتخصصة المنظمة قد تناسبك لاحقًا");
 
-  // 4) شكل التعلم وأولوية المفاضلة.
-  if (a.learningShape === "curriculum") {
-    addScore(scores, "bina_asasi", 34, "تفضّل المقررات والخطة الواضحة");
-    addScore(scores, "bina_muyassar", 24, "الخطة الواضحة مع بداية أخف خيار محتمل");
-    addScore(scores, "hadith", 16, "التخصص الحديثي منظم ومناسب لمحبي المقررات");
-  }
-  if (a.learningShape === "community") {
-    addScore(scores, "ishraq", 36, "تستمر أكثر مع الصحبة والمتابعة");
-    addScore(scores, "juthur", 30, "الصحبة والمتابعة من خصائص المسار الخاص");
-    addScore(scores, "ghiras", 26, "المسار العام يوفر بيئة وأنشطة مناسبة");
-    addScore(scores, "khadija", 34, "البيئة التفاعلية النسائية مناسبة إن انطبقت الشروط");
-  }
-  if (a.learningShape === "deep_reading") {
-    addScore(scores, "fikri", 38, "تفضّل التحليل والقراءة الفكرية");
-    addScore(scores, "bina_asasi", 10, "البناء الشرعي يساعد في ضبط القراءة");
-  }
-  if (a.learningShape === "practice") {
-    addScore(scores, "kharitat_thughur", 46, "تريد ثمرة عملية ومشروعًا في الواقع");
-  }
-  if (a.learningShape === "gentle_start") {
-    addScore(scores, "bina_muyassar", 38, "تريد بداية أخف قابلة للاستمرار");
-    addScore(scores, "bard_yaqin", 14, "تحتاج مسارًا أرفق وأقرب للقلب");
-    addScore(scores, "ghiras", 12, "المسار العام أيسر من الانتقائي");
-  }
+  addRankedScore(scores, a.needPattern, "relational_growth", "ishraq", 38, "احتياجك بيئة تربوية وصحبة ومتابعة");
+  addRankedScore(scores, a.needPattern, "relational_growth", "juthur", 34, "احتياجك بيئة تربوية خاصة");
+  addRankedScore(scores, a.needPattern, "relational_growth", "ghiras", 30, "احتياجك بيئة آمنة عامة للناشئة");
+  addRankedScore(scores, a.needPattern, "relational_growth", "khadija", 30, "البيئة التفاعلية قد تناسبك إن كنتِ ضمن شروط مدرسة خديجة");
+
+  addRankedScore(scores, a.needPattern, "certainty", "bard_yaqin", 56, "احتياجك الأقرب هو اليقين والتزكية");
+  addRankedScore(scores, a.needPattern, "certainty", "fikri", 8, "قد تحتاج لاحقًا لمعالجة فكرية أوسع");
+
+  addRankedScore(scores, a.needPattern, "intellectual_depth", "fikri", 56, "احتياجك فهم فكري ونقد للتيارات");
+  addRankedScore(scores, a.needPattern, "intellectual_depth", "bard_yaqin", 10, "قد تحتاج جانبًا يقينيًا وتزكويًا مساعدًا");
+
+  addRankedScore(scores, a.needPattern, "specialized_track", "hadith", 28, "تميل إلى تخصص علمي واضح");
+  addRankedScore(scores, a.needPattern, "specialized_track", "ithmar", 22, "التخصص الدقيق يناسبك إذا كنت من خريجي جذور أو إشراق");
+  addRankedScore(scores, a.needPattern, "specialized_track", "alim", 14, "قد يناسبك مسار تكويني طويل إذا توفرت شروطه");
+
+  addRankedScore(scores, a.needPattern, "reform_project", "kharitat_thughur", 58, "تريد معرفة ثغرك وتحويل التعلم إلى مشروع");
+  addRankedScore(scores, a.needPattern, "reform_project", "bina_asasi", 8, "قد تحتاج أساسًا شرعيًا قبل العمل الإصلاحي");
+
+  addRankedScore(scores, a.needPattern, "women_space", "khadija", 86, "اخترتِ محضنًا نسائيًا تفاعليًا");
+
+  // 4) شكل التعلم: سؤال ترتيبي متعدد أيضًا.
+  addRankedScore(scores, a.learningShape, "curriculum", "bina_asasi", 34, "تفضّل المقررات والخطة الواضحة");
+  addRankedScore(scores, a.learningShape, "curriculum", "bina_muyassar", 24, "الخطة الواضحة مع بداية أخف خيار محتمل");
+  addRankedScore(scores, a.learningShape, "curriculum", "hadith", 16, "التخصص الحديثي منظم ومناسب لمحبي المقررات");
+
+  addRankedScore(scores, a.learningShape, "community", "ishraq", 36, "تستمر أكثر مع الصحبة والمتابعة");
+  addRankedScore(scores, a.learningShape, "community", "juthur", 30, "الصحبة والمتابعة من خصائص المسار الخاص");
+  addRankedScore(scores, a.learningShape, "community", "ghiras", 26, "المسار العام يوفر بيئة وأنشطة مناسبة");
+  addRankedScore(scores, a.learningShape, "community", "khadija", 34, "البيئة التفاعلية النسائية مناسبة إن انطبقت الشروط");
+
+  addRankedScore(scores, a.learningShape, "deep_reading", "fikri", 38, "تفضّل التحليل والقراءة الفكرية");
+  addRankedScore(scores, a.learningShape, "deep_reading", "bina_asasi", 10, "البناء الشرعي يساعد في ضبط القراءة");
+
+  addRankedScore(scores, a.learningShape, "practice", "kharitat_thughur", 46, "تريد ثمرة عملية ومشروعًا في الواقع");
+
+  addRankedScore(scores, a.learningShape, "gentle_start", "bina_muyassar", 38, "تريد بداية أخف قابلة للاستمرار");
+  addRankedScore(scores, a.learningShape, "gentle_start", "bard_yaqin", 14, "تحتاج مسارًا أرفق وأقرب للقلب");
+  addRankedScore(scores, a.learningShape, "gentle_start", "ghiras", 12, "المسار العام أيسر من الانتقائي");
 
   if (a.prioritySignal === "curriculum_priority") addScore(scores, chooseBinaTrack(a), 42, "عند تزاحم الخيارات، قدّمتَ الخطة العلمية والمقررات");
   if (a.prioritySignal === "environment_priority") {
@@ -1432,10 +1463,21 @@ export default function ProgramSelectorScorecard() {
   const recommendations = useMemo(() => calculateScorecard(answers), [answers]);
   const primary = recommendations[0];
   const openedProgram = openedProgramId ? recommendations.find((p) => p.id === openedProgramId) || PROGRAMS[openedProgramId] : null;
-  const progress = qs.length ? Math.round(((Math.min(step, qs.length - 1) + (answers[current?.id] ? 1 : 0)) / qs.length) * 100) : 0;
+  const progress = qs.length ? Math.round(((Math.min(step, qs.length - 1) + (hasAnswer(answers[current?.id]) ? 1 : 0)) / qs.length) * 100) : 0;
 
   function choose(questionId, value) {
-    setAnswers((prev) => cleanAnswers({ ...prev, [questionId]: value }));
+    const question = QUESTIONS.find((q) => q.id === questionId);
+    setAnswers((prev) => {
+      if (question?.multi) {
+        const currentValues = asArray(prev[questionId]);
+        const exists = currentValues.includes(value);
+        const nextValues = exists
+          ? currentValues.filter((item) => item !== value)
+          : [...currentValues, value];
+        return cleanAnswers({ ...prev, [questionId]: nextValues });
+      }
+      return cleanAnswers({ ...prev, [questionId]: value });
+    });
   }
 
   function startQuiz() {
@@ -1448,7 +1490,7 @@ export default function ProgramSelectorScorecard() {
 
   function next() {
     const safeStep = Math.min(step, qs.length - 1);
-    if (!current || !answers[current.id]) return;
+    if (!current || !hasAnswer(answers[current.id])) return;
     if (safeStep >= qs.length - 1) setShowResult(true);
     else setStep(safeStep + 1);
   }
@@ -1506,17 +1548,22 @@ export default function ProgramSelectorScorecard() {
             <div className="question-head">
               <h2>{current.title}</h2>
               {current.subtitle && <p>{current.subtitle}</p>}
+              {current.multi && <p className="multi-hint">اضغط على أكثر من خيار لترتيب الأولويات. الضغط مرة ثانية يزيل الخيار.</p>}
             </div>
 
             <div className="options-grid">
               {currentOptions.map((opt) => (
                 <button
-                  className={`option-card ${answers[current.id] === opt.value ? "selected" : ""}`}
+                  className={`option-card ${hasChoice(answers[current.id], opt.value) ? "selected" : ""}`}
                   type="button"
                   key={opt.value}
                   onClick={() => choose(current.id, opt.value)}
                 >
-                  <span className="option-icon">{opt.icon}</span>
+                  <span className="option-icon">
+                    {current.multi && hasChoice(answers[current.id], opt.value) ? (
+                      <b className="rank-badge">{choiceRank(answers[current.id], opt.value) + 1}</b>
+                    ) : opt.icon}
+                  </span>
                   <span className="option-copy">
                     <strong>{opt.title}</strong>
                     {opt.sub && <small>{opt.sub}</small>}
@@ -1527,7 +1574,7 @@ export default function ProgramSelectorScorecard() {
 
             <div className="nav-row">
               <button className="ghost-btn" type="button" onClick={back} disabled={step === 0}>السابق</button>
-              <button className="main-btn" type="button" onClick={next} disabled={!answers[current.id]}>
+              <button className="main-btn" type="button" onClick={next} disabled={!hasAnswer(answers[current.id])}>
                 {step >= qs.length - 1 ? "اعرض النتيجة" : "التالي"}
               </button>
             </div>
@@ -1709,7 +1756,9 @@ h1 { margin: 0; font-size: clamp(30px, 5vw, 54px); line-height: 1.18; letter-spa
 }
 .option-card:hover { transform: translateY(-2px); border-color: rgba(18,116,95,0.4); box-shadow: 0 10px 24px rgba(47,35,16,0.08); }
 .option-card.selected { background: var(--teal-soft); border-color: var(--teal); box-shadow: 0 10px 24px rgba(18,116,95,0.12); }
-.option-icon { font-size: 24px; line-height: 1.2; }
+.option-icon { font-size: 24px; line-height: 1.2; min-width: 30px; display: inline-flex; align-items: center; justify-content: center; }
+.rank-badge { display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center; border-radius: 50%; background: var(--teal); color: #fff; font-size: 14px; box-shadow: 0 8px 16px rgba(18,116,95,0.22); }
+.multi-hint { margin-top: -10px !important; color: #0b604f !important; background: var(--teal-soft); border: 1px solid rgba(18,116,95,0.14); border-radius: 14px; padding: 10px 14px; font-size: 13px; }
 .option-copy { display: grid; gap: 4px; }
 .option-copy strong { font-size: 16px; color: var(--ink); }
 .option-copy small { color: var(--muted); line-height: 1.65; font-size: 13px; }
