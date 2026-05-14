@@ -366,6 +366,7 @@ const QUESTIONS = [
     options: () => [
       option("self", "لي أنا", "أبحث عن البرنامج الأنسب لي شخصيًا", "👤"),
       option("child", "لابني أو ابنتي", "أريد ترشيحًا يناسب العمر والبيئة التربوية", "👥"),
+      option("friend", "لصديق أو لصديقة", "أريد مساعدة شخص آخر على اختيار الأنسب", "🤝"),
     ],
   },
   {
@@ -376,7 +377,7 @@ const QUESTIONS = [
   },
   {
     id: "age",
-    title: "ما العمر؟",
+    title: "ما عمر الشخص المستفيد؟",
     subtitle: "قسمنا الأعمار بطريقة تساعد على التفريق بين مسارات الجيل الصاعد وبرامج الكبار.",
     options: () => [
       option("10_12", "10–12 سنة", "غالبًا مرحلة بذور", "🌱"),
@@ -389,8 +390,8 @@ const QUESTIONS = [
   },
   {
     id: "dailyTime",
-    title: "ما مقدار الوقت اليومي الواقعي؟",
-    subtitle: "ليس المطلوب المثالية؛ اختر ما يغلب على أيامك فعلًا.",
+    title: "ما مقدار الوقت اليومي المتاح غالبًا؟",
+    subtitle: "ليس المطلوب المثالية؛ اختر ما يغلب على الأيام فعلًا.",
     condition: (a) => a.age && a.age !== "10_12",
     options: () => [
       option("15", "15–20 دقيقة يوميًا", "أستطيع القليل الثابت فقط", "⏱️"),
@@ -445,14 +446,14 @@ const QUESTIONS = [
   },
   {
     id: "previousAcademy",
-    title: "هل سبق أن أتممت مسارًا في أكاديمية الجيل الصاعد؟",
-    subtitle: "هذا مهم فقط لمعرفة أهلية إثمار، وليس لتقييمك العام.",
+    title: "هل سبق للمستفيد أن أتمّ مسارًا في أكاديمية الجيل الصاعد؟",
+    subtitle: "هذا مهم فقط لمعرفة أهلية إثمار، وليس لتقييم الشخص نفسه.",
     condition: (a) => ["15_16", "17_20", "21_22"].includes(a.age),
     options: () => [
-      option("none", "لا", "لم أتم جذور أو إشراق", "—"),
-      option("juthur", "نعم، أتممت جذور", "", "🌿"),
-      option("ishraq", "نعم، أتممت إشراق", "", "☀️"),
-      option("both", "أتممت جذور وإشراق", "", "🌟"),
+      option("none", "لا", "لم يتم جذور أو إشراق", "—"),
+      option("juthur", "نعم، تمّ إتمام جذور", "", "🌿"),
+      option("ishraq", "نعم، تمّ إتمام إشراق", "", "☀️"),
+      option("both", "تمّ إتمام جذور وإشراق", "", "🌟"),
     ],
   },
   {
@@ -515,9 +516,11 @@ function isEligible(programId, a) {
       return age === "10_12";
     case "juthur":
     case "ghiras":
-      return age === "13_14" || age === "15_16";
+      // إذا صرّح المستخدم بإتمام جذور أو إشراق فلا نعيد اقتراح مسارات أدنى داخل الأكاديمية.
+      return (age === "13_14" || age === "15_16") && (!a.previousAcademy || a.previousAcademy === "none");
     case "ishraq":
-      return age === "17_20";
+      // إذا صرّح المستخدم بإتمام جذور أو إشراق فلا نعيد اقتراح إشراق؛ التوجيه يكون إلى إثمار أو بدائل مناسبة.
+      return age === "17_20" && (!a.previousAcademy || a.previousAcademy === "none");
     case "ithmar":
       return ["15_16", "17_20", "21_22"].includes(age) && ["juthur", "ishraq", "both"].includes(a.previousAcademy);
     case "khadija":
@@ -679,6 +682,11 @@ function calculateScorecard(a) {
 
   if (["juthur", "ishraq", "both"].includes(a.previousAcademy)) {
     addScore(scores, "ithmar", 92, "أهلية إثمار مرتبطة بإتمام جذور أو إشراق");
+    // منع ظهور مسارات أُنجزت أو أدنى منها كبدائل قريبة بعد التصريح بالأهلية لإثمار.
+    ["juthur", "ghiras", "ishraq"].forEach((id) => {
+      scores[id].score = -999;
+      scores[id].reasons = [];
+    });
   }
   if (a.previousAcademy === "none") {
     addScore(scores, "ishraq", 8, "عدم إتمام جذور أو إشراق يجعل إثمار غير مناسب الآن");
@@ -734,8 +742,8 @@ function visibleQuestions(answers) {
   return QUESTIONS.filter((q) => !q.condition || q.condition(answers));
 }
 
-function includesBina(recommendations) {
-  return recommendations.some((p) => p.id === "bina_asasi" || p.id === "bina_muyassar");
+function isBinaProgram(program) {
+  return program?.id === "bina_asasi" || program?.id === "bina_muyassar";
 }
 
 function Pill({ children }) {
@@ -764,7 +772,7 @@ function ProgramMini({ program, index, onOpen, primaryScore }) {
 function BinaComparison() {
   return (
     <div className="compare-box">
-      <div className="compare-title">الفرق السريع بين مساري البناء المنهجي</div>
+      <div className="compare-title">الفرق السريع بين البناء المنهجي - المسار الأساسي والمسار الميسّر</div>
       <div className="compare-grid">
         <div>
           <h4>البناء المنهجي - المسار الميسّر</h4>
@@ -1036,7 +1044,7 @@ export default function ProgramSelectorScorecard() {
                   </div>
                 )}
 
-                {includesBina(recommendations.slice(0, 3)) && <BinaComparison />}
+                {isBinaProgram(primary) && <BinaComparison />}
 
                 <div className="two-cols">
                   <div className="green-box">
