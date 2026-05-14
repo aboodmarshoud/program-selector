@@ -737,6 +737,25 @@ const QUESTIONS = [
     ],
   },
   {
+    id: "prioritySignal",
+    title: "إذا بدت لك أكثر من حاجة مهمة، فما الذي لا تريد التفريط به الآن؟",
+    subtitle: "هذا السؤال يساعد عند تزاحم أكثر من برنامج مناسب لنفس العمر.",
+    condition: (a) => isAgeAtLeast15(a),
+    options: (a) => {
+      const base = [
+        option("curriculum_priority", "خطة علمية واضحة ومقررات", "أريد أن يكون الأصل دراسة مرتبة وتدرجًا علميًا", "📚"),
+        option("environment_priority", "بيئة وصحبة ومتابعة", "أحتاج من يعينني على الثبات والالتزام", "🤝"),
+        option("gentle_priority", "بداية أخف تناسب الانشغال", "أهم شيء أن أبدأ بما أستطيع إكماله", "🌤️"),
+        option("depth_priority", "عمق أو تخصص لاحق", "أميل لمسار ينتقل بي من العموم إلى التخصص", "🎯"),
+      ];
+      if (a.gender === "female") {
+        base.splice(2, 0, option("women_priority", "خصوصية بيئة نسائية", "أحتاج محضنًا نسائيًا آمنًا وتفاعليًا", "🧕"));
+      }
+      return base;
+    },
+  },
+
+  {
     id: "selectivity",
     title: "كيف تتعامل مع الاختبارات والقبول الانتقائي؟",
     subtitle: "ليست الأفضلية دائمًا للأصعب؛ المهم ما يناسب مرحلتك.",
@@ -759,6 +778,24 @@ const QUESTIONS = [
       option("both", "تمّ إتمام جذور وإشراق", "", "🌟"),
     ],
   },
+  {
+    id: "specializationFocus",
+    title: "إن كنت تميل للتخصص أو العمق، فأي اتجاه أقرب؟",
+    subtitle: "لا تختَر إجابة لأن اسم برنامج يعجبك؛ اختر المجال الأقرب لميولك الفعلية.",
+    condition: (a) => isAgeAtLeast15(a) && (a.needPattern === "specialized_track" || a.prioritySignal === "depth_priority"),
+    options: (a) => {
+      const base = [
+        option("hadith", "علوم الحديث والسنة", "أميل إلى الرواية والدراية وخدمة السنة", "📜"),
+        option("long_formation", "تكوين علمي طويل جدًا", "أفكر في مسار ممتد وعميق لا مجرد دورة", "🕌"),
+        option("not_sure", "لم يتضح التخصص بعد", "أحتاج تأسيسًا يساعدني على الاختيار لاحقًا", "🧭"),
+      ];
+      if (["juthur", "ishraq", "both"].includes(a.previousAcademy)) {
+        base.splice(1, 0, option("academy_specialization", "تخصص دقيق بعد تجربة أكاديمية سابقة", "أتممت جذور أو إشراق وأبحث عن المرحلة الأعلى", "🌟"));
+      }
+      return base;
+    },
+  },
+
   {
     id: "quranLevel",
     title: "ما مستوى حفظ القرآن؟",
@@ -799,10 +836,16 @@ const QUESTIONS = [
 function cleanAnswers(answers) {
   const next = { ...answers };
   if (next.gender !== "female" && next.needPattern === "women_space") delete next.needPattern;
+  if (next.gender !== "female" && next.prioritySignal === "women_priority") delete next.prioritySignal;
   if (!["15_16", "17_20", "21_22"].includes(next.age)) delete next.previousAcademy;
   if (!isAgeAtLeast15(next)) {
     delete next.quranLevel;
     delete next.doubtImpact;
+    delete next.prioritySignal;
+    delete next.specializationFocus;
+  }
+  if (!(isAgeAtLeast15(next) && (next.needPattern === "specialized_track" || next.prioritySignal === "depth_priority"))) {
+    delete next.specializationFocus;
   }
   if (!(isAgeAtLeast15(next) && (next.needPattern === "reform_project" || next.learningShape === "practice"))) {
     delete next.reformReadiness;
@@ -848,189 +891,328 @@ function addScore(scores, id, points, reason) {
   if (reason && points > 0 && !scores[id].reasons.includes(reason)) scores[id].reasons.push(reason);
 }
 
+function isRecommendable(scores, id) {
+  return Boolean(scores[id]) && scores[id].score > -900;
+}
+
+function highestScore(scores, exceptId = null) {
+  return Object.values(scores)
+    .filter((item) => item.id !== exceptId && item.score > -900)
+    .reduce((max, item) => Math.max(max, item.score), 0);
+}
+
+function ensurePriority(scores, id, reason, margin = 28) {
+  if (!isRecommendable(scores, id)) return;
+  const target = highestScore(scores, id) + margin;
+  if (scores[id].score < target) scores[id].score = target;
+  if (reason && !scores[id].reasons.includes(reason)) scores[id].reasons.unshift(reason);
+}
+
+function softenScores(scores, ids, amount) {
+  ids.forEach((id) => {
+    if (isRecommendable(scores, id)) scores[id].score -= amount;
+  });
+}
+
+function academyCompleted(a) {
+  return ["juthur", "ishraq", "both"].includes(a.previousAcademy);
+}
+
+function chooseBinaTrack(a) {
+  if (["15", "30"].includes(a.dailyTime) || a.learningShape === "gentle_start" || a.prioritySignal === "gentle_priority") {
+    return "bina_muyassar";
+  }
+  return "bina_asasi";
+}
+
+function chooseAcademyTrack(a) {
+  if (a.age === "10_12") return "buthur";
+  if (a.age === "13_14" || a.age === "15_16") {
+    return a.selectivity === "ok_test" || a.selectivity === "high_selective" ? "juthur" : "ghiras";
+  }
+  if (a.age === "17_20" && !academyCompleted(a)) return "ishraq";
+  return null;
+}
+
+function applyDecisionRules(scores, a) {
+  const femaleAdult = a.gender === "female" && isAgeAtLeast15(a);
+  const wantsWomenSpace = femaleAdult && (a.needPattern === "women_space" || a.prioritySignal === "women_priority");
+  const wantsCurriculum = a.needPattern === "structured_path" || a.learningShape === "curriculum" || a.prioritySignal === "curriculum_priority";
+  const wantsEnvironment = a.needPattern === "relational_growth" || a.learningShape === "community" || a.prioritySignal === "environment_priority";
+  const wantsGentle = a.learningShape === "gentle_start" || a.prioritySignal === "gentle_priority" || ["15", "30"].includes(a.dailyTime);
+  const wantsSpecialization = a.needPattern === "specialized_track" || a.prioritySignal === "depth_priority" || Boolean(a.specializationFocus);
+  const wantsReform = a.needPattern === "reform_project" || a.learningShape === "practice";
+  const highDoubt = a.doubtImpact === "high" || a.needPattern === "certainty";
+  const theoreticalDoubt = a.doubtImpact === "theoretical" || a.needPattern === "intellectual_depth";
+
+  // قواعد حاسمة: هذه ليست نقاطًا إضافية فقط، بل تمنع تزاحمًا غير منطقي بين برامج مختلفة الطبيعة.
+  if (wantsWomenSpace) {
+    ensurePriority(scores, "khadija", "لأنكِ صرّحتِ بأن الاحتياج الأهم هو محضن نسائي تفاعلي", 55);
+    if (academyCompleted(a)) addScore(scores, "ithmar", 34, "إتمام جذور أو إشراق يجعل إثمار بديلًا متقدمًا لا بديلًا عن المحضن النسائي");
+    if (wantsCurriculum) addScore(scores, chooseBinaTrack(a), 20, "توجد أيضًا حاجة إلى خطة علمية مرتبة");
+    softenScores(scores, ["ishraq", "bina_asasi", "bina_muyassar"], 12);
+    return;
+  }
+
+  if (highDoubt) {
+    ensurePriority(scores, "bard_yaqin", "لأن الأثر الأوضح للشبهات أو القلق هو الحاجة إلى يقين وتزكية", 42);
+    softenScores(scores, ["fikri", "bina_asasi", "bina_muyassar", "ishraq"], 8);
+    return;
+  }
+
+  if (wantsReform && a.reformReadiness !== "not_now") {
+    ensurePriority(scores, "kharitat_thughur", "لأن احتياجك انتقل من مجرد الدراسة إلى معرفة الثغر والعمل الإصلاحي", 38);
+    addScore(scores, "bina_asasi", 14, "البناء الشرعي يبقى بديلًا أو أساسًا مساعدًا قبل العمل");
+    return;
+  }
+
+  if (theoreticalDoubt && a.doubtImpact !== "high") {
+    ensurePriority(scores, "fikri", "لأن احتياجك الأقرب هو الفهم الفكري والتحليل لا مجرد الترميم الوجداني", 36);
+    return;
+  }
+
+  if (wantsSpecialization) {
+    if (a.specializationFocus === "hadith") {
+      ensurePriority(scores, "hadith", "لأن التخصص الذي ظهر في إجاباتك هو علوم الحديث والسنة", 44);
+      addScore(scores, chooseBinaTrack(a), 12, "التأسيس العام قد يكون معينًا قبل التخصص أو معه");
+      return;
+    }
+    if (a.specializationFocus === "long_formation" && a.quranLevel === "full") {
+      ensurePriority(scores, "alim", "لأنك تميل إلى تكوين علمي طويل ومعك شرط قرآني داعم", 46);
+      return;
+    }
+    if (academyCompleted(a) && ["academy_specialization", "depth_priority", "specialized_track"].includes(a.specializationFocus || a.prioritySignal || a.needPattern)) {
+      ensurePriority(scores, "ithmar", "لأنك مؤهل لمسار إثمار وتبحث عن انتقال من البناء العام إلى التخصص", 44);
+      return;
+    }
+    if (a.specializationFocus === "not_sure") {
+      ensurePriority(scores, chooseBinaTrack(a), "لأن التخصص لم يتضح بعد، فالأصل تقديم تأسيس عام يساعد على الاختيار", 32);
+      return;
+    }
+  }
+
+  if (wantsEnvironment) {
+    const academyTrack = chooseAcademyTrack(a);
+    if (academyTrack) {
+      ensurePriority(scores, academyTrack, "لأن الاحتياج الأوضح هو البيئة التربوية والصحبة والمتابعة المناسبة للعمر", 38);
+      if (femaleAdult) addScore(scores, "khadija", 24, "البيئة النسائية التفاعلية بديل معتبر إن كانت الخصوصية النسائية أولوية");
+      return;
+    }
+    if (femaleAdult) {
+      ensurePriority(scores, "khadija", "لأن الاحتياج بيئة تفاعلية ومع العمر والجنس فمدرسة خديجة أقرب من مسار تعليمي صرف", 36);
+      return;
+    }
+  }
+
+  if (wantsCurriculum || wantsGentle) {
+    const bina = chooseBinaTrack(a);
+    ensurePriority(scores, bina, bina === "bina_muyassar" ? "لأنك تحتاج خطة علمية لكن البداية الأخف أنسب لوقتك أو لطريقة استمرارك" : "لأنك تحتاج خطة علمية مرتبة وتستطيع التزامًا أوضح", 34);
+    return;
+  }
+
+  if (academyCompleted(a)) {
+    addScore(scores, "ithmar", 22, "إتمام جذور أو إشراق يجعل إثمار احتمالًا متقدمًا إذا رغبت بالتخصص");
+  }
+}
+
 function calculateScorecard(a) {
   const scores = {};
   Object.keys(PROGRAMS).forEach((id) => {
     scores[id] = { id, score: isEligible(id, a) ? 0 : -999, reasons: [] };
   });
 
+  // 1) الأهلية العمرية والسياقية: نقاط خفيفة فقط، حتى لا يطغى العمر على الاحتياج.
   if (a.age === "10_12") addScore(scores, "buthur", 120, "العمر يطابق مسار بذور");
   if (a.age === "13_14") {
-    addScore(scores, "ghiras", 70, "العمر ضمن مسارات اليافعين");
-    addScore(scores, "juthur", 65, "العمر يسمح بالمسار الخاص عند الجدية");
+    addScore(scores, "ghiras", 36, "العمر ضمن مسارات اليافعين");
+    addScore(scores, "juthur", 34, "العمر يسمح بالمسار الخاص عند الجدية");
   }
   if (a.age === "15_16") {
-    addScore(scores, "ghiras", 45, "العمر ما زال مناسبًا لمسارات اليافعين");
-    addScore(scores, "juthur", 45, "العمر مناسب للمسار الخاص إذا وجدت الجدية");
-    addScore(scores, "bina_muyassar", 18, "العمر فوق 15 فيمكن البدء بتأسيس شرعي ميسر");
-    addScore(scores, "bina_asasi", 15, "العمر فوق 15 فيمكن دخول البناء المنهجي");
+    addScore(scores, "ghiras", 24, "العمر ما زال مناسبًا لمسارات اليافعين");
+    addScore(scores, "juthur", 24, "العمر مناسب للمسار الخاص إذا وجدت الجدية");
+    addScore(scores, "bina_muyassar", 10, "العمر فوق 15 فيمكن البدء بتأسيس شرعي ميسر");
+    addScore(scores, "bina_asasi", 8, "العمر فوق 15 فيمكن دخول البناء المنهجي");
   }
   if (a.age === "17_20") {
-    addScore(scores, "ishraq", 45, "العمر مناسب لأكاديمية الجيل الصاعد - إشراق");
-    addScore(scores, "bina_asasi", 22, "العمر فوق 15 ويناسب البناء الشرعي المنهجي");
-    addScore(scores, "bina_muyassar", 18, "العمر فوق 15 مع احتمال الحاجة لبداية أخف");
+    addScore(scores, "ishraq", 18, "العمر مناسب لأكاديمية الجيل الصاعد - إشراق");
+    addScore(scores, "bina_asasi", 12, "العمر فوق 15 ويناسب البناء الشرعي المنهجي");
+    addScore(scores, "bina_muyassar", 10, "العمر فوق 15 مع احتمال الحاجة لبداية أخف");
   }
   if (a.age === "21_22" || a.age === "23_plus") {
-    addScore(scores, "bina_asasi", 24, "العمر مناسب لبرامج التأسيس للكبار");
-    addScore(scores, "bina_muyassar", 20, "يمكن اختيار النسخة الأخف بحسب الوقت");
-    addScore(scores, "fikri", 12, "العمر مناسب للمعالجة الفكرية الأوسع");
-    addScore(scores, "hadith", 10, "العمر مناسب للتخصص العلمي");
+    addScore(scores, "bina_asasi", 16, "العمر مناسب لبرامج التأسيس للكبار");
+    addScore(scores, "bina_muyassar", 14, "يمكن اختيار النسخة الأخف بحسب الوقت");
+    addScore(scores, "fikri", 8, "العمر مناسب للمعالجة الفكرية الأوسع");
+    addScore(scores, "hadith", 8, "العمر مناسب للتخصص العلمي");
   }
 
   if (a.forWhom === "child" && isYouthAcademyAge(a)) {
-    addScore(scores, "buthur", 12, "البحث لابن أو ابنة يرجح البيئة العمرية المناسبة");
-    addScore(scores, "ghiras", 18, "البحث لابن أو ابنة يرجح بيئة تربوية آمنة");
-    addScore(scores, "juthur", 14, "يمكن النظر للمسار الخاص إذا كان الابن جادًا");
-    addScore(scores, "ishraq", 14, "البيئة الشبابية التربوية قد تناسب هذه المرحلة");
+    addScore(scores, "buthur", 10, "البحث لابن أو ابنة يرجح البيئة العمرية المناسبة");
+    addScore(scores, "ghiras", 14, "البحث لابن أو ابنة يرجح بيئة تربوية آمنة");
+    addScore(scores, "juthur", 10, "يمكن النظر للمسار الخاص إذا كان الابن جادًا");
+    addScore(scores, "ishraq", 10, "البيئة الشبابية التربوية قد تناسب هذه المرحلة");
   }
 
+  // 2) الوقت اليومي: يفرّق داخل العائلة الواحدة، ولا ينبغي أن يصنع عائلة البرنامج وحده.
   if (a.dailyTime === "15") {
-    addScore(scores, "bina_muyassar", 34, "وقتك اليومي محدود فالميسّر أرفق");
-    addScore(scores, "bard_yaqin", 16, "المدة اليومية الخفيفة تناسب مسارًا أرفق نسبيًا");
-    addScore(scores, "ghiras", 12, "المسار العام أخف من الانتقائي");
+    addScore(scores, "bina_muyassar", 26, "وقتك اليومي محدود فالميسّر أرفق");
+    addScore(scores, "bard_yaqin", 12, "المدة اليومية الخفيفة تناسب مسارًا أرفق نسبيًا");
   }
   if (a.dailyTime === "30") {
-    addScore(scores, "bina_muyassar", 26, "30–45 دقيقة يوميًا ترجّح البداية الميسرة");
-    addScore(scores, "bard_yaqin", 14, "الوقت المتوسط الخفيف يناسب مسار يقين وتزكية");
-    addScore(scores, "ishraq", 10, "يمكن للبيئة التربوية أن تناسب هذا القدر إذا توفرت الجدية");
+    addScore(scores, "bina_muyassar", 22, "30–45 دقيقة يوميًا ترجّح البداية الميسرة");
+    addScore(scores, "bard_yaqin", 10, "الوقت المتوسط الخفيف يناسب مسار يقين وتزكية");
   }
   if (a.dailyTime === "60") {
-    addScore(scores, "bina_asasi", 30, "نحو ساعة يوميًا مناسب للمسار الأساسي");
-    addScore(scores, "juthur", 18, "الالتزام اليومي جيد للمسارات الخاصة");
-    addScore(scores, "ishraq", 18, "الالتزام اليومي جيد لإشراق");
-    addScore(scores, "fikri", 14, "لديك وقت مناسب لمسار فكري أطول");
-    addScore(scores, "hadith", 14, "لديك وقت مناسب لتخصص علمي");
+    addScore(scores, "bina_asasi", 24, "نحو ساعة يوميًا مناسب للمسار الأساسي");
+    addScore(scores, "juthur", 10, "الالتزام اليومي جيد للمسارات الخاصة");
+    addScore(scores, "ishraq", 10, "الالتزام اليومي جيد لإشراق");
+    addScore(scores, "fikri", 10, "لديك وقت مناسب لمسار فكري أطول");
+    addScore(scores, "hadith", 10, "لديك وقت مناسب لتخصص علمي");
   }
   if (a.dailyTime === "90") {
-    addScore(scores, "bina_asasi", 34, "الوقت اليومي العالي يدعم المسار الأساسي");
-    addScore(scores, "alim", 24, "الوقت العالي يقربك من المسارات الطويلة جدًا");
-    addScore(scores, "ithmar", 24, "الوقت العالي يناسب التخصص الدقيق إذا توفرت الأهلية");
-    addScore(scores, "fikri", 24, "الوقت العالي مناسب للمسار الفكري العميق");
-    addScore(scores, "hadith", 22, "الوقت العالي مناسب للتخصص الحديثي");
+    addScore(scores, "bina_asasi", 28, "الوقت اليومي العالي يدعم المسار الأساسي");
+    addScore(scores, "alim", 16, "الوقت العالي يقربك من المسارات الطويلة جدًا");
+    addScore(scores, "ithmar", 18, "الوقت العالي يناسب التخصص الدقيق إذا توفرت الأهلية");
+    addScore(scores, "fikri", 18, "الوقت العالي مناسب للمسار الفكري العميق");
+    addScore(scores, "hadith", 16, "الوقت العالي مناسب للتخصص الحديثي");
   }
 
+  // 3) الاحتياج الأساسي: هذه أقوى إشارات الترشيح.
   if (a.needPattern === "structured_path") {
-    addScore(scores, "bina_asasi", 42, "تحتاج مسارًا علميًا منهجيًا مرتبًا");
-    addScore(scores, "bina_muyassar", 28, "تحتاج ترتيبًا علميًا مع احتمال البداية الأخف");
-    addScore(scores, "hadith", 14, "المسارات المتخصصة المنظمة قد تناسبك لاحقًا");
+    addScore(scores, "bina_asasi", 44, "تحتاج مسارًا علميًا منهجيًا مرتبًا");
+    addScore(scores, "bina_muyassar", 34, "تحتاج ترتيبًا علميًا مع احتمال البداية الأخف");
+    addScore(scores, "hadith", 10, "المسارات المتخصصة المنظمة قد تناسبك لاحقًا");
   }
   if (a.needPattern === "relational_growth") {
-    addScore(scores, "ishraq", 44, "احتياجك بيئة تربوية وصحبة ومتابعة");
-    addScore(scores, "juthur", 36, "احتياجك بيئة تربوية خاصة");
+    addScore(scores, "ishraq", 38, "احتياجك بيئة تربوية وصحبة ومتابعة");
+    addScore(scores, "juthur", 34, "احتياجك بيئة تربوية خاصة");
     addScore(scores, "ghiras", 30, "احتياجك بيئة آمنة عامة للناشئة");
-    addScore(scores, "khadija", 20, "البيئة التفاعلية قد تناسبك إن كنتِ ضمن شروط مدرسة خديجة");
+    addScore(scores, "khadija", 30, "البيئة التفاعلية قد تناسبك إن كنتِ ضمن شروط مدرسة خديجة");
   }
   if (a.needPattern === "certainty") {
-    addScore(scores, "bard_yaqin", 52, "احتياجك الأقرب هو اليقين والتزكية");
-    addScore(scores, "fikri", 12, "قد تحتاج لاحقًا لمعالجة فكرية أوسع");
+    addScore(scores, "bard_yaqin", 56, "احتياجك الأقرب هو اليقين والتزكية");
+    addScore(scores, "fikri", 8, "قد تحتاج لاحقًا لمعالجة فكرية أوسع");
   }
   if (a.needPattern === "intellectual_depth") {
-    addScore(scores, "fikri", 52, "احتياجك فهم فكري ونقد للتيارات");
-    addScore(scores, "bard_yaqin", 15, "قد تحتاج جانبًا يقينيًا وتزكويًا مساعدًا");
+    addScore(scores, "fikri", 56, "احتياجك فهم فكري ونقد للتيارات");
+    addScore(scores, "bard_yaqin", 10, "قد تحتاج جانبًا يقينيًا وتزكويًا مساعدًا");
   }
   if (a.needPattern === "specialized_track") {
-    addScore(scores, "hadith", 36, "تميل إلى تخصص علمي واضح");
-    addScore(scores, "ithmar", 30, "التخصص الدقيق يناسبك إذا كنت من خريجي جذور أو إشراق");
-    addScore(scores, "alim", 18, "قد يناسبك مسار تكويني طويل إذا توفرت شروطه");
+    addScore(scores, "hadith", 28, "تميل إلى تخصص علمي واضح");
+    addScore(scores, "ithmar", 22, "التخصص الدقيق يناسبك إذا كنت من خريجي جذور أو إشراق");
+    addScore(scores, "alim", 14, "قد يناسبك مسار تكويني طويل إذا توفرت شروطه");
   }
   if (a.needPattern === "reform_project") {
-    addScore(scores, "kharitat_thughur", 56, "تريد معرفة ثغرك وتحويل التعلم إلى مشروع");
-    addScore(scores, "bina_asasi", 12, "قد تحتاج أساسًا شرعيًا قبل العمل الإصلاحي");
+    addScore(scores, "kharitat_thughur", 58, "تريد معرفة ثغرك وتحويل التعلم إلى مشروع");
+    addScore(scores, "bina_asasi", 8, "قد تحتاج أساسًا شرعيًا قبل العمل الإصلاحي");
   }
   if (a.needPattern === "women_space") {
-    addScore(scores, "khadija", 72, "اخترتِ محضنًا نسائيًا تفاعليًا");
+    addScore(scores, "khadija", 86, "اخترتِ محضنًا نسائيًا تفاعليًا");
   }
 
+  // 4) شكل التعلم وأولوية المفاضلة.
   if (a.learningShape === "curriculum") {
     addScore(scores, "bina_asasi", 34, "تفضّل المقررات والخطة الواضحة");
-    addScore(scores, "bina_muyassar", 22, "الخطة الواضحة مع بداية أخف خيار محتمل");
-    addScore(scores, "hadith", 18, "التخصص الحديثي منظم ومناسب لمحبي المقررات");
+    addScore(scores, "bina_muyassar", 24, "الخطة الواضحة مع بداية أخف خيار محتمل");
+    addScore(scores, "hadith", 16, "التخصص الحديثي منظم ومناسب لمحبي المقررات");
   }
   if (a.learningShape === "community") {
-    addScore(scores, "ishraq", 42, "تستمر أكثر مع الصحبة والمتابعة");
-    addScore(scores, "juthur", 34, "الصحبة والمتابعة من خصائص المسار الخاص");
-    addScore(scores, "ghiras", 28, "المسار العام يوفر بيئة وأنشطة مناسبة");
-    addScore(scores, "khadija", 22, "البيئة التفاعلية النسائية مناسبة إن انطبقت الشروط");
+    addScore(scores, "ishraq", 36, "تستمر أكثر مع الصحبة والمتابعة");
+    addScore(scores, "juthur", 30, "الصحبة والمتابعة من خصائص المسار الخاص");
+    addScore(scores, "ghiras", 26, "المسار العام يوفر بيئة وأنشطة مناسبة");
+    addScore(scores, "khadija", 34, "البيئة التفاعلية النسائية مناسبة إن انطبقت الشروط");
   }
   if (a.learningShape === "deep_reading") {
     addScore(scores, "fikri", 38, "تفضّل التحليل والقراءة الفكرية");
-    addScore(scores, "bina_asasi", 14, "البناء الشرعي يساعد في ضبط القراءة");
+    addScore(scores, "bina_asasi", 10, "البناء الشرعي يساعد في ضبط القراءة");
   }
   if (a.learningShape === "practice") {
-    addScore(scores, "kharitat_thughur", 44, "تريد ثمرة عملية ومشروعًا في الواقع");
-    addScore(scores, "ishraq", 10, "المهارات والوعي العملي قد تناسب المرحلة الشبابية");
+    addScore(scores, "kharitat_thughur", 46, "تريد ثمرة عملية ومشروعًا في الواقع");
   }
   if (a.learningShape === "gentle_start") {
-    addScore(scores, "bina_muyassar", 36, "تريد بداية أخف قابلة للاستمرار");
-    addScore(scores, "bard_yaqin", 18, "تحتاج مسارًا أرفق وأقرب للقلب");
-    addScore(scores, "ghiras", 18, "المسار العام أيسر من الانتقائي");
+    addScore(scores, "bina_muyassar", 38, "تريد بداية أخف قابلة للاستمرار");
+    addScore(scores, "bard_yaqin", 14, "تحتاج مسارًا أرفق وأقرب للقلب");
+    addScore(scores, "ghiras", 12, "المسار العام أيسر من الانتقائي");
+  }
+
+  if (a.prioritySignal === "curriculum_priority") addScore(scores, chooseBinaTrack(a), 42, "عند تزاحم الخيارات، قدّمتَ الخطة العلمية والمقررات");
+  if (a.prioritySignal === "environment_priority") {
+    addScore(scores, "ishraq", 34, "عند تزاحم الخيارات، قدّمتَ البيئة والصحبة والمتابعة");
+    addScore(scores, "juthur", 28, "البيئة والمتابعة من خصائص مسارات الأكاديمية");
+    addScore(scores, "ghiras", 24, "البيئة العامة مناسبة لمن يريد صحبة أيسر");
+    addScore(scores, "khadija", 28, "البيئة التفاعلية النسائية بديل معتبر إن انطبقت الشروط");
+  }
+  if (a.prioritySignal === "women_priority") addScore(scores, "khadija", 78, "عند تزاحم الخيارات، قدّمتِ خصوصية البيئة النسائية");
+  if (a.prioritySignal === "gentle_priority") addScore(scores, "bina_muyassar", 42, "عند تزاحم الخيارات، قدّمتَ البداية الأخف والاستمرار");
+  if (a.prioritySignal === "depth_priority") {
+    addScore(scores, "ithmar", 26, "تبحث عن عمق أو تخصص لاحق إن توفرت الأهلية");
+    addScore(scores, "hadith", 22, "التخصص العلمي من مسارات العمق المحتملة");
+    addScore(scores, "fikri", 18, "العمق الفكري قد يكون مناسبًا بحسب ميولك");
   }
 
   if (a.selectivity === "open") {
-    addScore(scores, "ghiras", 22, "تفضل مسارًا مفتوحًا");
-    addScore(scores, "bina_muyassar", 14, "تفضل البداية الأيسر");
-    addScore(scores, "bard_yaqin", 8, "الانتقائية ليست مركزية في اختيارك");
+    addScore(scores, "ghiras", 18, "تفضل مسارًا مفتوحًا");
+    addScore(scores, "bina_muyassar", 12, "تفضل البداية الأيسر");
   }
   if (a.selectivity === "ok_test") {
-    addScore(scores, "bina_asasi", 14, "لا تمانع اختبارًا أو مرحلة قبول");
-    addScore(scores, "juthur", 18, "لا تمانع اختبار القبول للمسار الخاص");
-    addScore(scores, "ishraq", 18, "لا تمانع اختبار القبول لإشراق");
+    addScore(scores, "bina_asasi", 10, "لا تمانع اختبارًا أو مرحلة قبول");
+    addScore(scores, "juthur", 12, "لا تمانع اختبار القبول للمسار الخاص");
+    addScore(scores, "ishraq", 12, "لا تمانع اختبار القبول لإشراق");
   }
   if (a.selectivity === "high_selective") {
-    addScore(scores, "alim", 26, "تقبل المسارات العالية الانتقائية");
-    addScore(scores, "ithmar", 26, "تقبل المسارات الخاصة المتقدمة إن توفرت الأهلية");
-    addScore(scores, "juthur", 18, "تقبل المسار الخاص والمتابعة الأعلى");
-    addScore(scores, "khadija", 12, "لا تمانع عددًا محدودًا وقبولًا انتقائيًا");
+    addScore(scores, "alim", 20, "تقبل المسارات العالية الانتقائية");
+    addScore(scores, "ithmar", 22, "تقبل المسارات الخاصة المتقدمة إن توفرت الأهلية");
+    addScore(scores, "juthur", 14, "تقبل المسار الخاص والمتابعة الأعلى");
+    addScore(scores, "khadija", 10, "لا تمانع عددًا محدودًا وقبولًا انتقائيًا");
   }
 
-  if (["juthur", "ishraq", "both"].includes(a.previousAcademy)) {
-    addScore(scores, "ithmar", 92, "أهلية إثمار مرتبطة بإتمام جذور أو إشراق");
-    // منع ظهور مسارات أُنجزت أو أدنى منها كبدائل قريبة بعد التصريح بالأهلية لإثمار.
+  // 5) أهلية إثمار: لا تكون وحدها سببًا كافيًا لابتلاع بقية الاحتياجات.
+  if (academyCompleted(a)) {
+    addScore(scores, "ithmar", 36, "أهلية إثمار موجودة بسبب إتمام جذور أو إشراق");
     ["juthur", "ghiras", "ishraq"].forEach((id) => {
       scores[id].score = -999;
       scores[id].reasons = [];
     });
   }
-  if (a.previousAcademy === "none") {
-    addScore(scores, "ishraq", 8, "عدم إتمام جذور أو إشراق يجعل إثمار غير مناسب الآن");
-  }
+  if (a.previousAcademy === "none") addScore(scores, "ishraq", 4, "عدم إتمام جذور أو إشراق يجعل إثمار غير مناسب الآن");
+
+  if (a.specializationFocus === "hadith") addScore(scores, "hadith", 54, "التخصص الأقرب لك هو علوم الحديث والسنة");
+  if (a.specializationFocus === "academy_specialization") addScore(scores, "ithmar", 62, "تبحث عن تخصص دقيق بعد تجربة أكاديمية سابقة");
+  if (a.specializationFocus === "long_formation") addScore(scores, "alim", 42, "تميل إلى تكوين علمي طويل جدًا");
+  if (a.specializationFocus === "not_sure") addScore(scores, chooseBinaTrack(a), 26, "لم يتضح التخصص بعد، فالتأسيس العام أقرب");
 
   if (a.quranLevel === "full") addScore(scores, "alim", 48, "حفظ القرآن كاملًا يدعم أهلية برنامج عالِم");
-  if (a.quranLevel === "partial") addScore(scores, "bina_asasi", 8, "لديك أساس قرآني جزئي يمكن البناء عليه");
-  if (a.quranLevel === "little") addScore(scores, "bina_muyassar", 8, "البداية الميسرة قد تكون أرفق مع ضعف الحفظ");
-  if (a.quranLevel && a.quranLevel !== "full") scores.alim.score -= 65;
+  if (a.quranLevel === "partial") addScore(scores, "bina_asasi", 6, "لديك أساس قرآني جزئي يمكن البناء عليه");
+  if (a.quranLevel === "little") addScore(scores, "bina_muyassar", 6, "البداية الميسرة قد تكون أرفق مع ضعف الحفظ");
+  if (a.quranLevel && a.quranLevel !== "full") scores.alim.score -= 70;
 
   if (a.doubtImpact === "high") {
-    addScore(scores, "bard_yaqin", 54, "الشبهات تؤثر على السكينة؛ اليقين والتزكية أسبق");
-    scores.fikri.score -= 8;
+    addScore(scores, "bard_yaqin", 58, "الشبهات تؤثر على السكينة؛ اليقين والتزكية أسبق");
+    scores.fikri.score -= 12;
   }
   if (a.doubtImpact === "medium") {
-    addScore(scores, "bard_yaqin", 28, "تحتاج تثبيتًا يقينيًا مع فهم");
-    addScore(scores, "fikri", 12, "قد يفيدك البناء الفكري لاحقًا");
+    addScore(scores, "bard_yaqin", 30, "تحتاج تثبيتًا يقينيًا مع فهم");
+    addScore(scores, "fikri", 10, "قد يفيدك البناء الفكري لاحقًا");
   }
-  if (a.doubtImpact === "theoretical") {
-    addScore(scores, "fikri", 34, "تتعامل مع الشبهات كسؤال فكري تحليلي");
-  }
-  if (a.doubtImpact === "low") {
-    addScore(scores, "bina_asasi", 8, "يمكنك البدء بالتأسيس العام دون أولوية علاجية خاصة");
-  }
+  if (a.doubtImpact === "theoretical") addScore(scores, "fikri", 38, "تتعامل مع الشبهات كسؤال فكري تحليلي");
+  if (a.doubtImpact === "low") addScore(scores, "bina_asasi", 4, "يمكنك البدء بالتأسيس العام دون أولوية علاجية خاصة");
 
-  if (a.reformReadiness === "ready") {
-    addScore(scores, "kharitat_thughur", 42, "أنت مستعد للمواد القبلية ومشروع خارطة الثغور");
-  }
+  if (a.reformReadiness === "ready") addScore(scores, "kharitat_thughur", 44, "أنت مستعد للمواد القبلية ومشروع خارطة الثغور");
   if (a.reformReadiness === "interested") {
-    addScore(scores, "kharitat_thughur", 18, "لديك اهتمام بالإصلاح لكن تحتاج تهيئة قبلية");
-    addScore(scores, "bina_asasi", 12, "البناء المنهجي يقوي الأساس قبل العمل");
+    addScore(scores, "kharitat_thughur", 20, "لديك اهتمام بالإصلاح لكن تحتاج تهيئة قبلية");
+    addScore(scores, "bina_asasi", 10, "البناء المنهجي يقوي الأساس قبل العمل");
   }
   if (a.reformReadiness === "not_now") {
-    scores.kharitat_thughur.score -= 25;
-    addScore(scores, "bina_asasi", 12, "اعترفت أن البناء أسبق من المشروع العملي الآن");
+    scores.kharitat_thughur.score -= 30;
+    addScore(scores, "bina_asasi", 10, "اعترفت أن البناء أسبق من المشروع العملي الآن");
   }
 
-  // Guardrails: avoid recommending female-only program to males or youth-only programs outside age.
+  // إعادة تطبيق الأهلية بعد كل النقاط.
   Object.keys(scores).forEach((id) => {
     if (!isEligible(id, a)) scores[id].score = -999;
   });
+
+  // 6) طبقة المفاضلة الأخيرة: اختيار عائلة البرنامج قبل حساب الفروقات الرقمية.
+  applyDecisionRules(scores, a);
 
   const sorted = Object.values(scores)
     .filter((item) => item.score > -100)
