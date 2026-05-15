@@ -1,6 +1,5 @@
 import { useMemo, useState, useRef } from "react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
-import html2pdf from "html2pdf.js";
 
 const PROGRAMS = {
   alim: {
@@ -1672,32 +1671,11 @@ function ResultView({ result, onOpen, onRestart }: any) {
   };
 
   const handleDownloadPDF = async () => {
-    if (!resultRef.current) return;
-    try {
-      const opt = {
-        margin:       10,
-        filename:     `result-${primary.id}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, windowWidth: resultRef.current.scrollWidth },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
-      };
-      
-      const shareTop = resultRef.current.querySelector('.share-top') as HTMLElement;
-      if (shareTop) shareTop.style.display = 'none';
-      
-      await html2pdf().set(opt).from(resultRef.current).save();
-      
-      if (shareTop) shareTop.style.display = 'flex';
-    } catch (e) {
-      alert("عذراً، حدث خطأ أثناء محاولة حفظ النتيجة.");
-      const shareTop = resultRef.current.querySelector('.share-top') as HTMLElement;
-      if (shareTop) shareTop.style.display = 'flex';
-    }
+    window.print();
   };
 
   return (
-    <section className="result-wrap" ref={resultRef}>
+    <section className="result-wrap" ref={resultRef} dir="rtl">
       <div className="share-top" data-html2canvas-ignore="true">
         <button className="share-btn" type="button" onClick={handleDownloadPDF}>
           <span>📄</span> حفظ كملف PDF
@@ -1906,6 +1884,7 @@ const styles = `
     var(--bg);
   min-height: 100vh;
   color: var(--ink);
+  direction: rtl;
 }
 
 * { box-sizing: border-box; }
@@ -1964,19 +1943,20 @@ button { font-family: inherit; }
 .question-head p { color: var(--muted); line-height: 1.8; margin: 0 0 10px; }
 .multi-hint { background: #fff6df; color: #7d560c !important; border: 1px solid #f1dcab; border-radius: 16px; padding: 10px 14px; }
 .options-grid { display: grid; gap: 12px; margin: 24px 0; }
-.option-card { width: 100%; display: flex; align-items: flex-start; gap: 14px; text-align: right; border: 1.5px solid var(--border); background: white; border-radius: 20px; padding: 16px; cursor: pointer; transition: .18s ease; color: var(--ink); }
+.option-card { width: 100%; display: flex; align-items: center; gap: 14px; text-align: right; border: 1.5px solid var(--border); background: white; border-radius: 20px; padding: 16px; cursor: pointer; transition: .18s ease; color: var(--ink); }
 .option-card:hover { border-color: #a7cfbf; transform: translateY(-1px); }
 .option-card.selected { background: #eaf7f1; border-color: var(--green-2); box-shadow: 0 8px 18px rgba(15, 138, 104, .10); }
-.option-icon { width: 34px; height: 34px; flex: 0 0 34px; display: grid; place-items: center; font-size: 22px; background: #f6efe3; border-radius: 12px; }
-.rank-badge { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; color: white; background: var(--green); font-size: 14px; }
+.option-icon { width: 44px; height: 44px; flex: 0 0 44px; display: flex; align-items: center; justify-content: center; font-size: 24px; line-height: 1; background: #f6efe3; border-radius: 12px; }
+.rank-badge { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: white; background: var(--green); font-size: 14px; line-height: 1; }
 .option-copy strong { display: block; font-size: 17px; }
 .option-copy small { display: block; margin-top: 6px; color: var(--muted); line-height: 1.7; }
 .nav-row { margin-top: 16px; }
 
 .result-wrap { display: grid; gap: 18px; }
+.result-main, .alternatives-box, .compare-box, .advice-card, .chart-container { page-break-inside: avoid; }
 .result-main { overflow: hidden; border-width: 1.5px; }
 .result-top { display: flex; gap: 18px; padding: clamp(22px, 4vw, 36px); align-items: flex-start; }
-.result-icon { font-size: 50px; width: 70px; height: 70px; display: grid; place-items: center; background: white; border-radius: 22px; box-shadow: 0 10px 26px rgba(0,0,0,.06); }
+.result-icon { font-size: 50px; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; line-height: 1; background: white; border-radius: 22px; box-shadow: 0 10px 26px rgba(0,0,0,.06); }
 .result-label { display: inline-flex; padding: 6px 12px; border-radius: 99px; background: rgba(255,255,255,.74); color: var(--green); font-weight: 700; font-size: 13px; margin-bottom: 8px; }
 .result-top h2 { margin: 0 0 10px; font-size: clamp(26px, 5vw, 40px); }
 .result-top p { margin: 0; color: #52606b; line-height: 1.9; }
@@ -2038,7 +2018,7 @@ li { margin: 8px 0; line-height: 1.8; }
 .alternatives-box p { color: var(--muted); margin-top: -4px; }
 .mini-program { width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px; margin-top: 10px; background: white; border: 1px solid var(--border); border-radius: 18px; cursor: pointer; text-align: right; }
 .mini-rank { width: 28px; height: 28px; border-radius: 50%; background: #f3eadc; display: grid; place-items: center; font-weight: 800; color: var(--amber); }
-.mini-icon { font-size: 26px; }
+.mini-icon { font-size: 26px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
 .mini-text { flex: 1; }
 .mini-text strong, .mini-text small { display: block; }
 .mini-text small { color: var(--muted); margin-top: 4px; }
@@ -2056,7 +2036,7 @@ li { margin: 8px 0; line-height: 1.8; }
 .program-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 .directory-card { text-align: right; background: rgba(255,253,248,.94); border: 1.5px solid var(--border); border-radius: 24px; padding: 20px; cursor: pointer; min-height: 245px; display: flex; flex-direction: column; gap: 8px; }
 .directory-card:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(39,32,20,.08); }
-.directory-icon { font-size: 34px; }
+.directory-icon { font-size: 34px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
 .directory-card strong { font-size: 18px; }
 .directory-card small { color: var(--green); font-weight: 800; }
 .directory-card p { color: var(--muted); line-height: 1.7; margin: 0; flex: 1; }
@@ -2071,14 +2051,14 @@ li { margin: 8px 0; line-height: 1.8; }
 
 .program-detail { display: grid; gap: 18px; }
 .program-hero { display: flex; gap: 18px; align-items: flex-start; border: 1px solid var(--border); border-radius: 30px; padding: clamp(22px, 4vw, 36px); }
-.program-hero-icon { width: 72px; height: 72px; display: grid; place-items: center; font-size: 44px; background: white; border-radius: 24px; box-shadow: 0 12px 28px rgba(0,0,0,.06); }
+.program-hero-icon { width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; line-height: 1; font-size: 44px; background: white; border-radius: 24px; box-shadow: 0 12px 28px rgba(0,0,0,.06); }
 .program-hero small { color: var(--green); font-weight: 800; }
 .program-hero h1 { margin: 8px 0 10px; font-size: clamp(28px, 5vw, 44px); }
 .program-hero p { color: #52606b; line-height: 1.9; margin: 0; }
 .meta-grid { margin: 0; }
 .detail-section { padding: 24px; border-radius: 20px; border: 1.5px solid var(--border); margin-bottom: 16px; }
 .detail-section h3 { margin: 0 0 16px; display: flex; align-items: center; gap: 8px; font-size: 20px; color: var(--ink); }
-.ds-icon { font-size: 24px; }
+.ds-icon { font-size: 24px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
 .ds-blue { background: #f0f9ff; border-color: #bae6fd; }
 .ds-blue h3 { color: #0369a1; }
 .ds-green { background: #f0fdf4; border-color: #bbf7d0; }
@@ -2107,5 +2087,28 @@ li { margin: 8px 0; line-height: 1.8; }
   .hero-actions > button { width: 100%; }
   .option-card { padding: 14px; }
   .mini-program { align-items: flex-start; flex-wrap: wrap; }
+}
+
+@media print {
+  body { background: white !important; }
+  .selector-root { background: none !important; min-height: auto; }
+  .app-shell { padding: 0 !important; max-width: 100% !important; margin: 0 !important; }
+  .share-top, .ghost-btn, .nav-row, .hero-actions { display: none !important; }
+  .result-wrap { max-width: 100%; box-shadow: none; display: block; }
+  
+  .result-main, .alternatives-box, .compare-box, .advice-card, .links-box { 
+    box-shadow: none !important; 
+    border: 1px solid #ccc !important;
+    page-break-inside: avoid;
+    margin-bottom: 20px;
+  }
+  
+  .chart-container, .program-detail > .detail-section {
+    page-break-inside: avoid;
+  }
+  
+  .result-icon { box-shadow: none !important; border: 1px solid #eee; }
+  /* Avoid page breaks inside table rows */
+  tr { page-break-inside: avoid; }
 }
 `;
