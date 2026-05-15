@@ -1,29 +1,20 @@
-# أداة اختيار البرنامج المناسب
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-هذا مشروع React + Vite جاهز للنشر على GitHub Pages.
+# Run and deploy your AI Studio app
 
-## التشغيل على جهازك
+This contains everything you need to run your app locally.
 
-```bash
-npm install
-npm run dev
-```
+View your app in AI Studio: https://ai.studio/apps/6da1cdce-033d-4089-8ec8-296cba14520b
 
-## البناء النهائي
+## Run Locally
 
-```bash
-npm run build
-npm run preview
-```
+**Prerequisites:**  Node.js
 
-## النشر على GitHub Pages
 
-1. أنشئ مستودعًا جديدًا في GitHub.
-2. ارفع ملفات هذا المشروع إلى المستودع.
-3. ادخل إلى Settings > Pages.
-4. من Build and deployment اختر Source = GitHub Actions.
-5. ادفع أي تعديل إلى فرع main.
-6. افتح تبويب Actions حتى يكتمل النشر.
-7. رابط الموقع سيظهر في Settings > Pages.
-
-ملاحظة: ملف `vite.config.js` يستخدم `base: "./"` حتى يعمل الموقع تحت أي اسم مستودع.
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`

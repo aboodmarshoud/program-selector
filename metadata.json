@@ -1,0 +1,8 @@
+{
+  "name": "دليل اختيار البرامج - أحمد السيد",
+  "description": "تطبيق تفاعلي لمساعدة طلاب العلم واليافعين في اختيار البرنامج العلمي والتربوي الأنسب من برامج الشيخ أحمد بن يوسف السيد.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
