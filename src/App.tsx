@@ -1,6 +1,6 @@
 import { useMemo, useState, useRef } from "react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
-import html2canvas from "html2canvas";
+import html2pdf from "html2pdf.js";
 
 const PROGRAMS = {
   alim: {
@@ -18,7 +18,7 @@ const PROGRAMS = {
     selectivity: "انتقائي جدًا",
     color: "#0f4f3f",
     soft: "#e6f4ef",
-    dimensions: { sharia: 100, intellectual: 90, tazkiyah: 90, reform: 80 },
+    dimensions: { sharia: 100, intellectual: 90, tazkiyah: 90, reform: 80, skills: 90 },
     description:
       "مسار تكويني طويل وعميق لمن يطمح إلى التكوين العلمي الرسالي الموسوعي، مع عناية بالتأصيل والتزكية والفكر والمهارات.",
     goals: [
@@ -57,7 +57,7 @@ const PROGRAMS = {
     selectivity: "مرحلة تمهيدية واختبار",
     color: "#17446f",
     soft: "#e7f0f8",
-    dimensions: { sharia: 95, intellectual: 70, tazkiyah: 65, reform: 40 },
+    dimensions: { sharia: 95, intellectual: 70, tazkiyah: 65, reform: 40, skills: 60 },
     description:
       "مسار شرعي معرفي شامل يجمع بين التأصيل الشرعي والثقافة الإسلامية والبناء الفكري والسلوكي، وهو أنسب لمن يريد بناءً علميًا عامًا لا تخصصًا ضيقًا.",
     goals: [
@@ -96,7 +96,7 @@ const PROGRAMS = {
     selectivity: "مرحلة تمهيدية واختبار",
     color: "#28608c",
     soft: "#edf5fb",
-    dimensions: { sharia: 70, intellectual: 40, tazkiyah: 60, reform: 30 },
+    dimensions: { sharia: 70, intellectual: 40, tazkiyah: 60, reform: 30, skills: 40 },
     description:
       "نسخة أخف من البناء المنهجي تراعي المبتدئ أو المشغول أو من لا يستطيع الالتزام بالمسار الأساسي الطويل الآن.",
     goals: [
@@ -135,7 +135,7 @@ const PROGRAMS = {
     selectivity: "بحسب إعلان الدفعة",
     color: "#5a2d82",
     soft: "#f2eafa",
-    dimensions: { sharia: 50, intellectual: 100, tazkiyah: 50, reform: 60 },
+    dimensions: { sharia: 50, intellectual: 100, tazkiyah: 50, reform: 60, skills: 80 },
     description:
       "برنامج يعالج البناء الفكري الإسلامي، وفهم التيارات والشبهات ومركزية الوحي، وهو أوسع من المعالجات القصيرة أو الوجدانية فقط.",
     goals: [
@@ -174,7 +174,7 @@ const PROGRAMS = {
     selectivity: "بحسب إعلان البرنامج",
     color: "#0f6b78",
     soft: "#e7f6f8",
-    dimensions: { sharia: 40, intellectual: 60, tazkiyah: 100, reform: 30 },
+    dimensions: { sharia: 40, intellectual: 60, tazkiyah: 100, reform: 30, skills: 30 },
     description:
       "مسار معرفي تزكوي يعالج اليقين والثوابت مع عناية بالجانب الإيماني والسلوكي، وهو أقرب لمن يحتاج ترميم السكينة قبل التوسع الفكري.",
     goals: [
@@ -213,7 +213,7 @@ const PROGRAMS = {
     selectivity: "بحسب إعلان الأكاديمية",
     color: "#5a6f2a",
     soft: "#eef5e2",
-    dimensions: { sharia: 100, intellectual: 50, tazkiyah: 50, reform: 40 },
+    dimensions: { sharia: 100, intellectual: 50, tazkiyah: 50, reform: 40, skills: 70 },
     description:
       "مسار متخصص في علوم الحديث والسنة، مناسب لمن يريد بابًا علميًا محددًا لا مجرد تأسيس عام في العلوم الشرعية.",
     goals: [
@@ -252,7 +252,7 @@ const PROGRAMS = {
     selectivity: "تسجيل + اختبار + مواد قبلية",
     color: "#437047",
     soft: "#edf6ee",
-    dimensions: { sharia: 40, intellectual: 60, tazkiyah: 40, reform: 100 },
+    dimensions: { sharia: 40, intellectual: 60, tazkiyah: 40, reform: 100, skills: 95 },
     description:
       "دورة تبصيرية تساعد طالب البرامج والمصلح على فهم ثغور الأمة وموقعه منها، وتُختم بمشروع عملي يخدم به واقعه.",
     goals: [
@@ -271,8 +271,8 @@ const PROGRAMS = {
       "لديك أصل من البناء وتريد توجيهه في الواقع.",
     ],
     caution: [
+      "شروط الدخول: لابد من إنهاء المواد التالية (بوصلة المصلح، مركزيات الإصلاح، شرح المنهاج من ميراث النبوة). تجهز لها قبل التسجيل.",
       "لا تجعلها بديلًا عن أصل البناء الشرعي أو الإيماني.",
-      "إن لم تدرس المواد القبلية فتهيأ لها قبل التسجيل.",
       "ليست دورة معلومات فقط؛ يُنتظر منك مشروع عملي.",
     ],
   },
@@ -291,7 +291,7 @@ const PROGRAMS = {
     selectivity: "غالبًا مفتوح",
     color: "#638b2f",
     soft: "#f1f7e8",
-    dimensions: { sharia: 40, intellectual: 30, tazkiyah: 90, reform: 30 },
+    dimensions: { sharia: 40, intellectual: 30, tazkiyah: 90, reform: 30, skills: 40 },
     description:
       "مدخل تربوي مبكر لغرس الإيمان والقيم ومحاسن الأخلاق بأسلوب يناسب سن الطفل.",
     goals: [
@@ -322,7 +322,7 @@ const PROGRAMS = {
     selectivity: "اختبار قبول ومتابعة خاصة",
     color: "#2f7a4f",
     soft: "#e9f6ef",
-    dimensions: { sharia: 75, intellectual: 70, tazkiyah: 85, reform: 60 },
+    dimensions: { sharia: 75, intellectual: 70, tazkiyah: 85, reform: 60, skills: 60 },
     description:
       "مسار خاص للجيل الصاعد في عمر 13–16، يجمع البناء الإيماني والمعرفي والتربوي مع متابعة أقرب.",
     goals: [
@@ -353,7 +353,7 @@ const PROGRAMS = {
     selectivity: "غالبًا أيسر من جذور",
     color: "#3d8a3a",
     soft: "#ecf8ec",
-    dimensions: { sharia: 70, intellectual: 65, tazkiyah: 80, reform: 50 },
+    dimensions: { sharia: 70, intellectual: 65, tazkiyah: 80, reform: 50, skills: 50 },
     description:
       "مسار عام للفئة 13–16، يراعي البناء الشمولي والبيئة الآمنة دون اشتراطات المسار الخاص نفسها.",
     goals: [
@@ -384,7 +384,7 @@ const PROGRAMS = {
     selectivity: "اختبار قبول",
     color: "#8b5a20",
     soft: "#fff3df",
-    dimensions: { sharia: 70, intellectual: 75, tazkiyah: 85, reform: 65 },
+    dimensions: { sharia: 70, intellectual: 75, tazkiyah: 85, reform: 65, skills: 70 },
     description:
       "مسار شبابي تربوي ومعرفي للمرحلة 17–20، يركز على البيئة والتحصين والصحبة ومهارات التعامل مع الواقع.",
     goals: [
@@ -415,7 +415,7 @@ const PROGRAMS = {
     selectivity: "لخريجي جذور وإشراق حصرًا",
     color: "#8a6828",
     soft: "#fff7e5",
-    dimensions: { sharia: 90, intellectual: 90, tazkiyah: 90, reform: 80 },
+    dimensions: { sharia: 90, intellectual: 90, tazkiyah: 90, reform: 80, skills: 85 },
     description:
       "درة التاج في أكاديمية الجيل الصاعد، لا يستقبل المبتدئين، بل نخبة المميزين من خريجي جذور وإشراق للانتقال إلى التخصص الدقيق.",
     goals: [
@@ -446,7 +446,7 @@ const PROGRAMS = {
     selectivity: "عدد محدود وتفاعل مباشر",
     color: "#9b3d64",
     soft: "#fdebf2",
-    dimensions: { sharia: 65, intellectual: 65, tazkiyah: 95, reform: 60 },
+    dimensions: { sharia: 65, intellectual: 65, tazkiyah: 95, reform: 60, skills: 50 },
     description:
       "بيئة نسائية تفاعلية تجمع البناء الإيماني والتربوي والعلمي واللقاءات، وهي أنسب لمن تحتاج محضنًا نسائيًا لا دراسة إلكترونية صامتة فقط.",
     goals: ["بناء المرأة إيمانيًا وتربويًا وعلميًا.", "توفير محضن نسائي آمن وتفاعلي.", "إحياء معنى الصحبة واللقاءات لا مجرد متابعة مواد."],
@@ -499,8 +499,24 @@ function isGraduatedStatus(a) {
   return a.programStatus === "graduated_or_near";
 }
 
+function getCurrentPrograms(a) {
+  if (isCurrentStatus(a)) return asArray(a.knownPrograms);
+  if (a.programStatus === "studying_and_graduated") return asArray(a.currentPrograms);
+  return [];
+}
+
+function getGraduatedPrograms(a) {
+  if (isGraduatedStatus(a)) return asArray(a.knownPrograms);
+  if (a.programStatus === "studying_and_graduated") return asArray(a.graduatedPrograms);
+  return [];
+}
+
 function knownPrograms(a) {
-  return asArray(a.knownPrograms);
+  const arr = [];
+  if (a.knownPrograms) arr.push(...asArray(a.knownPrograms));
+  if (a.graduatedPrograms) arr.push(...asArray(a.graduatedPrograms));
+  if (a.currentPrograms) arr.push(...asArray(a.currentPrograms));
+  return Array.from(new Set(arr));
 }
 
 function hasKnown(a, id) {
@@ -509,7 +525,8 @@ function hasKnown(a, id) {
 
 function completedJuthurOrIshraq(a) {
   if (hasKnown(a, "ithmar")) return true;
-  return isGraduatedStatus(a) && (hasKnown(a, "juthur") || hasKnown(a, "ishraq"));
+  const grads = getGraduatedPrograms(a);
+  return grads.includes("juthur") || grads.includes("ishraq");
 }
 
 function questionTitle(q, answers) {
@@ -575,8 +592,25 @@ const QUESTIONS = [
       option("studying_committed", "نعم، طالب مستمر في الدراسة ومتابِع", "ما زلت أدرس وأحاول الالتزام قدر الإمكان", "✅"),
       option("studying_struggling", "نعم، طالب متعثر أو قصّرت سابقًا", "دخلت برنامجًا لكن حصل تراكم أو فتور كبير", "🧩"),
       option("graduated_or_near", "تخرجت من برنامج أو عدة برامج، أو على وشك التخرج", "أريد أن أبني على ما درست لا أن أكرر نفس الطريق", "🎓"),
+      option("studying_and_graduated", "طالب وخريج معاً", "تخرجت من برنامج وتدرس في آخر الآن", "🎓📖"),
       option("none", "لست طالبًا حاليًا ولم أتخرج من برنامج مؤثر", "يشمل من لم يدخل من قبل أو انسحب من تجربة سابقة", "🌱"),
     ],
+  },
+  {
+    id: "graduatedPrograms",
+    title: "ما البرامج التي تخرجت منها؟",
+    subtitle: "اختر كل ما ينطبق.",
+    multi: true,
+    condition: (a) => a.programStatus === "studying_and_graduated",
+    options: () => PROGRAM_OPTIONS,
+  },
+  {
+    id: "currentPrograms",
+    title: "ما البرامج التي تدرس فيها حالياً أو تعثرت فيها؟",
+    subtitle: "اختر كل ما ينطبق.",
+    multi: true,
+    condition: (a) => a.programStatus === "studying_and_graduated",
+    options: () => PROGRAM_OPTIONS,
   },
   {
     id: "knownPrograms",
@@ -588,7 +622,7 @@ const QUESTIONS = [
     },
     subtitle: "يمكن اختيار أكثر من برنامج.",
     multi: true,
-    condition: (a) => a.programStatus && a.programStatus !== "none",
+    condition: (a) => a.programStatus && a.programStatus !== "none" && a.programStatus !== "studying_and_graduated",
     options: () => PROGRAM_OPTIONS,
   },
   {
@@ -739,17 +773,6 @@ const QUESTIONS = [
       option("theoretical", "أراها أسئلة فكرية وتحليلية", "أريد أدوات نقد وفهم للتيارات", "🧠"),
     ],
   },
-  {
-    id: "reformReadiness",
-    title: "بالنسبة للعمل الإصلاحي العملي، أين أنت؟",
-    subtitle: "يظهر هذا السؤال لمن تميل إجاباته إلى العمل والمشاريع.",
-    condition: (a) => isAgeAtLeast15(a) && hasChoice(a.needPattern, "reform_project"),
-    options: () => [
-      option("not_now", "ليس هذا احتياجي الآن", "أحتاج بناءً قبل المشروع", "🧱"),
-      option("interested", "مهتم ولم أدرس المواد القبلية بعد", "أحتاج أن أتهيأ أولًا", "🧭"),
-      option("ready", "درست أو سأدرس المواد القبلية", "مركزيات الإصلاح، شرح المنهاج، بوصلة المصلح", "🗺️"),
-    ],
-  },
 ];
 
 function cleanAnswers(answers) {
@@ -764,13 +787,9 @@ function cleanAnswers(answers) {
     delete next.doubtImpact;
     delete next.prioritySignal;
     delete next.specializationFocus;
-    delete next.reformReadiness;
   }
   if (!(isAgeAtLeast15(next) && (hasChoice(next.needPattern, "specialized_track") || next.prioritySignal === "depth_priority"))) {
     delete next.specializationFocus;
-  }
-  if (!(isAgeAtLeast15(next) && hasChoice(next.needPattern, "reform_project"))) {
-    delete next.reformReadiness;
   }
   return next;
 }
@@ -869,55 +888,57 @@ function chooseAcademyTrack(a) {
 }
 
 function applyStudentHistoryLogic(scores, a) {
+  const current = getCurrentPrograms(a);
+  const graduated = getGraduatedPrograms(a);
   const known = knownPrograms(a);
   if (!known.length) return;
 
-  if (isCurrentStatus(a)) {
-    known.forEach((id) => addScore(scores, id, 28, "أنت تدرس هذا البرنامج الآن؛ والأصل أن نختبر هل الاستمرار فيه أولى من فتح مسار جديد"));
+  if (current.length > 0 && a.programStatus !== "studying_struggling") {
+    current.forEach((id) => addScore(scores, id, 28, "أنت تدرس هذا البرنامج الآن؛ والأصل أن نختبر هل الاستمرار فيه أولى من فتح مسار جديد"));
     Object.keys(scores).forEach((id) => {
-      if (!known.includes(id) && isRecommendable(scores, id)) scores[id].score -= 5;
+      if (!current.includes(id) && !graduated.includes(id) && isRecommendable(scores, id)) scores[id].score -= 5;
     });
   }
 
-  if (a.programStatus === "graduated_or_near") {
-    if (known.includes("bina_asasi")) {
+  if (graduated.length > 0) {
+    if (graduated.includes("bina_asasi")) {
       addScore(scores, "fikri", 20, "بعد البناء المنهجي قد يكون البناء الفكري خطوة لاحقة");
       addScore(scores, "hadith", 14, "بعد التأسيس العام يمكن الانتقال لتخصص حديثي");
       addScore(scores, "kharitat_thughur", 22, "بعد البناء قد تظهر حاجة العمل الإصلاحي والثغر");
       addScore(scores, "bard_yaqin", 8, "قد تحتاج مسارًا يقينيًا تزكويًا متممًا");
     }
-    if (known.includes("bina_muyassar")) addScore(scores, "bina_asasi", 28, "بعد الميسّر قد يكون المسار الأساسي خطوة لاحقة لمن استطاع");
-    if (known.includes("fikri")) {
+    if (graduated.includes("bina_muyassar")) addScore(scores, "bina_asasi", 28, "بعد الميسّر قد يكون المسار الأساسي خطوة لاحقة لمن استطاع");
+    if (graduated.includes("fikri")) {
       addScore(scores, "kharitat_thughur", 20, "بعد البناء الفكري قد يظهر سؤال العمل والثغر");
       addScore(scores, "bina_asasi", 10, "قد تحتاج تأصيلًا شرعيًا أوسع إن لم يكن موجودًا");
       addScore(scores, "hadith", 8, "يمكن فتح تخصص علمي لاحق");
     }
-    if (known.includes("bard_yaqin")) {
+    if (graduated.includes("bard_yaqin")) {
       addScore(scores, "fikri", 18, "بعد تثبيت اليقين قد يناسبك تعميق المعالجة الفكرية");
       addScore(scores, "bina_asasi", 14, "يمكن الانتقال إلى تأسيس شرعي أشمل");
     }
-    if (known.includes("juthur") || known.includes("ishraq")) {
+    if (graduated.includes("juthur") || graduated.includes("ishraq")) {
       addScore(scores, "ithmar", 72, "تخرجك من جذور أو إشراق يفتح احتمال إثمار");
       ["juthur", "ghiras", "ishraq"].forEach((id) => {
         if (scores[id]) scores[id].score = -999;
       });
     }
-    if (known.includes("hadith")) {
+    if (graduated.includes("hadith")) {
       addScore(scores, "bina_asasi", 12, "بعد أكاديمية الحديث قد تحتاج تأسيسًا عامًا إن لم يكن موجودًا");
       addScore(scores, "fikri", 10, "قد يناسبك تعميق فكري لاحق");
       addScore(scores, "kharitat_thughur", 10, "يمكن الانتقال لسؤال العمل الإصلاحي");
     }
-    if (known.includes("khadija")) {
+    if (graduated.includes("khadija")) {
       addScore(scores, "bina_asasi", 14, "بعد مدرسة خديجة قد يكون التأسيس الشرعي المنهجي خطوة مناسبة");
       addScore(scores, "fikri", 10, "قد يناسبك تعميق فكري لاحق");
       addScore(scores, "kharitat_thughur", 12, "قد يظهر سؤال العمل والثغر بعد المحضن التربوي");
     }
-    if (known.includes("kharitat_thughur")) addScore(scores, "bina_asasi", 6, "بعد خارطة الثغور قد تحتاج تثبيت أساس البناء إن لم يكتمل");
+    if (graduated.includes("kharitat_thughur")) addScore(scores, "bina_asasi", 6, "بعد خارطة الثغور قد تحتاج تثبيت أساس البناء إن لم يكتمل");
 
     // لا نعيد ترشيح برنامج تخرج منه أو أوشك على التخرج منه، لا كنتيجة أولى ولا كبديل.
     // وإذا تخرج من المسار الأساسي فلا نرجعه للميسّر لأنه أدنى منه في السعة.
-    const completedToHide = new Set(known);
-    if (known.includes("bina_asasi")) completedToHide.add("bina_muyassar");
+    const completedToHide = new Set(graduated);
+    if (graduated.includes("bina_asasi")) completedToHide.add("bina_muyassar");
 
     completedToHide.forEach((id) => {
       if (scores[id]) {
@@ -955,7 +976,7 @@ function applyDecisionRules(scores, a) {
     return;
   }
 
-  if (wantsReform && a.reformReadiness !== "not_now") {
+  if (wantsReform) {
     ensurePriority(scores, "kharitat_thughur", "لأن احتياجك انتقل من مجرد الدراسة إلى معرفة الثغر والعمل الإصلاحي", 38);
     addScore(scores, "bina_asasi", 14, "البناء الشرعي يبقى أساسًا مساعدًا قبل العمل");
     return;
@@ -1232,16 +1253,6 @@ function calculateRecommendations(a: any) {
   if (a.doubtImpact === "theoretical") addScore(scores, "fikri", 38, "تتعامل مع الشبهات كسؤال فكري تحليلي");
   if (a.doubtImpact === "low") addScore(scores, "bina_asasi", 4, "يمكنك البدء بالتأسيس العام دون أولوية علاجية خاصة");
 
-  if (a.reformReadiness === "ready") addScore(scores, "kharitat_thughur", 44, "أنت مستعد للمواد القبلية ومشروع خارطة الثغور");
-  if (a.reformReadiness === "interested") {
-    addScore(scores, "kharitat_thughur", 20, "لديك اهتمام بالإصلاح لكن تحتاج تهيئة قبلية");
-    addScore(scores, "bina_asasi", 10, "البناء المنهجي يقوي الأساس قبل العمل");
-  }
-  if (a.reformReadiness === "not_now") {
-    if (scores.kharitat_thughur) scores.kharitat_thughur.score -= 30;
-    addScore(scores, "bina_asasi", 10, "اعترفت أن البناء أسبق من المشروع العملي الآن");
-  }
-
   // طبقة تاريخ الطالب قبل القواعد الحاسمة حتى تؤثر على البدائل وعلى قرار الاستمرار/الانسحاب.
   applyStudentHistoryLogic(scores, a);
 
@@ -1264,22 +1275,26 @@ function calculateRecommendations(a: any) {
     : [PROGRAMS.bina_muyassar, PROGRAMS.bina_asasi].map((program) => ({ ...program, score: 50, reasons: ["اختيار احتياطي آمن عند نقص المعطيات"] }));
 
   // Profile Calculation for Chart
-  const profile = { sharia: 20, intellectual: 20, tazkiyah: 20, reform: 20 };
+  const profile = { sharia: 20, intellectual: 20, tazkiyah: 20, reform: 20, skills: 20 };
   const needs = asArray(a.needPattern);
 
   if (needs.includes("structured_path")) profile.sharia += 50;
   if (needs.includes("intellectual_depth")) profile.intellectual += 50;
   if (needs.includes("certainty")) profile.tazkiyah += 40;
   if (needs.includes("relational_growth")) profile.tazkiyah += 40;
-  if (needs.includes("reform_project")) profile.reform += 50;
+  if (needs.includes("reform_project")) {
+    profile.reform += 50;
+    profile.skills += 40;
+  }
   if (needs.includes("specialized_track")) profile.sharia += 30;
 
   if (a.doubtImpact === "high") profile.tazkiyah += 20;
   if (a.doubtImpact === "theoretical") profile.intellectual += 20;
   if (a.quranLevel === "full") profile.sharia += 20;
+  if (a.age === "13_14" || a.age === "15_16") profile.skills += 20;
 
   // Normalize to max 100
-  ["sharia", "intellectual", "tazkiyah", "reform"].forEach(k => {
+  ["sharia", "intellectual", "tazkiyah", "reform", "skills"].forEach(k => {
     profile[k] = Math.min(100, profile[k]);
   });
 
@@ -1590,13 +1605,14 @@ function DimensionChart({ profile, program }: any) {
     { subject: "بناء فكري", A: profile.intellectual, B: program.dimensions?.intellectual || 50, fullMark: 100 },
     { subject: "تزكية", A: profile.tazkiyah, B: program.dimensions?.tazkiyah || 50, fullMark: 100 },
     { subject: "عمل إصلاحي", A: profile.reform, B: program.dimensions?.reform || 50, fullMark: 100 },
+    { subject: "المهارات والأدوات", A: profile.skills, B: program.dimensions?.skills || 50, fullMark: 100 },
   ];
 
   return (
     <div className="chart-container">
       <div className="chart-header">
         <h3>تحليل التوافق</h3>
-        <p>مدى ملاءمة البرنامج لاحتياجك الحالي في ٤ أبعاد</p>
+        <p>مدى ملاءمة البرنامج لاحتياجك الحالي في ٥ أبعاد</p>
       </div>
       <div className="chart-visual">
         <ResponsiveContainer width="100%" height={280}>
@@ -1606,9 +1622,9 @@ function DimensionChart({ profile, program }: any) {
             <Radar
               name="احتياجك"
               dataKey="A"
-              stroke="#215f8f"
-              fill="#215f8f"
-              fillOpacity={0.35}
+              stroke="#f97316"
+              fill="#f97316"
+              fillOpacity={0.3}
             />
             <Radar
               name={program.name}
@@ -1655,30 +1671,36 @@ function ResultView({ result, onOpen, onRestart }: any) {
     }
   };
 
-  const handleDownloadImage = async () => {
+  const handleDownloadPDF = async () => {
     if (!resultRef.current) return;
     try {
-      const canvas = await html2canvas(resultRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        windowWidth: resultRef.current.scrollWidth,
-        windowHeight: resultRef.current.scrollHeight,
-      });
-      const link = document.createElement("a");
-      link.download = `result-${primary.id}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
+      const opt = {
+        margin:       10,
+        filename:     `result-${primary.id}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, windowWidth: resultRef.current.scrollWidth },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+      
+      const shareTop = resultRef.current.querySelector('.share-top') as HTMLElement;
+      if (shareTop) shareTop.style.display = 'none';
+      
+      await html2pdf().set(opt).from(resultRef.current).save();
+      
+      if (shareTop) shareTop.style.display = 'flex';
     } catch (e) {
-      alert("عذراً، حدث خطأ أثناء محاولة حفظ الصورة.");
+      alert("عذراً، حدث خطأ أثناء محاولة حفظ النتيجة.");
+      const shareTop = resultRef.current.querySelector('.share-top') as HTMLElement;
+      if (shareTop) shareTop.style.display = 'flex';
     }
   };
 
   return (
     <section className="result-wrap" ref={resultRef}>
       <div className="share-top" data-html2canvas-ignore="true">
-        <button className="share-btn" type="button" onClick={handleDownloadImage}>
-          <span>📸</span> حفظ كصورة
+        <button className="share-btn" type="button" onClick={handleDownloadPDF}>
+          <span>📄</span> حفظ كملف PDF
         </button>
         <button className="share-btn" type="button" onClick={handleShare}>
           <span>🔗</span> مشاركة الرابط
@@ -2010,7 +2032,7 @@ li { margin: 8px 0; line-height: 1.8; }
 .chart-legend { display: flex; justify-content: center; gap: 20px; font-size: 13px; font-weight: 600; color: var(--muted); margin-top: 8px; }
 .legend-item { display: flex; align-items: center; gap: 6px; }
 .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
-.user-dot { background: var(--blue); }
+.user-dot { background: #f97316; }
 
 .alternatives-box, .compare-box { padding: 22px; }
 .alternatives-box p { color: var(--muted); margin-top: -4px; }
@@ -2079,8 +2101,10 @@ li { margin: 8px 0; line-height: 1.8; }
 @media (max-width: 520px) {
   .app-shell { padding: 14px 10px 34px; }
   .hero-card, .quiz-card, .result-main, .advice-card { border-radius: 22px; }
-  .hero-actions, .nav-row { flex-direction: column; }
-  .main-btn, .ghost-btn { width: 100%; }
+  .hero-actions { flex-direction: column; }
+  .nav-row { flex-direction: row; gap: 8px; }
+  .nav-row > button { width: auto; flex: 1; }
+  .hero-actions > button { width: 100%; }
   .option-card { padding: 14px; }
   .mini-program { align-items: flex-start; flex-wrap: wrap; }
 }
