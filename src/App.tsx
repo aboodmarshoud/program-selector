@@ -1475,7 +1475,7 @@ function ProgramDetail({ program, onBack, onHome }: any) {
         <span className="program-hero-icon">{program.icon}</span>
         <div>
           <small>{program.badge}</small>
-          <h1 style={{ color: program.color }}>{program.name}</h1>
+          <h1>{program.name}</h1>
           <p>{program.description}</p>
         </div>
       </div>
@@ -1693,7 +1693,7 @@ function DynamicComparison({ onOpen, onBack }: any) {
         {selectedPrograms.length > 0 ? (
           selectedPrograms.map((p) => (
             <motion.div key={p.id} className="cc-card" layoutId={`cc-card-${p.id}`} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-               <h3 style={{ color: p.color }}>{p.icon} {p.name}</h3>
+               <h3>{p.icon} {p.name}</h3>
                <small>{p.badge}</small>
                <p>{p.description}</p>
                <div className="cc-details">
@@ -1845,7 +1845,7 @@ function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
           <span className="result-icon">{primary.icon}</span>
           <div>
             <div className="result-label">البرنامج الأقرب لاحتياجك الآن</div>
-            <h2 style={{ color: primary.color }}>{primary.name}</h2>
+            <h2>{primary.name}</h2>
             <p>{primary.description}</p>
           </div>
         </div>
@@ -1873,9 +1873,9 @@ function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
             <ul>{primary.caution?.slice(0, 4).map((item, index) => <li key={index}>{item}</li>)}</ul>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'space-between', marginTop: '16px' }} data-html2canvas-ignore="true">
+          <div className="result-actions" data-html2canvas-ignore="true">
             <button className="main-btn" type="button" onClick={() => onOpen(primary.id)}>افتح تفاصيل البرنامج</button>
-            <button className="ghost-btn restart-btn-fix" type="button" onClick={onRestart} style={{ display: 'flex', alignItems: 'center', gap: '8px', borderWidth: '2px' }}>
+            <button className="ghost-btn restart-btn-fix" type="button" onClick={onRestart}>
               <span style={{ fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"' }}>🔄</span> إعــادة الاختبــار
             </button>
           </div>
@@ -1893,8 +1893,8 @@ function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
       )}
 
       <div className="notice-box disclaimer-box" style={{ background: '#f8fafc', borderColor: '#cbd5e1' }}>
-        <h3 style={{ color: '#475569' }}>تنبيه ختامي</h3>
-        <p style={{ margin: 0, color: '#64748b', fontSize: '15px' }}>
+        <h3 style={{ color: 'var(--ink)' }}>تنبيه ختامي</h3>
+        <p style={{ margin: 0, color: 'var(--muted)', fontSize: '15px' }}>
           هذه النتيجة هي بناءً على الإجابات التي قمت بتقديمها مع محاولة البرنامج للموائمة بينها وبين البرامج الإلكترونية بحسب أهدافها وما تتطلبه وتُحققه بإذن الله. لكن يبقى القرار تتدخل فيه عوامل أخرى (نفسية، ذاتية، أو اجتماعية). لذلك اجعل هذا الاختبار مؤشراً يساعدك، وحاول أن تطّلع على البرامج تفصيلياً وعلى تجارب الطلاب الخريجين منها. وإن تيسّرت لك الاستشارة لأحد الملمين بهذه البرامج فهذا خير. وفقكم الله وفتح عليكم.
         </p>
       </div>
@@ -1905,7 +1905,7 @@ function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
 
 function AnswersSummary({ answers }: any) {
   return (
-    <div className="print-only answers-summary" style={{ marginTop: '30px', padding: '24px', background: 'white', borderRadius: '24px', border: '1px solid var(--border)' }}>
+    <div className="print-only answers-summary" style={{ marginTop: '30px', padding: '24px', background: 'var(--paper)', borderRadius: '24px', border: '1px solid var(--border)' }}>
       <h3 style={{ marginBottom: '16px', fontSize: '20px', color: 'var(--ink)' }}>إجاباتك (مدخلات التحليل):</h3>
       <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
         {QUESTIONS.map((q) => {
@@ -1914,11 +1914,11 @@ function AnswersSummary({ answers }: any) {
           const title = typeof q.title === 'function' ? q.title(answers) : q.title;
           const opts = typeof q.options === 'function' ? q.options(answers) : q.options;
           const chosenOpts = asArray(ans)
-            .map((v) => opts.find((o: any) => o.value === v)?.label || v)
+            .map((v) => opts.find((o: any) => o.value === v)?.title || v)
             .join("، ");
           
           return (
-            <li key={q.id} style={{ marginBottom: '14px', borderBottom: '1px dashed #eee', paddingBottom: '8px' }}>
+            <li key={q.id} style={{ marginBottom: '14px', borderBottom: '1px dashed var(--border)', paddingBottom: '8px' }}>
               <strong style={{ display: 'block', color: 'var(--ink)', fontSize: '15px' }}>{title}</strong>
               <span style={{ color: 'var(--green)', fontSize: '14px', fontWeight: 600 }}>{chosenOpts}</span>
             </li>
@@ -2147,6 +2147,8 @@ button { font-family: inherit; }
 .hero-card h1 { font-size: clamp(34px, 7vw, 62px); line-height: 1.15; margin: 0 0 18px; color: #102b23; }
 .hero-card p { max-width: 660px; margin: 0 auto 28px; color: var(--muted); line-height: 2; font-size: 18px; }
 .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.result-actions { display: flex; gap: 12px; justify-content: space-between; margin-top: 16px; }
+.result-actions button { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center; }
 .hero-btn { min-width: 170px; }
 
 .main-btn, .ghost-btn {
@@ -2327,6 +2329,7 @@ li { margin: 8px 0; line-height: 1.8; }
   .nav-row { flex-direction: row; gap: 8px; }
   .nav-row > button { width: auto; flex: 1; }
   .hero-actions > button { width: 100%; }
+  .result-actions button { font-size: 13px; padding: 10px; }
   .option-card { padding: 14px; }
   .mini-program { align-items: flex-start; flex-wrap: wrap; }
 }
@@ -2336,7 +2339,7 @@ li { margin: 8px 0; line-height: 1.8; }
   body { background: white !important; }
   .selector-root { background: none !important; min-height: auto; }
   .app-shell { padding: 0 !important; max-width: 100% !important; margin: 0 !important; }
-  .share-top, .ghost-btn, .nav-row, .hero-actions, .theme-toggle { display: none !important; }
+  .share-top, .ghost-btn, .nav-row, .hero-actions, .result-actions, .theme-toggle { display: none !important; }
   .result-wrap { max-width: 100%; box-shadow: none; display: block; }
   
   .result-main, .alternatives-box, .compare-box, .advice-card { 
@@ -2394,7 +2397,7 @@ html.dark .selector-root {
 }
 html.dark .theme-toggle, html.dark .cc-card, html.dark .picker-btn, html.dark .ghost-btn, html.dark .share-btn { background: #1e293b; border-color: #334155; color: #f8fafc !important; }
 html.dark .picker-btn.selected { background: rgba(15, 138, 104, 0.5); border-color: var(--green); }
-html.dark .hero-card, html.dark .quiz-card, html.dark .result-main, html.dark .comparison-page, html.dark .program-detail > .detail-section { background: #1e293b; border-color: #334155; }
+html.dark .hero-card, html.dark .quiz-card, html.dark .result-main, html.dark .comparison-page, html.dark .program-detail > .detail-section, html.dark .alternatives-box, html.dark .compare-box, html.dark .answers-summary { background: #1e293b; border-color: #334155; }
 html.dark .home-hero .hero-card { background: linear-gradient(135deg, #1e293b, #0f172a); }
 html.dark .hero-card h1 { color: #f8fafc; }
 html.dark .cc-details > div, html.dark .ds-blue, html.dark .ds-green, html.dark .ds-amber, html.dark .ds-rose, html.dark .why-box, html.dark .notice-box { background: #0f172a; border-color: #334155; }
@@ -2409,11 +2412,26 @@ html.dark .mini-program:hover .mini-arrow { background: var(--green); color: whi
 html.dark .option-card.selected { background: rgba(15, 138, 104, 0.2); border-color: var(--green); }
 html.dark .option-icon, html.dark .program-hero-icon, html.dark .result-icon, html.dark .mini-rank { background: #0f172a; border-color: #334155; }
 html.dark .result-top { background: linear-gradient(135deg, #1e293b, #0f172a) !important; }
+html.dark .program-hero { background: linear-gradient(135deg, #1e293b, #0f172a) !important; }
 html.dark .cc-vs { border-color: #0f172a; }
 html.dark .detail-grid > div { background: #0f172a; border-color: #334155; }
 html.dark .advice-program { background: #1e293b; border-color: #334155; }
 html.dark .advice-program:hover { background: #27374d; }
+html.dark .advice-compare-line { background: #0f172a; border-color: #334155; }
 html.dark .advice-card.advice-amber, html.dark .advice-card.advice-green, html.dark .advice-card.advice-rose, html.dark .advice-card.advice-blue, html.dark .advice-card.advice-slate { background: #1e293b; border-color: #334155; }
+html.dark .advice-amber .advice-kicker { color: #fde047; }
+html.dark .advice-green .advice-kicker { color: #86efac; }
+html.dark .advice-rose .advice-kicker { color: #fca5a5; }
+html.dark .advice-blue .advice-kicker { color: #7dd3fc; }
+html.dark .hero-badge { background: #0f172a; border-color: #334155; color: #34d399; }
+html.dark .multi-hint { background: #0f172a; border-color: #334155; color: #f8fafc !important; }
+html.dark .progress { background: #0f172a; }
+html.dark .table-link { background: rgba(15, 138, 104, 0.2); color: #34d399; }
+html.dark .result-label { background: rgba(15, 138, 104, 0.3); color: #34d399; }
+html.dark .mini-score { background: rgba(15, 138, 104, 0.2); color: #34d399; }
+html.dark .compare-grid > div, html.dark .legend-item { background: #1e293b; border-color: #334155; color: #f8fafc; }
+html.dark .comparison-table th { background: #0f172a; color: #cbd5e1; }
+html.dark .comparison-table td { border-color: #334155; }
 html.dark .intro-card { background: #1e293b; border-color: #334155; }
 html.dark .intro-card h3 { color: #f8fafc; }
 html.dark .intro-card p { color: #cbd5e1; }
