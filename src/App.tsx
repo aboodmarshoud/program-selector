@@ -38,9 +38,10 @@ const PROGRAMS = {
       "يريد تكوينًا علميًا واسعًا لا مجرد دورة قصيرة أو تخصص جزئي.",
     ],
     caution: [
+      "تنبيه بارز: يُشترط للبرنامج في الغالب حفظ القرآن الكريم كاملاً أو قدراً كبيراً منه، تأكد من الشروط وقت الإعلان.",
       "لا تجعله خيارًا لمجرد علو الاسم؛ هو مسار طويل جدًا وشروطه عالية.",
-      "إن لم تكن قد أتممت حفظ القرآن أو لا تستطيع الالتزام الطويل، فابدأ بالبناء المنهجي أو الميسّر.",
-      "راجع شروط الدفعة الأخيرة عند فتح التسجيل لأنها قد تتغير.",
+      "إن لم تستطع الالتزام الطويل أو لم تستوفِ شرط القرآن، فابدأ بالبناء المنهجي.",
+      "راجع شروط الدفعة الأخيرة عند فتح التسجيل للوقوف على التحديثات المستمرة.",
     ],
   },
   bina_asasi: {
@@ -726,34 +727,6 @@ const QUESTIONS = [
     ],
   },
   {
-    id: "specializationFocus",
-    title: "إن كنت تميل للتخصص أو العمق، فأي اتجاه أقرب؟",
-    subtitle: "اختر المجال الأقرب لميولك الفعلية.",
-    condition: (a) => isAgeAtLeast15(a) && (hasChoice(a.needPattern, "specialized_track") || a.prioritySignal === "depth_priority"),
-    options: (a) => {
-      const base = [
-        option("hadith", "علوم الحديث والسنة", "أميل إلى الرواية والدراية وخدمة السنة", "📜"),
-        option("long_formation", "تكوين علمي طويل جدًا", "أفكر في مسار ممتد وعميق لا مجرد دورة", "🕌"),
-        option("not_sure", "لم يتضح التخصص بعد", "أحتاج تأسيسًا يساعدني على الاختيار لاحقًا", "🧭"),
-      ];
-      if (completedJuthurOrIshraq(a)) {
-        base.splice(1, 0, option("academy_specialization", "تخصص دقيق بعد تجربة أكاديمية سابقة", "تخرجت من جذور أو إشراق وأبحث عن المرحلة الأعلى", "🌟"));
-      }
-      return base;
-    },
-  },
-  {
-    id: "quranLevel",
-    title: "ما مستوى حفظ القرآن؟",
-    subtitle: "هذا لا يمنع غالب البرامج، لكنه مهم لبعض المسارات الطويلة جدًا.",
-    condition: (a) => a.specializationFocus === "long_formation",
-    options: () => [
-      option("little", "أحفظ سورًا أو أجزاء قليلة", "", "📖"),
-      option("partial", "أحفظ قدرًا متوسطًا", "جزء أو عدة أجزاء", "📘"),
-      option("full", "أحفظ القرآن كاملًا", "", "🏅"),
-    ],
-  },
-  {
     id: "doubtImpact",
     title: "عند ورود الشبهات أو القلق الفكري، ما الأثر الغالب؟",
     subtitle: "الفرق هنا بين معالجة يقينية تزكوية ومعالجة فكرية موسعة.",
@@ -775,13 +748,8 @@ function cleanAnswers(answers) {
   if (next.gender !== "female" && next.prioritySignal === "women_priority") delete next.prioritySignal;
   if (next.programStatus === "none" || !next.programStatus) delete next.knownPrograms;
   if (!isAgeAtLeast15(next)) {
-    delete next.quranLevel;
     delete next.doubtImpact;
     delete next.prioritySignal;
-    delete next.specializationFocus;
-  }
-  if (!(isAgeAtLeast15(next) && (hasChoice(next.needPattern, "specialized_track") || next.prioritySignal === "depth_priority"))) {
-    delete next.specializationFocus;
   }
   return next;
 }
@@ -796,18 +764,18 @@ function isEligible(programId, a) {
   const adult = isAgeAtLeast15(a);
   switch (programId) {
     case "buthur":
-      return age === "10_12";
+      return ["10_12", "13_14"].includes(age);
     case "juthur":
     case "ghiras":
-      return (age === "13_14" || age === "15_16") && !isGraduatedStatus(a) && !completedJuthurOrIshraq(a);
+      return ["10_12", "13_14", "15_16", "17_20"].includes(age) && !isGraduatedStatus(a) && !completedJuthurOrIshraq(a);
     case "ishraq":
-      return age === "17_20" && !completedJuthurOrIshraq(a) && !hasKnown(a, "ishraq");
+      return ["15_16", "17_20", "21_22"].includes(age) && !completedJuthurOrIshraq(a) && !hasKnown(a, "ishraq");
     case "ithmar":
-      return ["15_16", "17_20", "21_22"].includes(age) && completedJuthurOrIshraq(a);
+      return adult && completedJuthurOrIshraq(a);
     case "khadija":
       return a.gender === "female" && adult;
     case "alim":
-      return ["15_16", "17_20", "21_22"].includes(age);
+      return adult;
     case "bina_asasi":
     case "bina_muyassar":
     case "fikri":
@@ -952,7 +920,7 @@ function applyDecisionRules(scores, a) {
   const wantsCurriculum = primaryNeed === "structured_path" || a.prioritySignal === "curriculum_priority";
   const wantsEnvironment = primaryNeed === "relational_growth" || a.prioritySignal === "environment_priority";
   const wantsGentle = a.prioritySignal === "gentle_priority" || a.dailyTime === "light" || a.struggleReason === "difficulty";
-  const wantsSpecialization = primaryNeed === "specialized_track" || a.prioritySignal === "depth_priority" || Boolean(a.specializationFocus);
+  const wantsSpecialization = primaryNeed === "specialized_track" || a.prioritySignal === "depth_priority";
   const wantsReform = primaryNeed === "reform_project";
   const highDoubt = a.doubtImpact === "high" || primaryNeed === "certainty";
   const theoreticalDoubt = a.doubtImpact === "theoretical" || primaryNeed === "intellectual_depth";
@@ -983,29 +951,17 @@ function applyDecisionRules(scores, a) {
   }
 
   if (wantsSpecialization) {
-    if (a.specializationFocus === "hadith") {
-      ensurePriority(scores, "hadith", "لأن التخصص الأقرب هو علوم الحديث والسنة", 44);
-      addScore(scores, chooseBinaTrack(a), 12, "التأسيس العام قد يكون معينًا قبل التخصص أو معه");
-      return;
-    }
-    if (a.specializationFocus === "long_formation" && a.quranLevel === "full") {
-      ensurePriority(scores, "alim", "لأنك تميل إلى تكوين علمي طويل ومعك شرط قرآني داعم", 46);
+    if (a.dailyTime === "formation_project") {
+      ensurePriority(scores, "alim", "تخصيصك لـ 4-6 ساعات يدل على استعداد لالتزام قوي يناسب برنامج عالم بالدرجة الأولى، فهو برنامج تأصيلي واسع", 50);
       return;
     }
     if (completedJuthurOrIshraq(a)) {
-      if (a.specializationFocus === "academy_specialization" || hasChoice(a.needPattern, "specialized_track")) {
-        ensurePriority(scores, "ithmar", "لأنك مؤهل لمسار إثمار وتبحث عن التخصص الدقيق", 44);
-        return;
-      }
-      if (a.prioritySignal === "depth_priority" || a.needPattern?.includes("intellectual_depth") || theoreticalDoubt) {
-        ensurePriority(scores, "ithmar", "مسار إثمار يقدم تأصيلاً فكرياً وعقدياً متقدماً للخريجين (تاريخ الفكر، مصادر التلقي) ويناسب عمقك المطلوب", 40);
-        return;
-      }
-    }
-    if (a.specializationFocus === "not_sure") {
-      ensurePriority(scores, chooseBinaTrack(a), "لأن التخصص لم يتضح بعد، فالتأسيس العام يساعد على الاختيار", 32);
+      ensurePriority(scores, "ithmar", "لأنك مؤهل لمسار إثمار وتبحث عن التخصص الدقيق", 44);
       return;
     }
+    ensurePriority(scores, "hadith", "أكاديمية الحديث لا تتطلب تفرغاً طويلاً كبرنامج عالم وتلبي رغبة التخصص والمتابعة (تتطلب وقتاً أيسر)", 44);
+    addScore(scores, chooseBinaTrack(a), 12, "التأسيس العام قد يكون معينًا قبل التخصص أو معه");
+    return;
   }
 
   if (wantsEnvironment) {
@@ -1022,6 +978,10 @@ function applyDecisionRules(scores, a) {
   }
 
   if (wantsCurriculum || wantsGentle) {
+    if (wantsCurriculum && a.dailyTime === "formation_project") {
+      ensurePriority(scores, "alim", "بما أنك تبحث عن مسار علمي مرتب ولديك 4-6 ساعات يومياً، فبرنامج عالم يعطيك أقوى وأوسع تأصيل", 46);
+      return;
+    }
     const bina = chooseBinaTrack(a);
     ensurePriority(
       scores,
@@ -1052,7 +1012,7 @@ function calculateRecommendations(a: any) {
       addScore(scores, "juthur", 15, "مقررات مثل 'لأنك الله' و'القيامة' تبني الإيمان وتثبت اليقين في هذا العمر");
       addScore(scores, "ghiras", 12, "مقررات هذا المسار تؤسس لليقين والإيمان في هذا العمر المتقدم");
     }
-    if (a.needPattern?.includes("intellectual_depth") || a.specializationFocus === "not_sure") {
+    if (a.needPattern?.includes("intellectual_depth")) {
       addScore(scores, "juthur", 12, "يشتمل جذور وغراس على مواد فكرية تؤسس للوعي المبكر (مثل سابغات والتفكير الناقد)");
       addScore(scores, "ghiras", 10, "مسار غراس يقدم تأسيساً فكرياً يناسب هذه المرحلة");
     }
@@ -1205,26 +1165,6 @@ function calculateRecommendations(a: any) {
     });
   }
 
-  if (a.specializationFocus === "hadith") addScore(scores, "hadith", 54, "التخصص الأقرب لك هو علوم الحديث والسنة");
-  if (a.specializationFocus === "academy_specialization") addScore(scores, "ithmar", 62, "تبحث عن تخصص دقيق بعد تجربة أكاديمية سابقة");
-  if (a.specializationFocus === "long_formation") addScore(scores, "alim", 42, "تميل إلى تكوين علمي طويل جدًا");
-  if (a.specializationFocus === "not_sure") addScore(scores, chooseBinaTrack(a), 26, "لم يتضح التخصص بعد، فالتأسيس العام أقرب");
-
-  if (a.quranLevel === "full") addScore(scores, "alim", 32, "حفظ القرآن كاملًا يدعم أهلية برنامج عالِم");
-  if (a.quranLevel === "partial") addScore(scores, "bina_asasi", 6, "لديك أساس قرآني جزئي يمكن البناء عليه");
-  if (a.quranLevel === "little") addScore(scores, "bina_muyassar", 6, "البداية الميسرة قد تكون أرفق مع ضعف الحفظ");
-
-  const alimGate =
-    a.quranLevel === "full" &&
-    a.specializationFocus === "long_formation" &&
-    a.selectivity === "high_selective" &&
-    a.dailyTime === "formation_project";
-
-  if (!alimGate && !hasKnown(a, "alim") && scores.alim) {
-    scores.alim.score = -999;
-    scores.alim.reasons = [];
-  }
-
   if (a.doubtImpact === "high") {
     addScore(scores, "bard_yaqin", 58, "الشبهات تؤثر على السكينة؛ اليقين والتزكية أسبق");
     if (scores.fikri) scores.fikri.score -= 12;
@@ -1253,9 +1193,28 @@ function calculateRecommendations(a: any) {
       return { ...prog, score: Math.max(0, item.score), reasons: item.reasons.slice(0, 5) };
     });
 
-  const list = sorted.length
+  const list = (sorted.length
     ? sorted
-    : [PROGRAMS.bina_muyassar, PROGRAMS.bina_asasi].map((program) => ({ ...program, score: 50, reasons: ["اختيار احتياطي آمن عند نقص المعطيات"] }));
+    : [PROGRAMS.bina_muyassar, PROGRAMS.bina_asasi].map((program) => ({ ...program, score: 50, reasons: ["اختيار احتياطي آمن عند نقص المعطيات"] }))
+  ).map((item) => {
+    let ageCaution = null;
+    if (item.id === "buthur" && ["13_14"].includes(a.age)) {
+      ageCaution = "تنبيه: هذا المسار مخصص عادة للفئة 10-12 سنة. قد تكون بيئته غير مناسبة تماماً لمرحلتك.";
+    } else if ((item.id === "juthur" || item.id === "ghiras") && ["17_20"].includes(a.age)) {
+      ageCaution = "تنبيه: هذا المسار مخصص لليافعين. قد لا يكون مناسباً لسنك وتطلعاتك.";
+    } else if ((item.id === "juthur" || item.id === "ghiras") && ["10_12"].includes(a.age)) {
+      ageCaution = "تنبيه: هذا المسار قد يكون متقدماً بعض الشيء على مرحلتك العمرية الحالية.";
+    } else if (item.id === "ishraq" && ["21_22", "23_plus"].includes(a.age)) {
+      ageCaution = "تنبيه: صممت المرحلة لمن هم ضمن 17-20 سنة. الأفضل اختيار برنامج بمقاس مرحلتك إلا إذا كنت تبحث عن بيئة الشباب تحديداً.";
+    } else if (item.id === "alim" && a.age === "23_plus") {
+      ageCaution = "تنبيه: تم إدراج البرنامج لملائمته العالية لإجاباتك، لكن هذا البرنامج يقبل الأعمار الأصغر في الأصل (مع مرونة يسيرة أحياناً)، فخذ ذلك بعين الاعتبار.";
+    }
+    
+    if (ageCaution) {
+      return { ...item, caution: [ageCaution, ...(item.caution || [])] };
+    }
+    return item;
+  });
 
   // Profile Calculation for Chart
   const profile = { sharia: 20, intellectual: 20, tazkiyah: 20, reform: 20, skills: 20 };
@@ -1273,7 +1232,6 @@ function calculateRecommendations(a: any) {
 
   if (a.doubtImpact === "high") profile.tazkiyah += 20;
   if (a.doubtImpact === "theoretical") profile.intellectual += 20;
-  if (a.quranLevel === "full") profile.sharia += 20;
   if (a.age === "13_14" || a.age === "15_16") profile.skills += 20;
 
   // Normalize to max 100
