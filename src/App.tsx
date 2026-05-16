@@ -628,7 +628,10 @@ const QUESTIONS = [
   },
   {
     id: "struggleReason",
-    title: "ما السبب الأساسي للتعثر أو الانقطاع؟",
+    title: (a: any) => {
+      if (a.programStatus === "none") return "لماذا لم تدخل برنامجًا من قبل، أو ما سبب انسحابك إن كنت قد بدأت؟";
+      return "ما السبب الأساسي للتعثر أو الانقطاع؟";
+    },
     subtitle: "فهم السبب يساعدنا في توجيهك لمعالجة المشكلة، لا تكرارها.",
     condition: (a) => a.programStatus === "studying_struggling" || a.programStatus === "none",
     options: () => [
@@ -637,18 +640,6 @@ const QUESTIONS = [
       option("environment", "الفتور وغياب البيئة", "أفقد حماسي بالدراسة الفردية وأحتاج صحبة أو محضن", "🥀"),
       option("wrong_fit", "البرنامج لم يناسب اهتماماتي", "لم أجد فيه ما يلبي احتياجي المباشر", "🔄"),
       option("did_not_try", "لم أجرب شيئاً بعد", "لست منقطعا، بل أبدأ للتو", "🌱"),
-    ]
-  },
-  {
-    id: "nextStepIntent",
-    title: "ما هو توجهك للخطوة القادمة؟",
-    subtitle: "بما أنك راكمت معرفة سابقة، كيف ترى مسارك التالي؟",
-    condition: (a) => a.programStatus === "graduated_or_near",
-    options: () => [
-      option("deepen", "تعميق تخصصي الشرعي", "أريد التبحر وبناء علمي أرسخ (حديث، فقه..)", "📜"),
-      option("broaden_fikri", "بناء حصانة فكرية", "أسست شرعيًا وأحتاج فهم الواقع والشبهات", "🧠"),
-      option("practice", "الانتقال للعمل والمشاريع", "أريد توظيف العلم في عمل إصلاحي ودعوي", "🗺️"),
-      option("tazkiyah", "ترميم إيماني", "درست كثيراً وأحتاج جانباً تزكوياً أرفق", "💧"),
     ]
   },
   {
@@ -666,7 +657,7 @@ const QUESTIONS = [
   {
     id: "needPattern",
     title: "أي وصف أقرب لاحتياجك الآن؟",
-    subtitle: "يمكن اختيار أكثر من إجابة؛ اختر أولًا الأهم، ثم ما يليه.",
+    subtitle: () => (<span><strong>يمكنك اختيار أكثر من خيار؛</strong> اختر الإجابات بحسب أولويتها بالنسبة لك، فالأهم ثم ما يليه.</span>),
     multi: true,
     condition: (a) => a.age && a.age !== "10_12",
     options: (a) => {
@@ -866,9 +857,12 @@ function ensurePriority(scores: Record<string, ScoreItem>, id: string, reason: s
   if (reason && !scores[id].reasons.includes(reason)) scores[id].reasons.unshift(reason);
 }
 
-function softenScores(scores: Record<string, ScoreItem>, ids: string[], amount: number) {
+function softenScores(scores: Record<string, ScoreItem>, ids: string[], amount: number, reason?: string) {
   ids.forEach((id) => {
-    if (isRecommendable(scores, id)) scores[id].score -= amount;
+    if (isRecommendable(scores, id)) {
+      scores[id].score -= amount;
+      if (reason && !scores[id].reasons.includes(reason)) scores[id].reasons.push(reason);
+    }
   });
 }
 
@@ -1102,19 +1096,6 @@ function calculateRecommendations(a: any) {
     addScore(scores, "kharitat_thughur", 30, "استكشاف الثغور قد يساعدك في تحديد ما يناسبك فعلياً قبل توريط نفسك في برنامج طويل");
     addScore(scores, "fikri", 15, "قد يكون البناء الفكري أنسب لميولك من التأسيس الشرعي البحت");
   }
-
-  if (a.nextStepIntent === "deepen") {
-    addScore(scores, "hadith", 45, "أكاديمية الحديث تمثل مساراً متعمقاً مناسباً للمتخرجين");
-    addScore(scores, "alim", 40, "برنامج عالِم هو المحطة الأكبر للتعمق الشرعي");
-    addScore(scores, "ithmar", 40, "مسار التخصص لخريجي الجيل الصاعد يخدم هذا التوجه");
-  } else if (a.nextStepIntent === "broaden_fikri") {
-    addScore(scores, "fikri", 60, "التأسيس الفكري هو الخطوة المنطقية لمن أتم بناءه الشرعي");
-  } else if (a.nextStepIntent === "practice") {
-    addScore(scores, "kharitat_thughur", 60, "خارطة الثغور هي البوابة الأساسية للانتقال للعمل والمشاريع الإصلاحية");
-  } else if (a.nextStepIntent === "tazkiyah") {
-    addScore(scores, "bard_yaqin", 50, "مسار يقيني أرفق وأنسب كاستراحة محارب ولترميم الباطن");
-    addScore(scores, "khadija", 30, "بيئة تفاعلية أقرب للتزكية والتفاعل");
-  }
   // ----------------------------------------
   
   if (a.forWhom === "child" && isYouthAcademyAge(a)) {
@@ -1127,6 +1108,7 @@ function calculateRecommendations(a: any) {
   if (a.dailyTime === "light") {
     addScore(scores, "bina_muyassar", 28, "الالتزام الخفيف يرجّح البداية الميسرة");
     addScore(scores, "bard_yaqin", 16, "الالتزام الخفيف قد يناسب مسارًا أقرب لليقين والتزكية");
+    softenScores(scores, ["bina_asasi", "fikri", "hadith", "ithmar", "alim", "kharitat_thughur"], 80, "تنبيه: حجم هذا البرنامج ومتطلباته قد تفوق مساحة الوقت المتاح لك حالياً"); 
   }
   if (a.dailyTime === "standard") {
     addScore(scores, "bina_asasi", 22, "الالتزام المتوسط المنتظم مناسب للبناء المنهجي");
@@ -1514,7 +1496,7 @@ function ProgramDetail({ program, onBack, onHome }: any) {
           <small>رابط الموقع الرسمي</small>
           <strong>
             {program.officialUrl ? (
-              <a href={program.officialUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--green)" }}>{program.officialUrl.replace('https://', '')}</a>
+               <a href={program.officialUrl} target="_blank" rel="noopener noreferrer" className="program-link">{program.officialUrl.replace('https://', '')}</a>
             ) : "سيُحدّث لاحقًا"}
           </strong>
         </div>
@@ -1522,7 +1504,7 @@ function ProgramDetail({ program, onBack, onHome }: any) {
           <small>رابط قناة تلجرام</small>
           <strong>
             {program.telegramUrl ? (
-              <a href={program.telegramUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--green)" }}>{program.telegramUrl.replace('https://t.me/', '')}</a>
+              <a href={program.telegramUrl} target="_blank" rel="noopener noreferrer" className="program-link">{program.telegramUrl.replace('https://t.me/', '')}</a>
             ) : "سيُحدّث لاحقًا"}
           </strong>
         </div>
@@ -1805,7 +1787,7 @@ function DimensionChart({ profile, program }: any) {
   );
 }
 
-function ResultView({ result, onOpen, onRestart, onHome }: any) {
+function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
   const list = result.list;
   const primary = list[0];
   const alternatives = list.slice(1, 4);
@@ -1833,6 +1815,10 @@ function ResultView({ result, onOpen, onRestart, onHome }: any) {
   };
 
   const handleDownloadPDF = async () => {
+    if (window.top !== window.self) {
+      alert("عذراً، نافذة الطباعة لا تفتح داخل هذا العرض. يرجى فتح التطبيق في نافذة جديدة عبر الزر الموجود أعلى يمين الشاشة، ثم جرب الطباعة مرة أخرى.");
+      return;
+    }
     window.print();
   };
 
@@ -1912,7 +1898,34 @@ function ResultView({ result, onOpen, onRestart, onHome }: any) {
           هذه النتيجة هي بناءً على الإجابات التي قمت بتقديمها مع محاولة البرنامج للموائمة بينها وبين البرامج الإلكترونية بحسب أهدافها وما تتطلبه وتُحققه بإذن الله. لكن يبقى القرار تتدخل فيه عوامل أخرى (نفسية، ذاتية، أو اجتماعية). لذلك اجعل هذا الاختبار مؤشراً يساعدك، وحاول أن تطّلع على البرامج تفصيلياً وعلى تجارب الطلاب الخريجين منها. وإن تيسّرت لك الاستشارة لأحد الملمين بهذه البرامج فهذا خير. وفقكم الله وفتح عليكم.
         </p>
       </div>
+      <AnswersSummary answers={answers} />
     </section>
+  );
+}
+
+function AnswersSummary({ answers }: any) {
+  return (
+    <div className="print-only answers-summary" style={{ marginTop: '30px', padding: '24px', background: 'white', borderRadius: '24px', border: '1px solid var(--border)' }}>
+      <h3 style={{ marginBottom: '16px', fontSize: '20px', color: 'var(--ink)' }}>إجاباتك (مدخلات التحليل):</h3>
+      <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+        {QUESTIONS.map((q) => {
+          const ans = answers[q.id];
+          if (!hasAnswer(ans)) return null;
+          const title = typeof q.title === 'function' ? q.title(answers) : q.title;
+          const opts = typeof q.options === 'function' ? q.options(answers) : q.options;
+          const chosenOpts = asArray(ans)
+            .map((v) => opts.find((o: any) => o.value === v)?.label || v)
+            .join("، ");
+          
+          return (
+            <li key={q.id} style={{ marginBottom: '14px', borderBottom: '1px dashed #eee', paddingBottom: '8px' }}>
+              <strong style={{ display: 'block', color: 'var(--ink)', fontSize: '15px' }}>{title}</strong>
+              <span style={{ color: 'var(--green)', fontSize: '14px', fontWeight: 600 }}>{chosenOpts}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 
@@ -1998,6 +2011,7 @@ export default function ProgramSelector() {
         className="theme-toggle" 
         onClick={() => setDarkMode(!darkMode)}
         title={darkMode ? "الوضع الفاتح" : "الوضع الداكن"}
+        data-html2canvas-ignore="true"
       >
         {darkMode ? <Sun size={20} /> : <Moon size={20} />}
       </button>
@@ -2067,14 +2081,16 @@ export default function ProgramSelector() {
 
               <div className="nav-row">
                 <button className="ghost-btn" type="button" onClick={back} disabled={step === 0}>السابق</button>
-                <button className="main-btn" type="button" onClick={next} disabled={!hasAnswer(answers[current.id])}>{step >= qs.length - 1 ? "اعرض النتيجة" : "التالي"}</button>
+                <button className="main-btn" type="button" onClick={next} disabled={!hasAnswer(answers[current.id])}>
+                  {(step >= qs.length - 1 && hasAnswer(answers[current.id])) || QUESTIONS[QUESTIONS.length - 1]?.id === current?.id ? "اعرض النتيجة" : "التالي"}
+                </button>
               </div>
             </motion.section>
           )}
 
           {mode === "quiz" && showResult && !openedProgram && (
             <motion.div key="result" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.35 }}>
-              <ResultView result={result} onOpen={setOpenedProgramId} onRestart={restart} onHome={goHome} />
+              <ResultView result={result} answers={answers} onOpen={setOpenedProgramId} onRestart={restart} onHome={goHome} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -2149,7 +2165,7 @@ button { font-family: inherit; }
 .intro-card p { margin: 0; color: var(--muted); line-height: 1.8; }
 
 .quiz-card, .result-wrap, .directory-page, .comparison-page, .program-detail { max-width: 900px; margin: 0 auto; }
-.quiz-card, .result-main, .alternatives-box, .compare-box, .advice-card, .program-detail > .detail-section, .links-box {
+.quiz-card, .result-main, .alternatives-box, .compare-box, .advice-card, .program-detail > .detail-section {
   background: rgba(255,253,248,.95);
   border: 1px solid var(--border);
   border-radius: 28px;
@@ -2168,8 +2184,8 @@ button { font-family: inherit; }
 .option-card { width: 100%; display: flex; align-items: center; gap: 14px; text-align: right; border: 1.5px solid var(--border); background: white; border-radius: 20px; padding: 16px; cursor: pointer; transition: .18s ease; color: var(--ink); }
 .option-card:hover { border-color: #a7cfbf; transform: translateY(-1px); }
 .option-card.selected { background: #eaf7f1; border-color: var(--green-2); box-shadow: 0 8px 18px rgba(15, 138, 104, .10); }
-.option-icon { width: 44px; height: 44px; flex: 0 0 44px; display: flex; align-items: center; justify-content: center; font-size: 24px; line-height: 1; background: #f6efe3; border-radius: 12px; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"; }
-.rank-badge { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: white; background: var(--green); font-size: 14px; line-height: 1; }
+.option-icon { width: 44px; height: 44px; flex: 0 0 44px; display: flex; align-items: center; justify-content: center; font-size: 24px; line-height: 1; background: #f6efe3; border-radius: 12px; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"; overflow: hidden; }
+.rank-badge { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: white; background: var(--green); font-size: 14px; line-height: 1.2; margin: auto; }
 .option-copy strong { display: block; font-size: 17px; }
 .option-copy small { display: block; margin-top: 6px; color: var(--muted); line-height: 1.7; }
 .nav-row { margin-top: 16px; }
@@ -2238,14 +2254,16 @@ li { margin: 8px 0; line-height: 1.8; }
 
 .alternatives-box, .compare-box { padding: 22px; }
 .alternatives-box p { color: var(--muted); margin-top: -4px; }
-.mini-program { width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px; margin-top: 10px; background: white; border: 1px solid var(--border); border-radius: 18px; cursor: pointer; text-align: right; }
+.mini-program { width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px; margin-top: 10px; background: white; border: 1px solid var(--border); border-radius: 18px; cursor: pointer; text-align: right; transition: .2s ease; }
+.mini-program:hover { border-color: var(--green-2); transform: translateY(-1px); box-shadow: 0 8px 18px rgba(15,138,104,0.08); }
 .mini-rank { width: 28px; height: 28px; border-radius: 50%; background: #f3eadc; display: grid; place-items: center; font-weight: 800; color: var(--amber); }
 .mini-icon { font-size: 26px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"; }
 .mini-text { flex: 1; }
 .mini-text strong, .mini-text small { display: block; }
 .mini-text small { color: var(--muted); margin-top: 4px; }
 .mini-score { font-weight: 800; color: var(--green); background: #eaf7f1; padding: 6px 10px; border-radius: 99px; }
-.mini-arrow { color: var(--muted); font-size: 13px; }
+.mini-arrow { color: var(--green); font-size: 13px; font-weight: 700; background: rgba(15, 138, 104, 0.1); padding: 6px 12px; border-radius: 99px; transition: .2s ease; margin-right: auto; }
+.mini-program:hover .mini-arrow { background: var(--green); color: white; }
 .compare-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .compare-grid > div { background: white; border: 1px solid var(--border); border-radius: 18px; padding: 14px; }
 .compare-grid p { margin: 8px 0 0; color: var(--muted); line-height: 1.8; }
@@ -2292,6 +2310,8 @@ li { margin: 8px 0; line-height: 1.8; }
 .links-box { padding: 18px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .links-box div { background: white; border: 1px solid var(--border); border-radius: 16px; padding: 14px; }
 .links-box small { display: block; color: var(--muted); margin-bottom: 5px; }
+.program-link { color: var(--green); text-decoration: none; transition: .2s; }
+.program-link:hover { opacity: 0.8; }
 
 @media (max-width: 840px) {
   .intro-grid, .program-grid, .detail-grid { grid-template-columns: 1fr; }
@@ -2312,13 +2332,14 @@ li { margin: 8px 0; line-height: 1.8; }
 }
 
 @media print {
+  .print-only { display: block !important; }
   body { background: white !important; }
   .selector-root { background: none !important; min-height: auto; }
   .app-shell { padding: 0 !important; max-width: 100% !important; margin: 0 !important; }
-  .share-top, .ghost-btn, .nav-row, .hero-actions { display: none !important; }
+  .share-top, .ghost-btn, .nav-row, .hero-actions, .theme-toggle { display: none !important; }
   .result-wrap { max-width: 100%; box-shadow: none; display: block; }
   
-  .result-main, .alternatives-box, .compare-box, .advice-card, .links-box { 
+  .result-main, .alternatives-box, .compare-box, .advice-card { 
     box-shadow: none !important; 
     border: 1px solid #ccc !important;
     page-break-inside: avoid;
@@ -2335,6 +2356,7 @@ li { margin: 8px 0; line-height: 1.8; }
 }
 
 /* Creative Comparison Styles */
+.print-only { display: none; }
 .compare-picker { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 16px; margin-bottom: 24px; scrollbar-width: none; }
 .compare-picker::-webkit-scrollbar { display: none; }
 .picker-btn { font-family: inherit; font-size: 14px; background: white; border: 1px solid var(--border); border-radius: 99px; padding: 10px 18px; white-space: nowrap; cursor: pointer; color: var(--ink); display: flex; align-items: center; gap: 8px; transition: 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.03); max-width: 100%; min-width: 0; }
@@ -2356,10 +2378,12 @@ li { margin: 8px 0; line-height: 1.8; }
 }
 
 /* Theme Toggle */
-.theme-toggle { position: absolute; top: 24px; left: 24px; background: white; border: 1px solid var(--border); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: 0.2s; z-index: 100; }
+.theme-toggle { position: fixed; top: 100px; left: 24px; background: white; border: 1px solid var(--border); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: 0.2s; z-index: 1000; }
 .theme-toggle:hover { color: var(--ink); border-color: var(--muted); }
 
-/* Dark Mode Variables */
+@media (max-width: 840px) {
+  .theme-toggle { top: 70px; left: 16px; }
+}
 html.dark .selector-root {
   --bg: #0f172a;
   --paper: #1e293b;
@@ -2370,14 +2394,18 @@ html.dark .selector-root {
 }
 html.dark .theme-toggle, html.dark .cc-card, html.dark .picker-btn, html.dark .ghost-btn, html.dark .share-btn { background: #1e293b; border-color: #334155; color: #f8fafc !important; }
 html.dark .picker-btn.selected { background: rgba(15, 138, 104, 0.5); border-color: var(--green); }
-html.dark .hero-card, html.dark .quiz-card, html.dark .result-main, html.dark .comparison-page, html.dark .program-detail > .detail-section, html.dark .links-box { background: #1e293b; border-color: #334155; }
+html.dark .hero-card, html.dark .quiz-card, html.dark .result-main, html.dark .comparison-page, html.dark .program-detail > .detail-section { background: #1e293b; border-color: #334155; }
 html.dark .home-hero .hero-card { background: linear-gradient(135deg, #1e293b, #0f172a); }
 html.dark .hero-card h1 { color: #f8fafc; }
 html.dark .cc-details > div, html.dark .ds-blue, html.dark .ds-green, html.dark .ds-amber, html.dark .ds-rose, html.dark .why-box, html.dark .notice-box { background: #0f172a; border-color: #334155; }
 html.dark .ds-blue h3, html.dark .ds-green h3, html.dark .ds-amber h3, html.dark .ds-rose h3 { color: #f8fafc; }
+html.dark .program-link { color: #34d399; }
 html.dark .option-card, html.dark .mini-program, html.dark .directory-card { background: #1e293b; border-color: #334155; color: #f8fafc; }
 html.dark .links-box div { background: #0f172a; border-color: #334155; color: #f8fafc; }
 html.dark .option-card:hover, html.dark .directory-card:hover { border-color: var(--green); background: #27374d; }
+html.dark .mini-program:hover { border-color: var(--green); background: #27374d; box-shadow: none; }
+html.dark .mini-arrow { background: rgba(15, 138, 104, 0.2); color: #34d399; }
+html.dark .mini-program:hover .mini-arrow { background: var(--green); color: white; }
 html.dark .option-card.selected { background: rgba(15, 138, 104, 0.2); border-color: var(--green); }
 html.dark .option-icon, html.dark .program-hero-icon, html.dark .result-icon, html.dark .mini-rank { background: #0f172a; border-color: #334155; }
 html.dark .result-top { background: linear-gradient(135deg, #1e293b, #0f172a) !important; }
