@@ -1601,7 +1601,7 @@ function ComparisonTable({ onOpen, onBack }: any) {
 function DimensionChart({ profile, program }: any) {
   const data = [
     { subject: "تأصيل شرعي", A: profile.sharia, B: program.dimensions?.sharia || 50, fullMark: 100 },
-    { subject: "بناء فكري", A: profile.intellectual, B: program.dimensions?.intellectual || 50, fullMark: 100 },
+    { subject: "الوعي", A: profile.intellectual, B: program.dimensions?.intellectual || 50, fullMark: 100 },
     { subject: "تزكية", A: profile.tazkiyah, B: program.dimensions?.tazkiyah || 50, fullMark: 100 },
     { subject: "عمل إصلاحي", A: profile.reform, B: program.dimensions?.reform || 50, fullMark: 100 },
     { subject: "المهارات والأدوات", A: profile.skills, B: program.dimensions?.skills || 50, fullMark: 100 },
@@ -1720,7 +1720,12 @@ function ResultView({ result, onOpen, onRestart }: any) {
             <ul>{primary.caution?.slice(0, 4).map((item, index) => <li key={index}>{item}</li>)}</ul>
           </div>
 
-          <button className="main-btn" type="button" onClick={() => onOpen(primary.id)}>افتح تفاصيل البرنامج</button>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'space-between', marginTop: '16px' }} data-html2canvas-ignore="true">
+            <button className="main-btn" type="button" onClick={() => onOpen(primary.id)}>افتح تفاصيل البرنامج</button>
+            <button className="ghost-btn" type="button" onClick={onRestart} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'white', color: 'var(--green-2)', borderColor: 'var(--green-2)', borderWidth: '2px' }}>
+              <span style={{ fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"' }}>🔄</span> إعــادة الاختبــار
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1734,7 +1739,12 @@ function ResultView({ result, onOpen, onRestart }: any) {
         </div>
       )}
 
-      <button className="ghost-btn restart-btn" type="button" onClick={onRestart}>إعادة الاختبار</button>
+      <div className="notice-box disclaimer-box" style={{ background: '#f8fafc', borderColor: '#cbd5e1' }}>
+        <h3 style={{ color: '#475569' }}>تنبيه ختامي</h3>
+        <p style={{ margin: 0, color: '#64748b', fontSize: '15px' }}>
+          هذه النتيجة هي بناءً على الإجابات التي قمت بتقديمها مع محاولة البرنامج للموائمة بينها وبين البرامج الإلكترونية بحسب أهدافها وما تتطلبه وتُحققه بإذن الله. لكن يبقى القرار تتدخل فيه عوامل أخرى (نفسية، ذاتية، أو اجتماعية). لذلك اجعل هذا الاختبار مؤشراً يساعدك، وحاول أن تطّلع على البرامج تفصيلياً وعلى تجارب الطلاب الخريجين منها. وإن تيسّرت لك الاستشارة لأحد الملمين بهذه البرامج فهذا خير. وفقكم الله وفتح عليكم.
+        </p>
+      </div>
     </section>
   );
 }
