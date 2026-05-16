@@ -1,5 +1,7 @@
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
+import { motion, AnimatePresence } from "motion/react";
+import { Moon, Sun } from "lucide-react";
 
 const PROGRAMS = {
   alim: {
@@ -50,8 +52,8 @@ const PROGRAMS = {
     audience: "فوق 15 سنة",
     cost: "مجاني",
     medium: "موقع البرنامج + تلجرام",
-    officialUrl: "",
-    telegramUrl: "",
+    officialUrl: "https://binaamanhaji.com/",
+    telegramUrl: "https://t.me/BinaaManhaji",
     registrationStatus: "سيتم تحديثه لاحقًا",
     selectivity: "مرحلة تمهيدية واختبار",
     color: "#17446f",
@@ -89,8 +91,8 @@ const PROGRAMS = {
     audience: "فوق 15 سنة",
     cost: "مجاني",
     medium: "موقع البرنامج + تلجرام",
-    officialUrl: "",
-    telegramUrl: "",
+    officialUrl: "https://binaamanhaji.com/",
+    telegramUrl: "https://t.me/BinaaManhaji",
     registrationStatus: "سيتم تحديثه لاحقًا",
     selectivity: "مرحلة تمهيدية واختبار",
     color: "#28608c",
@@ -128,7 +130,7 @@ const PROGRAMS = {
     audience: "فوق 15 سنة",
     cost: "مجاني",
     medium: "موقع البرنامج + تلجرام",
-    officialUrl: "",
+    officialUrl: "https://benaafikri.com/",
     telegramUrl: "",
     registrationStatus: "سيتم تحديثه لاحقًا",
     selectivity: "بحسب إعلان الدفعة",
@@ -284,8 +286,8 @@ const PROGRAMS = {
     audience: "10–12 سنة",
     cost: "مجاني",
     medium: "موقع البرنامج + تلجرام",
-    officialUrl: "",
-    telegramUrl: "",
+    officialUrl: "https://jeelacademy.app/",
+    telegramUrl: "https://t.me/JeelAcademySA",
     registrationStatus: "سيتم تحديثه لاحقًا",
     selectivity: "غالبًا مفتوح",
     color: "#638b2f",
@@ -315,8 +317,8 @@ const PROGRAMS = {
     audience: "13–16 سنة",
     cost: "مجاني",
     medium: "موقع البرنامج + تلجرام",
-    officialUrl: "",
-    telegramUrl: "",
+    officialUrl: "https://jeelacademy.app/",
+    telegramUrl: "https://t.me/JeelAcademySA",
     registrationStatus: "سيتم تحديثه لاحقًا",
     selectivity: "اختبار قبول ومتابعة خاصة",
     color: "#2f7a4f",
@@ -346,8 +348,8 @@ const PROGRAMS = {
     audience: "13–16 سنة",
     cost: "مجاني",
     medium: "موقع البرنامج + تلجرام",
-    officialUrl: "",
-    telegramUrl: "",
+    officialUrl: "https://jeelacademy.app/",
+    telegramUrl: "https://t.me/JeelAcademySA",
     registrationStatus: "سيتم تحديثه لاحقًا",
     selectivity: "غالبًا أيسر من جذور",
     color: "#3d8a3a",
@@ -377,8 +379,8 @@ const PROGRAMS = {
     audience: "17–20 سنة",
     cost: "مجاني",
     medium: "موقع البرنامج + تلجرام",
-    officialUrl: "",
-    telegramUrl: "",
+    officialUrl: "https://jeelacademy.app/",
+    telegramUrl: "https://t.me/JeelAcademySA",
     registrationStatus: "سيتم تحديثه لاحقًا",
     selectivity: "اختبار قبول",
     color: "#8b5a20",
@@ -408,8 +410,8 @@ const PROGRAMS = {
     audience: "15–22 سنة من خريجي جذور أو إشراق",
     cost: "مجاني",
     medium: "موقع البرنامج + تلجرام",
-    officialUrl: "",
-    telegramUrl: "",
+    officialUrl: "https://jeelacademy.app/",
+    telegramUrl: "https://t.me/JeelAcademySA",
     registrationStatus: "سيتم تحديثه لاحقًا",
     selectivity: "لخريجي جذور وإشراق حصرًا",
     color: "#8a6828",
@@ -1479,11 +1481,14 @@ function DetailSection({ title, items, icon, colorClass = "default" }: any) {
   );
 }
 
-function ProgramDetail({ program, onBack }: any) {
+function ProgramDetail({ program, onBack, onHome }: any) {
   if (!program) return null;
   return (
     <section className="program-detail">
-      <button className="ghost-btn" type="button" onClick={onBack}>العودة</button>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+        <button className="ghost-btn" type="button" onClick={onBack}>العودة</button>
+        <button className="ghost-btn home-btn-fix" type="button" onClick={onHome}>الرئيسية</button>
+      </div>
       <div className="program-hero" style={{ background: `linear-gradient(135deg, ${program.soft}, #fff)` }}>
         <span className="program-hero-icon">{program.icon}</span>
         <div>
@@ -1507,18 +1512,68 @@ function ProgramDetail({ program, onBack }: any) {
       <div className="links-box">
         <div>
           <small>رابط الموقع الرسمي</small>
-          <strong>{program.officialUrl || "سيُحدّث لاحقًا"}</strong>
+          <strong>
+            {program.officialUrl ? (
+              <a href={program.officialUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--green)" }}>{program.officialUrl.replace('https://', '')}</a>
+            ) : "سيُحدّث لاحقًا"}
+          </strong>
         </div>
         <div>
           <small>رابط قناة تلجرام</small>
-          <strong>{program.telegramUrl || "سيُحدّث لاحقًا"}</strong>
+          <strong>
+            {program.telegramUrl ? (
+              <a href={program.telegramUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--green)" }}>{program.telegramUrl.replace('https://t.me/', '')}</a>
+            ) : "سيُحدّث لاحقًا"}
+          </strong>
         </div>
       </div>
     </section>
   );
 }
 
-function HomeView({ onStart, onPrograms, onCompare }: any) {
+function ComparisonTable({ onOpen, onBack }: any) {
+  const list = Object.values(PROGRAMS);
+  return (
+    <section className="comparison-page">
+      <div className="section-head">
+        <button className="ghost-btn" type="button" onClick={onBack}>العودة للرئيسية</button>
+        <div><small>مقارنة عامة</small><h2>مقارنة مختصرة بين البرامج</h2><p>هذه المقارنة للاطلاع العام، أما الترشيح الأدق فابدأ اختبار الاختيار.</p></div>
+      </div>
+      <div className="comparison-table-wrap" style={{ overflowX: 'auto', borderRadius: '24px', padding: '16px', border: '1px solid var(--border)' }}>
+        <table className="comparison-table" style={{ width: '100%', minWidth: '800px', textAlign: 'right', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom: '2px solid var(--border)' }}>
+              <th style={{ padding: '12px', color: 'var(--muted)' }}>البرنامج</th>
+              <th style={{ padding: '12px', color: 'var(--muted)' }}>الفئة</th>
+              <th style={{ padding: '12px', color: 'var(--muted)' }}>المدة</th>
+              <th style={{ padding: '12px', color: 'var(--muted)' }}>طبيعة القبول</th>
+              <th style={{ padding: '12px', color: 'var(--muted)' }}>التكلفة</th>
+              <th style={{ padding: '12px', color: 'var(--muted)' }}>الوسيلة</th>
+              <th style={{ padding: '12px', color: 'var(--muted)' }}>التسجيل</th>
+              <th style={{ padding: '12px', color: 'var(--muted)' }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {list.map((program) => (
+              <tr key={program.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                <td style={{ padding: '12px' }}><strong>{program.icon} {program.name}</strong><br/><small style={{color:'var(--muted)'}}>{program.badge}</small></td>
+                <td style={{ padding: '12px', fontSize: '14px' }}>{program.audience}</td>
+                <td style={{ padding: '12px', fontSize: '14px' }}>{program.duration}</td>
+                <td style={{ padding: '12px', fontSize: '14px' }}>{program.selectivity}</td>
+                <td style={{ padding: '12px', fontSize: '14px' }}>{program.cost}</td>
+                <td style={{ padding: '12px', fontSize: '14px' }}>{program.medium}</td>
+                <td style={{ padding: '12px', fontSize: '14px' }}>{program.registrationStatus}</td>
+                <td style={{ padding: '12px' }}><button className="table-link ghost-btn" style={{ padding: '6px 12px', fontSize: '13px' }} type="button" onClick={() => onOpen(program.id)}>تفاصيل</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function HomeView({ onStart, onPrograms, onCompare, onCompareDynamic }: any) {
   return (
     <>
       <section className="home-hero">
@@ -1530,6 +1585,7 @@ function HomeView({ onStart, onPrograms, onCompare }: any) {
             <button className="main-btn hero-btn" type="button" onClick={onStart}>ابدأ اختبار الاختيار</button>
             <button className="ghost-btn hero-btn" type="button" onClick={onPrograms}>استعراض كل البرامج</button>
             <button className="ghost-btn hero-btn" type="button" onClick={onCompare}>مقارنة عامة</button>
+            <button className="ghost-btn hero-btn" type="button" onClick={onCompareDynamic}>مقارنة مخصصة</button>
           </div>
         </div>
       </section>
@@ -1565,36 +1621,140 @@ function ProgramDirectory({ onOpen, onBack }: any) {
   );
 }
 
-function ComparisonTable({ onOpen, onBack }: any) {
+function DynamicComparison({ onOpen, onBack }: any) {
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const list = Object.values(PROGRAMS);
+
+  const toggleSelect = (id: string) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter((x) => x !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
+  };
+
+  const selectedPrograms = selectedIds.map(id => PROGRAMS[id as keyof typeof PROGRAMS]).filter(Boolean);
+
+  const chartData = [
+    { subject: "تأصيل شرعي" },
+    { subject: "الوعي" },
+    { subject: "تزكية" },
+    { subject: "عمل إصلاحي" },
+    { subject: "المهارات" },
+  ].map((metric) => {
+    const dataRow: any = { subject: metric.subject };
+    selectedPrograms.forEach((p, i) => {
+      const pData = p.dimensions as any;
+      let val = 50;
+      if (pData) {
+        if (metric.subject === "تأصيل شرعي") val = pData.sharia || 50;
+        if (metric.subject === "الوعي") val = pData.intellectual || 50;
+        if (metric.subject === "تزكية") val = pData.tazkiyah || 50;
+        if (metric.subject === "عمل إصلاحي") val = pData.reform || 50;
+        if (metric.subject === "المهارات") val = pData.skills || 50;
+      }
+      dataRow[`P${i}`] = val;
+    });
+    return dataRow;
+  });
+
   return (
-    <section className="comparison-page">
+    <motion.section 
+      className="comparison-page"
+      initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+    >
       <div className="section-head">
         <button className="ghost-btn" type="button" onClick={onBack}>العودة للرئيسية</button>
-        <div><small>مقارنة عامة</small><h2>مقارنة مختصرة بين البرامج</h2><p>هذه المقارنة للاطلاع العام، أما الترشيح الأدق فابدأ اختبار الاختيار.</p></div>
+        <div><small>مقارنة مخصصة</small><h2>مقارنة بين البرامج</h2><p>اختر البرامج التي تريد المقارنة بينها بشكل مباشر.</p></div>
       </div>
-      <div className="comparison-table-wrap">
-        <table className="comparison-table">
-          <thead>
-            <tr><th>البرنامج</th><th>الفئة</th><th>المدة</th><th>طبيعة القبول</th><th>التكلفة</th><th>الوسيلة</th><th>التسجيل</th><th></th></tr>
-          </thead>
-          <tbody>
-            {list.map((program) => (
-              <tr key={program.id}>
-                <td><strong>{program.icon} {program.name}</strong><small>{program.badge}</small></td>
-                <td>{program.audience}</td>
-                <td>{program.duration}</td>
-                <td>{program.selectivity}</td>
-                <td>{program.cost}</td>
-                <td>{program.medium}</td>
-                <td>{program.registrationStatus}</td>
-                <td><button className="table-link" type="button" onClick={() => onOpen(program.id)}>تفاصيل</button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      
+      <div style={{ position: 'relative', marginBottom: '24px', zIndex: 50 }}>
+        <button 
+          className="ghost-btn dropdown-trigger" 
+          style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--paper)' }}
+          onClick={() => setDropdownOpen(!dropdownOpen)}
+          type="button"
+        >
+          <span>{selectedIds.length > 0 ? `تم تحديد ${selectedIds.length} برامج` : 'اختر البرامج للمقارنة...'}</span>
+          <span>▼</span>
+        </button>
+        
+        {dropdownOpen && (
+          <div className="dropdown-menu" style={{ position: 'absolute', top: '100%', right: 0, left: 0, background: 'var(--paper)', border: '1px solid var(--border)', borderRadius: '16px', padding: '16px', marginTop: '8px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px', maxHeight: '300px', overflowY: 'auto' }}>
+            {list.map((prog) => {
+              const isSelected = selectedIds.includes(prog.id);
+              return (
+                <button 
+                  key={prog.id} 
+                  onClick={() => toggleSelect(prog.id)} 
+                  className={`picker-btn ${isSelected ? 'selected' : ''}`} 
+                  style={{ justifyContent: 'flex-start', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                  type="button"
+                  title={prog.name}
+                >
+                  <div className={`checkbox-icon ${isSelected ? 'checked' : ''}`} style={{ 
+                    width: '18px', height: '18px', borderRadius: '4px', border: isSelected ? '0' : '1px solid var(--border)', 
+                    backgroundColor: isSelected ? 'var(--bg)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '8px', flexShrink: 0 
+                  }}>
+                    {isSelected && <span style={{ color: 'var(--green)', fontSize: '12px' }}>✓</span>}
+                  </div>
+                  <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{prog.icon} {prog.name}</span>
+                </button>
+              )
+            })}
+          </div>
+        )}
       </div>
-    </section>
+
+      <div className="creative-compare-board" style={{ gap: '16px', alignItems: 'stretch' }}>
+        {selectedPrograms.length > 0 ? (
+          selectedPrograms.map((p) => (
+            <motion.div key={p.id} className="cc-card" layoutId={`cc-card-${p.id}`} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+               <h3 style={{ color: p.color }}>{p.icon} {p.name}</h3>
+               <small>{p.badge}</small>
+               <p>{p.description}</p>
+               <div className="cc-details">
+                  <div><span>المدة</span> <strong>{p.duration}</strong></div>
+                  <div><span>الفئة</span> <strong>{p.audience}</strong></div>
+                  <div><span>التكلفة</span> <strong>{p.cost}</strong></div>
+               </div>
+               <button className="ghost-btn" style={{marginTop: 'auto', width: "100%"}} onClick={() => onOpen(p.id)}>تفاصيل البرنامج</button>
+            </motion.div>
+          ))
+        ) : (
+          <div className="cc-card empty-card" style={{ width: '100%' }}>
+             <span>👆</span>
+             <p>اختر البرامج من القائمة المنسدلة أعلاه</p>
+          </div>
+        )}
+      </div>
+
+      {selectedPrograms.length > 1 && (
+        <motion.div className="chart-container cc-radar-box" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+             <div className="chart-header">
+                <h3>تحليل توافق الأبعاد</h3>
+                <p>مقارنة البناء العلمي، الوعي، والمهاري بين البرامج المحددة</p>
+             </div>
+             <div className="chart-visual">
+                <ResponsiveContainer width="100%" height={320}>
+                  <RadarChart cx="50%" cy="50%" outerRadius="75%" data={chartData}>
+                    <PolarGrid stroke="var(--border)" />
+                    <PolarAngleAxis dataKey="subject" tick={{ fill: "var(--ink)", fontSize: 13, fontWeight: 700 }} />
+                    {selectedPrograms.map((p, i) => (
+                      <Radar key={p.id} name={p.name} dataKey={`P${i}`} stroke={p.color} fill={p.color} fillOpacity={0.25} strokeWidth={2} />
+                    ))}
+                  </RadarChart>
+                </ResponsiveContainer>
+             </div>
+             <div className="chart-legend">
+                {selectedPrograms.map((p) => (
+                  <div key={p.id} className="legend-item"><div className="legend-dot" style={{ backgroundColor: p.color }} /> {p.name}</div>
+                ))}
+             </div>
+        </motion.div>
+      )}
+    </motion.section>
   );
 }
 
@@ -1616,21 +1776,23 @@ function DimensionChart({ profile, program }: any) {
       <div className="chart-visual">
         <ResponsiveContainer width="100%" height={280}>
           <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
-            <PolarGrid stroke="#e2e8f0" />
-            <PolarAngleAxis dataKey="subject" tick={{ fill: "#64748b", fontSize: 13, fontWeight: 600 }} />
+            <PolarGrid stroke="var(--border)" />
+            <PolarAngleAxis dataKey="subject" tick={{ fill: "var(--ink)", fontSize: 13, fontWeight: 700 }} />
             <Radar
               name="احتياجك"
               dataKey="A"
               stroke="#f97316"
               fill="#f97316"
               fillOpacity={0.3}
+              strokeWidth={2}
             />
             <Radar
               name={program.name}
               dataKey="B"
               stroke={program.color}
               fill={program.color}
-              fillOpacity={0.15}
+              fillOpacity={0.25}
+              strokeWidth={2}
             />
           </RadarChart>
         </ResponsiveContainer>
@@ -1643,7 +1805,7 @@ function DimensionChart({ profile, program }: any) {
   );
 }
 
-function ResultView({ result, onOpen, onRestart }: any) {
+function ResultView({ result, onOpen, onRestart, onHome }: any) {
   const list = result.list;
   const primary = list[0];
   const alternatives = list.slice(1, 4);
@@ -1676,13 +1838,18 @@ function ResultView({ result, onOpen, onRestart }: any) {
 
   return (
     <section className="result-wrap" ref={resultRef} dir="rtl">
-      <div className="share-top" data-html2canvas-ignore="true">
-        <button className="share-btn" type="button" onClick={handleDownloadPDF}>
-          <span>📄</span> حفظ كملف PDF
+      <div className="share-top" data-html2canvas-ignore="true" style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <button className="share-btn home-btn-fix2" type="button" onClick={onHome}>
+          <span>🏠</span> الرئيسية
         </button>
-        <button className="share-btn" type="button" onClick={handleShare}>
-          <span>🔗</span> مشاركة الرابط
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="share-btn" type="button" onClick={handleDownloadPDF}>
+            <span>📄</span> حفظ كملف PDF
+          </button>
+          <button className="share-btn" type="button" onClick={handleShare}>
+            <span>🔗</span> مشاركة الرابط
+          </button>
+        </div>
       </div>
 
       <AdviceCard advice={result.advice} onOpen={onOpen} />
@@ -1722,7 +1889,7 @@ function ResultView({ result, onOpen, onRestart }: any) {
 
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'space-between', marginTop: '16px' }} data-html2canvas-ignore="true">
             <button className="main-btn" type="button" onClick={() => onOpen(primary.id)}>افتح تفاصيل البرنامج</button>
-            <button className="ghost-btn" type="button" onClick={onRestart} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'white', color: 'var(--green-2)', borderColor: 'var(--green-2)', borderWidth: '2px' }}>
+            <button className="ghost-btn restart-btn-fix" type="button" onClick={onRestart} style={{ display: 'flex', alignItems: 'center', gap: '8px', borderWidth: '2px' }}>
               <span style={{ fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"' }}>🔄</span> إعــادة الاختبــار
             </button>
           </div>
@@ -1755,6 +1922,12 @@ export default function ProgramSelector() {
   const [showResult, setShowResult] = useState(false);
   const [openedProgramId, setOpenedProgramId] = useState(null);
   const [mode, setMode] = useState("home");
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    if (darkMode) document.documentElement.classList.add("dark");
+    else document.documentElement.classList.remove("dark");
+  }, [darkMode]);
 
   const qs = useMemo(() => visibleQuestions(answers), [answers]);
   const current = qs[Math.min(step, qs.length - 1)] || qs[0];
@@ -1818,54 +1991,93 @@ export default function ProgramSelector() {
   }
 
   return (
-    <div className="selector-root" dir="rtl">
+    <div className={`selector-root ${darkMode ? 'dark' : ''}`} dir="rtl">
       <style>{styles}</style>
+      
+      <button 
+        className="theme-toggle" 
+        onClick={() => setDarkMode(!darkMode)}
+        title={darkMode ? "الوضع الفاتح" : "الوضع الداكن"}
+      >
+        {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+      </button>
+
       <main className="app-shell">
-        {openedProgram && <ProgramDetail program={openedProgram} onBack={closeProgram} />}
+        <AnimatePresence mode="wait">
+          {openedProgram && (
+            <motion.div key="detail" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }}>
+              <ProgramDetail program={openedProgram} onBack={closeProgram} onHome={goHome} />
+            </motion.div>
+          )}
 
-        {mode === "home" && !openedProgram && <HomeView onStart={startQuiz} onPrograms={() => setMode("programs")} onCompare={() => setMode("compare")} />}
-        {mode === "programs" && !openedProgram && <ProgramDirectory onOpen={setOpenedProgramId} onBack={goHome} />}
-        {mode === "compare" && !openedProgram && <ComparisonTable onOpen={setOpenedProgramId} onBack={goHome} />}
+          {mode === "home" && !openedProgram && (
+            <motion.div key="home" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }}>
+              <HomeView onStart={startQuiz} onPrograms={() => setMode("programs")} onCompare={() => setMode("compare")} onCompareDynamic={() => setMode("compareDynamic")} />
+            </motion.div>
+          )}
 
-        {mode === "quiz" && !showResult && !openedProgram && current && (
-          <section className="quiz-card">
-            <div className="quiz-topline">
-              <button className="ghost-btn" type="button" onClick={goHome}>الرئيسية</button>
-              <span>اختبار اختيار البرنامج المناسب</span>
-            </div>
-            <div className="progress-row"><span>السؤال {Math.min(step, qs.length - 1) + 1} من {qs.length}</span><span>{progress}%</span></div>
-            <div className="progress"><span style={{ width: `${progress}%` }} /></div>
+          {mode === "programs" && !openedProgram && (
+            <motion.div key="programs" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }}>
+              <ProgramDirectory onOpen={setOpenedProgramId} onBack={goHome} />
+            </motion.div>
+          )}
 
-            <div className="question-head">
-              <h2>{questionTitle(current, answers)}</h2>
-              {questionSubtitle(current, answers) && <p>{questionSubtitle(current, answers)}</p>}
-              {current.multi && <p className="multi-hint">يمكنك اختيار أكثر من خيار.</p>}
-            </div>
+          {mode === "compare" && !openedProgram && (
+            <motion.div key="compare" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }}>
+              <ComparisonTable onOpen={setOpenedProgramId} onBack={goHome} />
+            </motion.div>
+          )}
 
-            <div className="options-grid">
-              {currentOptions.map((opt) => (
-                <button
-                  className={`option-card ${hasChoice(answers[current.id], opt.value) ? "selected" : ""}`}
-                  type="button"
-                  key={opt.value}
-                  onClick={() => choose(current.id, opt.value)}
-                >
-                  <span className="option-icon">
-                    {current.multi && hasChoice(answers[current.id], opt.value) ? <b className="rank-badge">{choiceRank(answers[current.id], opt.value) + 1}</b> : opt.icon}
-                  </span>
-                  <span className="option-copy"><strong>{opt.title}</strong>{opt.sub && <small>{opt.sub}</small>}</span>
-                </button>
-              ))}
-            </div>
+          {mode === "compareDynamic" && !openedProgram && (
+            <motion.div key="compareDynamic" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }}>
+              <DynamicComparison onOpen={setOpenedProgramId} onBack={goHome} />
+            </motion.div>
+          )}
 
-            <div className="nav-row">
-              <button className="ghost-btn" type="button" onClick={back} disabled={step === 0}>السابق</button>
-              <button className="main-btn" type="button" onClick={next} disabled={!hasAnswer(answers[current.id])}>{step >= qs.length - 1 ? "اعرض النتيجة" : "التالي"}</button>
-            </div>
-          </section>
-        )}
+          {mode === "quiz" && !showResult && !openedProgram && current && (
+            <motion.section key="quiz" className="quiz-card" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.2 }}>
+              <div className="quiz-topline">
+                <button className="ghost-btn" type="button" onClick={goHome}>الرئيسية</button>
+                <span>اختبار اختيار البرنامج المناسب</span>
+              </div>
+              <div className="progress-row"><span>السؤال {Math.min(step, qs.length - 1) + 1} من {qs.length}</span><span>{progress}%</span></div>
+              <div className="progress"><span style={{ width: `${progress}%` }} /></div>
 
-        {mode === "quiz" && showResult && !openedProgram && <ResultView result={result} onOpen={setOpenedProgramId} onRestart={restart} />}
+              <div className="question-head">
+                <h2>{questionTitle(current, answers)}</h2>
+                {questionSubtitle(current, answers) && <p>{questionSubtitle(current, answers)}</p>}
+                {current.multi && <p className="multi-hint">يمكنك اختيار أكثر من خيار.</p>}
+              </div>
+
+              <div className="options-grid">
+                {currentOptions.map((opt) => (
+                  <button
+                    className={`option-card ${hasChoice(answers[current.id], opt.value) ? "selected" : ""}`}
+                    type="button"
+                    key={opt.value}
+                    onClick={() => choose(current.id, opt.value)}
+                  >
+                    <span className="option-icon">
+                      {current.multi && hasChoice(answers[current.id], opt.value) ? <b className="rank-badge">{choiceRank(answers[current.id], opt.value) + 1}</b> : opt.icon}
+                    </span>
+                    <span className="option-copy"><strong>{opt.title}</strong>{opt.sub && <small>{opt.sub}</small>}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="nav-row">
+                <button className="ghost-btn" type="button" onClick={back} disabled={step === 0}>السابق</button>
+                <button className="main-btn" type="button" onClick={next} disabled={!hasAnswer(answers[current.id])}>{step >= qs.length - 1 ? "اعرض النتيجة" : "التالي"}</button>
+              </div>
+            </motion.section>
+          )}
+
+          {mode === "quiz" && showResult && !openedProgram && (
+            <motion.div key="result" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.35 }}>
+              <ResultView result={result} onOpen={setOpenedProgramId} onRestart={restart} onHome={goHome} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );
@@ -2121,4 +2333,73 @@ li { margin: 8px 0; line-height: 1.8; }
   /* Avoid page breaks inside table rows */
   tr { page-break-inside: avoid; }
 }
+
+/* Creative Comparison Styles */
+.compare-picker { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 16px; margin-bottom: 24px; scrollbar-width: none; }
+.compare-picker::-webkit-scrollbar { display: none; }
+.picker-btn { font-family: inherit; font-size: 14px; background: white; border: 1px solid var(--border); border-radius: 99px; padding: 10px 18px; white-space: nowrap; cursor: pointer; color: var(--ink); display: flex; align-items: center; gap: 8px; transition: 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.03); max-width: 100%; min-width: 0; }
+.picker-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+.picker-btn.selected { background: var(--green); color: white; border-color: var(--green-2); }
+.creative-compare-board { display: flex; align-items: stretch; gap: 16px; margin-bottom: 24px; position: relative; justify-content: center; flex-wrap: wrap; }
+.cc-card { flex: 1; min-width: 300px; background: white; border: 1.5px solid var(--border); border-radius: 24px; padding: 24px; display: flex; flex-direction: column; box-shadow: 0 12px 30px rgba(0,0,0,0.05); }
+.cc-card.empty-card { background: transparent; border: 2px dashed var(--border); align-items: center; justify-content: center; color: var(--muted); padding: 40px; box-shadow: none; min-height: 250px; }
+.cc-card h3 { margin: 0 0 4px; font-size: 22px; }
+.cc-card small { color: var(--muted); font-weight: 700; margin-bottom: 12px; display: inline-block; }
+.cc-card p { color: var(--muted); line-height: 1.8; margin-bottom: 20px; flex: 1; }
+.cc-details { display: grid; gap: 12px; margin-bottom: 20px; }
+.cc-details > div { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px 16px; border-radius: 12px; font-size: 14px; }
+.cc-details > div span { color: var(--muted); }
+.cc-details > div strong { color: var(--ink); }
+.cc-vs { display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; color: white; background: var(--amber); width: 40px; height: 40px; border-radius: 50%; border: 4px solid var(--app-bg, #f7f4ed); margin: auto; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 10; }
+@media (max-width: 768px) {
+  .cc-vs { position: static; transform: none; margin: -20px auto; }
+}
+
+/* Theme Toggle */
+.theme-toggle { position: absolute; top: 24px; left: 24px; background: white; border: 1px solid var(--border); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: 0.2s; z-index: 100; }
+.theme-toggle:hover { color: var(--ink); border-color: var(--muted); }
+
+/* Dark Mode Variables */
+html.dark .selector-root {
+  --bg: #0f172a;
+  --paper: #1e293b;
+  --ink: #f8fafc;
+  --muted: #cbd5e1;
+  --border: #334155;
+  --chart-bg: #1e293b;
+}
+html.dark .theme-toggle, html.dark .cc-card, html.dark .picker-btn, html.dark .ghost-btn, html.dark .share-btn { background: #1e293b; border-color: #334155; color: #f8fafc !important; }
+html.dark .picker-btn.selected { background: rgba(15, 138, 104, 0.5); border-color: var(--green); }
+html.dark .hero-card, html.dark .quiz-card, html.dark .result-main, html.dark .comparison-page, html.dark .program-detail > .detail-section, html.dark .links-box { background: #1e293b; border-color: #334155; }
+html.dark .home-hero .hero-card { background: linear-gradient(135deg, #1e293b, #0f172a); }
+html.dark .hero-card h1 { color: #f8fafc; }
+html.dark .cc-details > div, html.dark .ds-blue, html.dark .ds-green, html.dark .ds-amber, html.dark .ds-rose, html.dark .why-box, html.dark .notice-box { background: #0f172a; border-color: #334155; }
+html.dark .ds-blue h3, html.dark .ds-green h3, html.dark .ds-amber h3, html.dark .ds-rose h3 { color: #f8fafc; }
+html.dark .option-card, html.dark .mini-program, html.dark .directory-card { background: #1e293b; border-color: #334155; color: #f8fafc; }
+html.dark .links-box div { background: #0f172a; border-color: #334155; color: #f8fafc; }
+html.dark .option-card:hover, html.dark .directory-card:hover { border-color: var(--green); background: #27374d; }
+html.dark .option-card.selected { background: rgba(15, 138, 104, 0.2); border-color: var(--green); }
+html.dark .option-icon, html.dark .program-hero-icon, html.dark .result-icon, html.dark .mini-rank { background: #0f172a; border-color: #334155; }
+html.dark .result-top { background: linear-gradient(135deg, #1e293b, #0f172a) !important; }
+html.dark .cc-vs { border-color: #0f172a; }
+html.dark .detail-grid > div { background: #0f172a; border-color: #334155; }
+html.dark .advice-program { background: #1e293b; border-color: #334155; }
+html.dark .advice-program:hover { background: #27374d; }
+html.dark .advice-card.advice-amber, html.dark .advice-card.advice-green, html.dark .advice-card.advice-rose, html.dark .advice-card.advice-blue, html.dark .advice-card.advice-slate { background: #1e293b; border-color: #334155; }
+html.dark .intro-card { background: #1e293b; border-color: #334155; }
+html.dark .intro-card h3 { color: #f8fafc; }
+html.dark .intro-card p { color: #cbd5e1; }
+html.dark .dropdown-menu { background: #1e293b !important; border-color: #334155 !important; }
+html.dark .ghost-btn { background: #1e293b; color: var(--ink); border-color: #334155; }
+html.dark .ghost-btn:hover { background: #334155; }
+html.dark .ghost-btn.restart-btn-fix, html.dark .share-btn.home-btn-fix2 { background: #1e293b; color: #f8fafc !important; border-color: #334155 !important; }
+html.dark .ghost-btn.home-btn-fix { background: #1e293b; color: #f8fafc !important; border-color: #334155 !important; }
+html.dark .comparison-table-wrap, html.dark .comparison-table-wrap table { background: #1e293b !important; color: #f8fafc; border-color: #334155 !important; }
+html.dark .comparison-table-wrap th { color: #cbd5e1 !important; }
+html.dark .comparison-table-wrap tr, html.dark .comparison-table-wrap td, html.dark .comparison-table-wrap th { border-color: #334155 !important; }
+html.dark .disclaimer-box { background: #1e293b !important; border-color: #334155 !important; }
+html.dark .disclaimer-box h3 { color: #f8fafc !important; }
+html.dark .disclaimer-box p { color: #cbd5e1 !important; }
+html.dark [style*="color: #52606b"], html.dark [style*="color: #475569"], html.dark [style*="color: #64748b"] { color: #cbd5e1 !important; }
+html.dark p, html.dark h1, html.dark h2, html.dark h3, html.dark h4, html.dark strong { color: var(--ink); }
 `;
