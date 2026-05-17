@@ -1514,27 +1514,89 @@ function ComparisonTable({ onOpen, onBack }: any) {
 }
 
 function HomeView({ onStart, onPrograms, onCompare, onCompareDynamic }: any) {
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+  };
+
   return (
-    <>
+    <motion.div variants={container} initial="hidden" animate="show">
       <section className="home-hero">
-        <div className="hero-card">
+        <motion.div className="hero-card" variants={item}>
           <div className="hero-badge">دليل اختيار برامج الشيخ أحمد بن يوسف السيد</div>
-          <h1>لا تسجّل في كل برنامج تراه.</h1>
-          <p>تعرّف على احتياجك، ومرحلتك، وطريقة التعلم التي تناسبك، ثم اختر البرنامج الأقرب بدل التشتت بين البرامج.</p>
+          <h1 className="hero-title">لا تسجّل في كل برنامج تراه.</h1>
+          <p className="hero-subtitle">تعرّف على احتياجك، ومرحلتك، وطريقة التعلم التي تناسبك، ثم اختر البرنامج الأقرب بدل التشتت بين البرامج.</p>
           <div className="hero-actions">
             <button className="main-btn hero-btn" type="button" onClick={onStart}>ابدأ اختبار الاختيار</button>
             <button className="ghost-btn hero-btn" type="button" onClick={onPrograms}>استعراض كل البرامج</button>
             <button className="ghost-btn hero-btn" type="button" onClick={onCompare}>مقارنة عامة</button>
             <button className="ghost-btn hero-btn" type="button" onClick={onCompareDynamic}>مقارنة مخصصة</button>
           </div>
+        </motion.div>
+      </section>
+      
+      <motion.section className="intro-grid" variants={container}>
+        <motion.div className="intro-card" variants={item}>
+          <div className="intro-icon-box">🧭</div>
+          <h3>اختيار بحسب الحاجة</h3>
+          <p>الأسئلة لا تفترض برنامجًا مسبقًا، بل تقرأ احتياج الطالب وواقعه بذكاء.</p>
+        </motion.div>
+        <motion.div className="intro-card" variants={item}>
+          <div className="intro-icon-box">🎓</div>
+          <h3>يراعي التجربة السابقة</h3>
+          <p>إذا كنت طالبًا حاليًا أو خريجًا أو متعثراً، فالنتيجة تتعامل مع ذلك مباشرة لتوجيهك للخطوة التالية.</p>
+        </motion.div>
+        <motion.div className="intro-card" variants={item}>
+          <div className="intro-icon-box">📚</div>
+          <h3>نتيجة مع بدائل</h3>
+          <p>لا يقيدك بخيار واحد، بل يعرض البرنامج الأقرب، ثم بدائل قريبة مع نسبة توافق دقيقة.</p>
+        </motion.div>
+      </motion.section>
+
+      <motion.section className="bento-section" variants={container}>
+        <div className="section-head-minimal">
+          <span className="kicker">نظرة سريعة</span>
+          <h2>عن الدليل وبرامجه</h2>
+          <div className="divider-sm"></div>
         </div>
-      </section>
-      <section className="intro-grid">
-        <div className="intro-card"><span>🧭</span><h3>اختيار بحسب الحاجة</h3><p>الأسئلة لا تفترض برنامجًا مسبقًا، بل تقرأ احتياج الطالب وواقعه.</p></div>
-        <div className="intro-card"><span>🎓</span><h3>يراعي التجربة السابقة</h3><p>إذا كنت طالبًا حاليًا أو خريجًا أو منسحبًا، فالنتيجة تتعامل مع ذلك مباشرة.</p></div>
-        <div className="intro-card"><span>📚</span><h3>نتيجة مع بدائل</h3><p>يعرض البرنامج الأقرب، ثم بدائل قريبة مع نسبة مناسبة.</p></div>
-      </section>
-    </>
+        <div className="bento-grid">
+          <motion.div className="bento-item bento-1" variants={item}>
+            <span className="bento-label">قائمة برامج غنية</span>
+            <div className="bento-val">12+</div>
+            <p>برنامج تدريبي ومسار علمي متخصص</p>
+          </motion.div>
+          <motion.div className="bento-item bento-2" variants={item}>
+            <div className="bento-icon">🎯</div>
+            <strong>دقة الترشيح</strong>
+            <small>خوارزمية توافق ذكية</small>
+          </motion.div>
+          <motion.div className="bento-item bento-3" variants={item}>
+            <div className="quote-icon">"</div>
+            <p className="testimonial-text">هذا الدليل وفر علي شهوراً من التشتت، عرفت بالضبط ما يناسب مرحلتي العلمية دون تكرار أو فجوات.</p>
+            <div className="testimonial-author">— طالب خريج</div>
+          </motion.div>
+          <motion.div className="bento-item bento-4" variants={item}>
+            <div className="bento-flex">
+              <div>
+                <strong>مجاني وعام</strong>
+                <p>متاح لجميع الباحثين عن التأصيل الشرعي والوعي الفكري</p>
+              </div>
+              <div className="bento-stat-mini">100%</div>
+            </div>
+          </motion.div>
+        </div>
+      </motion.section>
+    </motion.div>
   );
 }
 
@@ -2088,41 +2150,194 @@ button { font-family: inherit; }
 
 .app-shell { max-width: 1120px; margin: 0 auto; padding: 28px 16px 56px; }
 
-.home-hero { min-height: 390px; display: grid; place-items: center; padding: 28px 0; }
+.home-hero { min-height: 480px; display: grid; place-items: center; padding: 40px 0; }
 .hero-card {
-  width: min(860px, 100%);
+  width: min(920px, 100%);
   background: linear-gradient(135deg, rgba(255,253,248,.96), rgba(255,250,238,.9));
   border: 1px solid var(--border);
-  border-radius: 34px;
-  box-shadow: 0 24px 70px rgba(39, 32, 20, .10);
-  padding: clamp(28px, 6vw, 58px);
+  border-radius: 40px;
+  box-shadow: 0 30px 90px rgba(39, 32, 20, .12);
+  padding: clamp(32px, 8vw, 70px);
   text-align: center;
   position: relative;
   overflow: hidden;
 }
-.hero-card::before { content: ""; position: absolute; inset: -70px auto auto -70px; width: 220px; height: 220px; border-radius: 50%; background: rgba(23, 107, 84, .09); }
-.hero-badge { display: inline-flex; padding: 8px 16px; border-radius: 99px; background: #e8f4ef; color: var(--green); font-size: 14px; margin-bottom: 18px; border: 1px solid #cfe7de; }
-.hero-card h1 { font-size: clamp(34px, 7vw, 62px); line-height: 1.15; margin: 0 0 18px; color: #102b23; }
-.hero-card p { max-width: 660px; margin: 0 auto 28px; color: var(--muted); line-height: 2; font-size: 18px; }
-.hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.hero-card::before { 
+  content: ""; position: absolute; inset: -100px auto auto -100px; 
+  width: 300px; height: 300px; border-radius: 50%; opacity: 0.6;
+  background: radial-gradient(circle, rgba(23, 107, 84, .15), transparent 70%); 
+}
+.hero-badge { 
+  display: inline-flex; padding: 10px 20px; border-radius: 99px; 
+  background: #e8f4ef; color: var(--green); font-size: 14px; 
+  margin-bottom: 24px; border: 1px solid #cfe7de; font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.hero-title { 
+  font-size: clamp(38px, 8vw, 68px); line-height: 1.1; 
+  margin: 0 0 20px; color: #102b23; font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.hero-subtitle { 
+  max-width: 680px; margin: 0 auto 40px; color: var(--muted); 
+  line-height: 1.9; font-size: clamp(17px, 2vw, 20px); 
+}
+.hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
 .result-actions { display: flex; gap: 12px; justify-content: space-between; margin-top: 16px; }
 .result-actions button { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center; }
-.hero-btn { min-width: 170px; }
+.hero-btn { min-width: 180px; height: 54px; }
 
 .main-btn, .ghost-btn {
-  border: 0; border-radius: 16px; padding: 13px 22px; font-weight: 700; cursor: pointer; transition: .18s ease; font-size: 15px;
+  border: 0; border-radius: 18px; padding: 14px 28px; font-weight: 700; cursor: pointer; transition: all .25s cubic-bezier(0.4, 0, 0.2, 1); font-size: 16px;
 }
-.main-btn { color: white; background: linear-gradient(135deg, var(--green), var(--green-2)); box-shadow: 0 10px 20px rgba(15, 138, 104, .18); }
-.main-btn:hover { transform: translateY(-1px); }
-.main-btn:disabled, .ghost-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
-.ghost-btn { background: rgba(255,255,255,.72); color: #395047; border: 1px solid var(--border); }
-.ghost-btn:hover { background: white; }
+.main-btn { 
+  color: white; 
+  background: linear-gradient(135deg, var(--green), var(--green-2)); 
+  box-shadow: 0 12px 24px rgba(15, 138, 104, .25); 
+}
+.main-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(15, 138, 104, .3); }
+.main-btn:active { transform: translateY(-1px); }
+.main-btn:disabled, .ghost-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
+.ghost-btn { background: rgba(255,255,255,.8); color: #395047; border: 1.5px solid var(--border); }
+.ghost-btn:hover { background: white; border-color: var(--green); color: var(--green); transform: translateY(-2px); }
 
-.intro-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 14px 0 30px; }
-.intro-card { background: rgba(255,253,248,.86); border: 1px solid var(--border); border-radius: 24px; padding: 22px; box-shadow: 0 8px 22px rgba(39,32,20,.04); }
-.intro-card span { font-size: 30px; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"; }
-.intro-card h3 { margin: 12px 0 8px; }
-.intro-card p { margin: 0; color: var(--muted); line-height: 1.8; }
+.intro-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 20px 0 40px; }
+.intro-card { 
+  background: rgba(255,253,248,.9); border: 1px solid var(--border); 
+  border-radius: 30px; padding: 28px; transition: all 0.3s ease;
+  box-shadow: 0 10px 30px rgba(39,32,20,.05);
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+}
+.intro-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(39,32,20,.1); border-color: var(--green); }
+.intro-icon-box { 
+  width: 64px; height: 64px; background: #fbf8f2; border: 1px solid var(--border); 
+  border-radius: 20px; display: flex; align-items: center; justify-content: center;
+  font-size: 32px; margin-bottom: 20px;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
+}
+.intro-card h3 { margin: 0 0 12px; font-size: 20px; color: #112e25; }
+.intro-card p { margin: 0; color: var(--muted); line-height: 1.8; font-size: 15px; }
+
+.bento-section {
+  padding: 40px 0 60px;
+  margin: 20px 0 40px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Full-width soft background zone */
+.bento-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(251, 251, 242, 0.7) 0%, rgba(255, 255, 255, 0) 100%);
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(23, 107, 84, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.section-head-minimal {
+  text-align: right;
+  margin-bottom: 48px;
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 16px;
+}
+
+.section-head-minimal .kicker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--green);
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+.section-head-minimal .kicker::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(23, 107, 84, 0.15));
+}
+
+.section-head-minimal h2 {
+  font-size: clamp(26px, 4vw, 34px);
+  color: #112e25;
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.divider-sm { display: none; }
+
+.bento-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 180px); gap: 20px; }
+.bento-item { 
+  background: white; border: 1px solid var(--border); border-radius: 32px; padding: 28px;
+  display: flex; flex-direction: column; justify-content: center; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 30px rgba(39,32,20,0.03); overflow: hidden; position: relative;
+}
+.bento-item:hover { transform: translateY(-8px); box-shadow: 0 20px 50px rgba(39,32,20,0.1); border-color: var(--green); }
+.bento-1 { grid-column: span 2; background: linear-gradient(135deg, #ffffff, #f9f7f0); }
+.bento-2 { grid-column: span 1; align-items: center; text-align: center; }
+.bento-3 { grid-column: span 1; grid-row: span 2; background: #176b54; color: white; border: 0; justify-content: space-between; }
+.bento-4 { grid-column: span 3; }
+
+.bento-label { font-size: 13px; font-weight: 800; color: var(--green); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+.bento-val { font-size: 48px; font-weight: 900; color: #112e25; line-height: 1; margin-bottom: 4px; }
+.bento-item p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+.bento-icon { font-size: 28px; margin-bottom: 12px; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"; }
+.bento-item strong { display: block; font-size: 18px; color: #112e25; margin-bottom: 4px; }
+.bento-item small { color: var(--muted); font-size: 13px; }
+
+.quote-icon { font-size: 60px; line-height: 1; opacity: 0.3; font-family: serif; position: absolute; top: 10px; right: 20px; }
+.testimonial-text { font-size: 17px !important; line-height: 1.7 !important; font-weight: 500; color: rgba(255,255,255,0.95) !important; z-index: 1; }
+.testimonial-author { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.6); margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; z-index: 1; }
+
+.bento-flex { display: flex; align-items: center; justify-content: space-between; gap: 20px; width: 100%; }
+.bento-stat-mini { background: #eaf7f1; color: var(--green); padding: 12px 18px; border-radius: 20px; font-weight: 900; font-size: 24px; border: 1px dashed var(--green); }
+
+@media (max-width: 860px) {
+  .intro-grid { grid-template-columns: 1fr; }
+  .bento-grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: auto; gap: 12px; }
+  .bento-1 { grid-column: span 2; min-height: 140px; }
+  .bento-2 { grid-column: span 1; min-height: 140px; }
+  .bento-3 { grid-column: span 1; min-height: 140px; }
+  .bento-4 { grid-column: span 2; min-height: 120px; }
+}
+
+@media (max-width: 520px) {
+  .section-head-minimal { text-align: center; margin-bottom: 32px; }
+  .section-head-minimal .kicker { justify-content: center; }
+  .section-head-minimal .kicker::after { 
+    content: "";
+    width: 40px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(23, 107, 84, 0.2));
+    flex: none;
+  }
+  .section-head-minimal .kicker::before {
+    content: "";
+    width: 40px;
+    height: 1px;
+    background: linear-gradient(270deg, transparent, rgba(23, 107, 84, 0.2));
+    flex: none;
+  }
+  .bento-grid { grid-template-columns: 1fr; gap: 12px; }
+  .bento-1, .bento-2, .bento-3, .bento-4 { grid-column: span 1; min-height: auto; padding: 20px; text-align: center; align-items: center; }
+  .bento-val { font-size: 38px; }
+  .testimonial-text { font-size: 15px !important; }
+  .bento-3 { min-height: 200px; }
+  .bento-stat-mini { font-size: 20px; padding: 10px 14px; }
+  .bento-flex { flex-direction: column; gap: 10px; }
+}
 
 .quiz-card, .result-wrap, .directory-page, .comparison-page, .program-detail { max-width: 900px; margin: 0 auto; }
 .quiz-card, .result-main, .alternatives-box, .compare-box, .advice-card, .program-detail > .detail-section {

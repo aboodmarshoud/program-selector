@@ -6,3 +6,5 @@ export default defineConfig({
   // Relative assets make the site work under any GitHub Pages repo path.
   base: "./",
 });
+
+// النسخة الأولى 
