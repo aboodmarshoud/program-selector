@@ -9,7 +9,7 @@ const port = process.env.PORT || 3000;
 const dataDir = path.join(__dirname, "data");
 const analyticsFile = path.join(dataDir, "analytics-events.json");
 
-app.use(express.json({ limit: "64kb" }));
+app.use(express.json({ limit: "256kb" }));
 
 async function readEvents() {
   try {
@@ -59,6 +59,11 @@ app.post("/api/analytics", async (req, res) => {
     timestamp: event.timestamp || new Date().toISOString(),
     resultProgramId: event.resultProgramId ? String(event.resultProgramId) : undefined,
     stepCount: Number.isFinite(event.stepCount) ? event.stepCount : undefined,
+    rawAnswers: event.rawAnswers && typeof event.rawAnswers === "object" ? event.rawAnswers : undefined,
+    readableAnswers: Array.isArray(event.readableAnswers) ? event.readableAnswers : undefined,
+    recommendations: Array.isArray(event.recommendations) ? event.recommendations : undefined,
+    profile: event.profile && typeof event.profile === "object" ? event.profile : undefined,
+    context: event.context && typeof event.context === "object" ? event.context : undefined,
   });
 
   await writeEvents(events);

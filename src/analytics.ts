@@ -7,6 +7,26 @@ export type AnalyticsEventPayload = {
   timestamp: string;
   resultProgramId?: string;
   stepCount?: number;
+  rawAnswers?: Record<string, unknown>;
+  readableAnswers?: Array<{
+    id: string;
+    title: string;
+    value: unknown;
+    label: string;
+  }>;
+  recommendations?: Array<{
+    id: string;
+    name: string;
+    score?: number;
+    badge?: string;
+  }>;
+  profile?: Record<string, unknown>;
+  context?: {
+    referrer: string;
+    language: string;
+    userAgent: string;
+    viewport: string;
+  };
 };
 
 export type AnalyticsSummary = {

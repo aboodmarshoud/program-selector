@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { Moon, Sun } from "lucide-react";
 import { loadAnalyticsSummary, trackAnalyticsEvent, type AnalyticsSummary } from "./analytics";
 
+const ANALYTICS_PASSWORD = "admin2026";
+
 const PROGRAMS = {
   alim: {
     id: "alim",
@@ -483,6 +485,7 @@ function rankWeight(value, choice) {
 }
 
 function hasAnswer(value) {
+  if (typeof value === "string") return value.trim().length > 0;
   return Array.isArray(value) ? value.length > 0 : Boolean(value);
 }
 
@@ -572,6 +575,13 @@ const QUESTIONS = [
     title: "ما الجنس؟",
     subtitle: "حتى لا تظهر خيارات خاصة لا تناسب المستفيد.",
     options: () => [option("male", "ذكر", "", "👤"), option("female", "أنثى", "", "🧕")],
+  },
+  {
+    id: "country",
+    title: "ما البلد؟",
+    subtitle: "اكتب البلد فقط. هذا يساعد في فهم انتشار الأداة بين الزوار.",
+    inputType: "text",
+    placeholder: "مثال: الأردن، تركيا، السعودية...",
   },
   {
     id: "age",
@@ -1871,10 +1881,12 @@ function AnswersSummary({ answers }: any) {
           const ans = answers[q.id];
           if (!hasAnswer(ans)) return null;
           const title = typeof q.title === 'function' ? q.title(answers) : q.title;
-          const opts = typeof q.options === 'function' ? q.options(answers) : q.options;
-          const chosenOpts = asArray(ans)
-            .map((v) => opts.find((o: any) => o.value === v)?.title || v)
-            .join("، ");
+          const opts = typeof q.options === 'function' ? q.options(answers) : [];
+          const chosenOpts = q.inputType === "text"
+            ? String(ans).trim()
+            : asArray(ans)
+              .map((v) => opts.find((o: any) => o.value === v)?.title || v)
+              .join("، ");
           
           return (
             <li key={q.id} style={{ marginBottom: '14px', borderBottom: '1px dashed var(--border)', paddingBottom: '8px' }}>
@@ -1888,11 +1900,52 @@ function AnswersSummary({ answers }: any) {
   );
 }
 
+function answerLabel(question: any, value: any, answers: any) {
+  if (value == null) return "";
+  if (!question?.options) return Array.isArray(value) ? value.join(", ") : String(value).trim();
+
+  const options = question.options(answers).filter(Boolean);
+  const labelFor = (item: any) => options.find((opt: any) => opt.value === item)?.title || String(item);
+  return Array.isArray(value) ? value.map(labelFor).join("، ") : labelFor(value);
+}
+
+function buildCompletionAnalytics(answers: any, result: any, qs: any[]) {
+  const readableAnswers = qs
+    .filter((question) => hasAnswer(answers[question.id]))
+    .map((question) => ({
+      id: question.id,
+      title: questionTitle(question, answers),
+      value: answers[question.id],
+      label: answerLabel(question, answers[question.id], answers),
+    }));
+
+  return {
+    rawAnswers: answers,
+    readableAnswers,
+    recommendations: result.list.slice(0, 5).map((program: any) => ({
+      id: program.id,
+      name: program.name,
+      score: program.score,
+      badge: program.badge,
+    })),
+    profile: result.profile,
+    context: {
+      referrer: document.referrer,
+      language: navigator.language,
+      userAgent: navigator.userAgent,
+      viewport: `${window.innerWidth}x${window.innerHeight}`,
+    },
+  };
+}
+
 function AnalyticsDashboard({ onBack }: any) {
+  const [password, setPassword] = useState("");
+  const [authorized, setAuthorized] = useState(() => localStorage.getItem("program_selector_analytics_auth") === "true");
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
   async function refresh() {
+    if (!authorized) return;
     setLoading(true);
     setSummary(await loadAnalyticsSummary());
     setLoading(false);
@@ -1900,7 +1953,37 @@ function AnalyticsDashboard({ onBack }: any) {
 
   useEffect(() => {
     refresh();
-  }, []);
+  }, [authorized]);
+
+  function unlock(event: any) {
+    event.preventDefault();
+    if (password === ANALYTICS_PASSWORD) {
+      localStorage.setItem("program_selector_analytics_auth", "true");
+      setAuthorized(true);
+    }
+  }
+
+  if (!authorized) {
+    return (
+      <section className="analytics-page">
+        <div className="analytics-login">
+          <small>لوحة خاصة</small>
+          <h2>إدخال كلمة السر</h2>
+          <form onSubmit={unlock}>
+            <input
+              className="text-answer-input"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="كلمة السر"
+            />
+            <button className="main-btn" type="submit">دخول</button>
+          </form>
+          <button className="ghost-btn" type="button" onClick={onBack}>العودة للرئيسية</button>
+        </div>
+      </section>
+    );
+  }
 
   const cards = [
     { label: "عدد الداخلين إلى الموقع", value: summary?.visitors ?? 0 },
@@ -1940,6 +2023,21 @@ function AnalyticsDashboard({ onBack }: any) {
       <div className="analytics-panel analytics-note">
         <p>لجمع بيانات كل الزوار يجب تشغيل الموقع عبر السيرفر المرفق بعد البناء: <code>npm run build</code> ثم <code>npm start</code>. عند النشر كصفحة ثابتة فقط ستظهر بيانات هذا المتصفح فقط.</p>
       </div>
+
+      <div className="analytics-panel analytics-note">
+        <h3>آخر الاختبارات المكتملة</h3>
+        {(summary?.events || [])
+          .filter((event) => event.event === "quiz_completed")
+          .slice(-10)
+          .reverse()
+          .map((event) => (
+            <div className="analytics-event" key={`${event.sessionId}-${event.timestamp}`}>
+              <strong>{event.recommendations?.[0]?.name || event.resultProgramId || "نتيجة غير محددة"}</strong>
+              <small>{new Date(event.timestamp).toLocaleString("ar")}</small>
+              <p>{event.readableAnswers?.map((answer) => `${answer.title}: ${answer.label}`).join(" | ")}</p>
+            </div>
+          ))}
+      </div>
     </section>
   );
 }
@@ -1972,7 +2070,7 @@ export default function ProgramSelector() {
 
   const qs = useMemo(() => visibleQuestions(answers), [answers]);
   const current = qs[Math.min(step, qs.length - 1)] || qs[0];
-  const currentOptions = current ? current.options(answers).filter(Boolean) : [];
+  const currentOptions = current?.options ? current.options(answers).filter(Boolean) : [];
   const result = useMemo(() => calculateRecommendations(answers), [answers]);
   const openedProgram = openedProgramId ? result.list.find((p) => p.id === openedProgramId) || PROGRAMS[openedProgramId] : null;
   const progress = qs.length ? Math.round(((Math.min(step, qs.length - 1) + (hasAnswer(answers[current?.id]) ? 1 : 0)) / qs.length) * 100) : 0;
@@ -2010,6 +2108,7 @@ export default function ProgramSelector() {
         trackAnalyticsEvent("quiz_completed", {
           resultProgramId: result.list[0]?.id,
           stepCount: qs.length,
+          ...buildCompletionAnalytics(answers, result, qs),
         });
       }
     } else setStep(safeStep + 1);
@@ -2109,21 +2208,34 @@ export default function ProgramSelector() {
                 {current.multi && <p className="multi-hint">يمكنك اختيار أكثر من خيار.</p>}
               </div>
 
-              <div className="options-grid">
-                {currentOptions.map((opt) => (
-                  <button
-                    className={`option-card ${hasChoice(answers[current.id], opt.value) ? "selected" : ""}`}
-                    type="button"
-                    key={opt.value}
-                    onClick={() => choose(current.id, opt.value)}
-                  >
-                    <span className="option-icon">
-                      {current.multi && hasChoice(answers[current.id], opt.value) ? <b className="rank-badge">{choiceRank(answers[current.id], opt.value) + 1}</b> : opt.icon}
-                    </span>
-                    <span className="option-copy"><strong>{opt.title}</strong>{opt.sub && <small>{opt.sub}</small>}</span>
-                  </button>
-                ))}
-              </div>
+              {current.inputType === "text" ? (
+                <div className="text-answer-wrap">
+                  <input
+                    className="text-answer-input"
+                    type="text"
+                    value={answers[current.id] || ""}
+                    onChange={(event) => choose(current.id, event.target.value)}
+                    placeholder={current.placeholder || ""}
+                    autoComplete="country-name"
+                  />
+                </div>
+              ) : (
+                <div className="options-grid">
+                  {currentOptions.map((opt) => (
+                    <button
+                      className={`option-card ${hasChoice(answers[current.id], opt.value) ? "selected" : ""}`}
+                      type="button"
+                      key={opt.value}
+                      onClick={() => choose(current.id, opt.value)}
+                    >
+                      <span className="option-icon">
+                        {current.multi && hasChoice(answers[current.id], opt.value) ? <b className="rank-badge">{choiceRank(answers[current.id], opt.value) + 1}</b> : opt.icon}
+                      </span>
+                      <span className="option-copy"><strong>{opt.title}</strong>{opt.sub && <small>{opt.sub}</small>}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
 
               <div className="nav-row">
                 <button className="ghost-btn" type="button" onClick={back} disabled={step === 0}>السابق</button>
@@ -2234,6 +2346,22 @@ button { font-family: inherit; }
 .analytics-note { display: block; }
 .analytics-note p { margin: 0; color: var(--muted); line-height: 1.9; }
 .analytics-note code { background: #f6efe3; border: 1px solid var(--border); border-radius: 8px; padding: 2px 6px; color: var(--ink); }
+.analytics-login {
+  max-width: 460px;
+  margin: 70px auto 0;
+  background: rgba(255,253,248,.95);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: 0 18px 52px rgba(39,32,20,.08);
+  padding: 24px;
+}
+.analytics-login h2 { margin: 8px 0 18px; }
+.analytics-login small { color: var(--green); font-weight: 800; }
+.analytics-login form { display: grid; gap: 12px; margin-bottom: 12px; }
+.analytics-event { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; }
+.analytics-event strong, .analytics-event small { display: block; }
+.analytics-event small { color: var(--muted); margin: 4px 0 8px; }
+.analytics-event p { font-size: 13px; }
 .quiz-card { padding: clamp(20px, 4vw, 34px); }
 .quiz-topline, .progress-row, .nav-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .quiz-topline span { color: var(--muted); font-weight: 700; }
@@ -2243,6 +2371,20 @@ button { font-family: inherit; }
 .question-head h2 { font-size: clamp(24px, 5vw, 36px); margin: 0 0 10px; color: #112e25; }
 .question-head p { color: var(--muted); line-height: 1.8; margin: 0 0 10px; }
 .multi-hint { background: #fff6df; color: #7d560c !important; border: 1px solid #f1dcab; border-radius: 16px; padding: 10px 14px; }
+.text-answer-wrap { margin: 24px 0; }
+.text-answer-input {
+  width: 100%;
+  border: 1.5px solid var(--border);
+  background: white;
+  color: var(--ink);
+  border-radius: 18px;
+  padding: 16px 18px;
+  font: inherit;
+  font-size: 17px;
+  outline: none;
+  transition: .18s ease;
+}
+.text-answer-input:focus { border-color: var(--green-2); box-shadow: 0 0 0 4px rgba(15, 138, 104, .12); }
 .options-grid { display: grid; gap: 12px; margin: 24px 0; }
 .option-card { width: 100%; display: flex; align-items: center; gap: 14px; text-align: right; border: 1.5px solid var(--border); background: white; border-radius: 20px; padding: 16px; cursor: pointer; transition: .18s ease; color: var(--ink); }
 .option-card:hover { border-color: #a7cfbf; transform: translateY(-1px); }
@@ -2461,6 +2603,7 @@ html.dark .theme-toggle, html.dark .cc-card, html.dark .picker-btn, html.dark .g
 html.dark .picker-btn.selected { background: rgba(15, 138, 104, 0.5); border-color: var(--green); }
 html.dark .hero-card, html.dark .quiz-card, html.dark .result-main, html.dark .comparison-page, html.dark .program-detail > .detail-section, html.dark .alternatives-box, html.dark .compare-box, html.dark .answers-summary { background: #1e293b; border-color: #334155; }
 html.dark .analytics-card, html.dark .analytics-panel { background: #1e293b; border-color: #334155; }
+html.dark .analytics-login { background: #1e293b; border-color: #334155; }
 html.dark .analytics-note code { background: #0f172a; border-color: #334155; color: #f8fafc; }
 html.dark .home-hero .hero-card { background: linear-gradient(135deg, #1e293b, #0f172a); }
 html.dark .hero-card h1 { color: #f8fafc; }
@@ -2468,6 +2611,7 @@ html.dark .cc-details > div, html.dark .ds-blue, html.dark .ds-green, html.dark 
 html.dark .ds-blue h3, html.dark .ds-green h3, html.dark .ds-amber h3, html.dark .ds-rose h3 { color: #f8fafc; }
 html.dark .program-link { color: #34d399; }
 html.dark .option-card, html.dark .mini-program, html.dark .directory-card { background: #1e293b; border-color: #334155; color: #f8fafc; }
+html.dark .text-answer-input { background: #1e293b; border-color: #334155; color: #f8fafc; }
 html.dark .links-box div { background: #0f172a; border-color: #334155; color: #f8fafc; }
 html.dark .option-card:hover, html.dark .directory-card:hover { border-color: var(--green); background: #27374d; }
 html.dark .mini-program:hover { border-color: var(--green); background: #27374d; box-shadow: none; }
