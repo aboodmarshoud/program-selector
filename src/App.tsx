@@ -64,7 +64,7 @@ const PROGRAMS = {
     selectivity: "انتقائي جدًا",
     color: "#0f4f3f",
     soft: "#e6f4ef",
-    dimensions: { sharia: 100, intellectual: 90, tazkiyah: 90, reform: 80, skills: 90 },
+    dimensions: { sharia: 100, intellectual: 75, tazkiyah: 85, reform: 80, skills: 85 },
     description:
       "مسار تكويني طويل وعميق لمن يطمح إلى التكوين العلمي الرسالي الموسوعي، مع عناية بالتأصيل والتزكية والفكر والمهارات.",
     goals: [
@@ -104,7 +104,7 @@ const PROGRAMS = {
     selectivity: "مرحلة تمهيدية واختبار",
     color: "#17446f",
     soft: "#e7f0f8",
-    dimensions: { sharia: 95, intellectual: 70, tazkiyah: 65, reform: 40, skills: 60 },
+    dimensions: { sharia: 85, intellectual: 70, tazkiyah: 80, reform: 75, skills: 70 },
     description:
       "مسار شرعي معرفي شامل يجمع بين التأصيل الشرعي والثقافة الإسلامية والبناء الفكري والسلوكي، وهو أنسب لمن يريد بناءً علميًا عامًا لا تخصصًا ضيقًا.",
     goals: [
@@ -143,7 +143,7 @@ const PROGRAMS = {
     selectivity: "مرحلة تمهيدية واختبار",
     color: "#28608c",
     soft: "#edf5fb",
-    dimensions: { sharia: 70, intellectual: 40, tazkiyah: 60, reform: 30, skills: 40 },
+    dimensions: { sharia: 65, intellectual: 50, tazkiyah: 65, reform: 55, skills: 45 },
     description:
       "نسخة أخف من البناء المنهجي تراعي المبتدئ أو المشغول أو من لا يستطيع الالتزام بالمسار الأساسي الطويل الآن.",
     goals: [
@@ -182,7 +182,7 @@ const PROGRAMS = {
     selectivity: "بحسب إعلان الدفعة",
     color: "#5a2d82",
     soft: "#f2eafa",
-    dimensions: { sharia: 50, intellectual: 100, tazkiyah: 50, reform: 60, skills: 80 },
+    dimensions: { sharia: 65, intellectual: 95, tazkiyah: 65, reform: 70, skills: 55 },
     description:
       "برنامج يعالج البناء الفكري الإسلامي، وفهم التيارات والشبهات ومركزية الوحي، وهو أوسع من المعالجات القصيرة أو الوجدانية فقط.",
     goals: [
@@ -221,7 +221,7 @@ const PROGRAMS = {
     selectivity: "بحسب إعلان البرنامج",
     color: "#0f6b78",
     soft: "#e7f6f8",
-    dimensions: { sharia: 40, intellectual: 60, tazkiyah: 100, reform: 30, skills: 30 },
+    dimensions: { sharia: 40, intellectual: 65, tazkiyah: 95, reform: 40, skills: 30 },
     description:
       "مسار معرفي تزكوي يعالج اليقين والثوابت مع عناية بالجانب الإيماني والسلوكي، وهو أقرب لمن يحتاج ترميم السكينة قبل التوسع الفكري.",
     goals: [
@@ -260,7 +260,7 @@ const PROGRAMS = {
     selectivity: "بحسب إعلان الأكاديمية",
     color: "#5a6f2a",
     soft: "#eef5e2",
-    dimensions: { sharia: 100, intellectual: 50, tazkiyah: 50, reform: 40, skills: 70 },
+    dimensions: { sharia: 90, intellectual: 55, tazkiyah: 60, reform: 35, skills: 45 },
     description:
       "مسار متخصص في علوم الحديث والسنة، مناسب لمن يريد بابًا علميًا محددًا لا مجرد تأسيس عام في العلوم الشرعية.",
     goals: [
@@ -299,7 +299,7 @@ const PROGRAMS = {
     selectivity: "تسجيل + اختبار + مواد قبلية",
     color: "#437047",
     soft: "#edf6ee",
-    dimensions: { sharia: 40, intellectual: 60, tazkiyah: 40, reform: 100, skills: 95 },
+    dimensions: { sharia: 50, intellectual: 75, tazkiyah: 60, reform: 90, skills: 85 },
     description:
       "دورة تبصيرية تساعد طالب البرامج والمصلح على فهم ثغور الأمة وموقعه منها، وتُختم بمشروع عملي يخدم به واقعه.",
     goals: [
@@ -323,6 +323,194 @@ const PROGRAMS = {
       "ليست دورة معلومات فقط؛ يُنتظر منك مشروع عملي.",
     ],
   },
+  mashrou_al_omr: {
+    id: "mashrou_al_omr",
+    name: "مشروع العمر للمصلحين",
+    badge: "تكوين إصلاحي تخصصي",
+    icon: "🏛️",
+    duration: "نحو 5 سنوات",
+    audience: "لمن يجعل الإصلاح مشروع عمره",
+    cost: "مجاني",
+    medium: "موقع البرنامج + تلجرام",
+    officialUrl: "",
+    telegramUrl: "",
+    registrationStatus: "يفتح على دفعات متباعدة",
+    selectivity: "انتقائي وثقيل نسبيًا",
+    color: "#5d3f8c",
+    soft: "#f1ecfb",
+    dimensions: { sharia: 70, intellectual: 80, tazkiyah: 65, reform: 95, skills: 90 },
+    description:
+      "مسار طويل وعميق لمن تجاوز مجرد البحث عن مقرر، ويريد بناءً رساليًا ينتهي إلى مشروع عطاء واضح في أحد مسارات: المفكر، الباحث، طالب العلم، الداعية، المربي.",
+    goals: [
+      "تحويل البناء العلمي والفكري والتربوي إلى مشروع إصلاحي ممتد.",
+      "اختيار مسار تخصصي من مسارات المشروع: المفكر، الباحث، طالب العلم، الداعية، المربي.",
+      "الجمع بين التكوين الشخصي ومشاريع العطاء العملي."
+    ],
+    outcomes: [
+      "رؤية إصلاحية أوسع من مجرد دراسة مواد متفرقة.",
+      "تحديد مسار عطاء طويل يناسب الملكات والاحتياج.",
+      "انتقال من سؤال: ماذا أدرس؟ إلى سؤال: كيف أخدم؟"
+    ],
+    suitable: [
+      "لديك استعداد عالٍ ووقت يومي معتبر لسنوات.",
+      "أتممت أصلًا بنائيًا أو لديك نضج يسمح بمسار ثقيل.",
+      "تريد أن يكون التعلم مرتبطًا بمشروع إصلاحي لا بمجرد التحصيل."
+    ],
+    caution: [
+      "ليس خيار البداية الخفيفة؛ يحتاج نفسًا طويلًا واستعدادًا لمتطلبات عالية.",
+      "إن لم تكن قد بنيت أصلًا علميًا أو إيمانيًا مناسبًا، فابدأ بالبناء المنهجي أو برد اليقين أو مسار أقرب لحاجتك.",
+      "التسجيل لا يفتح دائمًا؛ اجعله وجهة لاحقة إن لم تكن الدفعة متاحة."
+    ],
+  },
+  omr_mufakkir: {
+    id: "omr_mufakkir",
+    name: "مشروع العمر - مسار المفكر",
+    badge: "رؤية وفكر إصلاحي",
+    icon: "🧠",
+    duration: "نحو 5 سنوات",
+    audience: "غالبًا لمن بنى أصلًا منهجيًا سابقًا",
+    cost: "مجاني",
+    medium: "موقع البرنامج + تلجرام",
+    officialUrl: "",
+    telegramUrl: "",
+    registrationStatus: "يفتح على دفعات متباعدة",
+    selectivity: "انتقائي، وغالبًا لخريجي البناء المنهجي أو من في معناهم",
+    color: "#5d3f8c",
+    soft: "#f1ecfb",
+    dimensions: { sharia: 65, intellectual: 95, tazkiyah: 65, reform: 95, skills: 85 },
+    description: "مسار داخل مشروع العمر لمن يغلب عليه هم بناء الرؤية، تحليل الأفكار، تحرير التصورات، وخدمة الإصلاح من بوابة الفكر والوعي.",
+    goals: ["بناء عقلية مفكرة تخدم قضايا الأمة.", "تحويل الوعي الفكري إلى مشاريع إصلاحية.", "الربط بين المعرفة والواقع والسؤال الحضاري."],
+    outcomes: ["قدرة أعلى على التحليل والتركيب.", "مشروع فكري أو توعوي واضح.", "وعي إصلاحي طويل النفس."],
+    suitable: ["تخرجت من البناء المنهجي أو لديك أصل مكافئ.", "يميل اهتمامك إلى الأفكار والتيارات والرؤية الكلية.", "لديك وقت واستعداد لمسار طويل ثقيل."],
+    caution: ["ليس بداية مناسبة لمن لم يتأسس بعد.", "لا يفتح دائمًا؛ قد تحتاج مسارًا رديفًا حتى تفتح الدفعة.", "إن كانت حاجتك الأولى تزكوية أو تأسيسية فابدأ بما هو أسبق."],
+  },
+  omr_bahith: {
+    id: "omr_bahith",
+    name: "مشروع العمر - مسار الباحث",
+    badge: "بحث وتحرير",
+    icon: "🔎",
+    duration: "نحو 5 سنوات",
+    audience: "غالبًا لمن بنى أصلًا منهجيًا سابقًا",
+    cost: "مجاني",
+    medium: "موقع البرنامج + تلجرام",
+    officialUrl: "",
+    telegramUrl: "",
+    registrationStatus: "يفتح على دفعات متباعدة",
+    selectivity: "انتقائي، وغالبًا لخريجي البناء المنهجي أو من في معناهم",
+    color: "#4f5d95",
+    soft: "#eef2ff",
+    dimensions: { sharia: 80, intellectual: 85, tazkiyah: 60, reform: 90, skills: 90 },
+    description: "مسار داخل مشروع العمر لمن يميل إلى البحث والتحرير وجمع المادة وبناء المشاريع المعرفية الرصينة.",
+    goals: ["تنمية الملكة البحثية.", "خدمة الثغور المعرفية بمشاريع محررة.", "ربط البحث بالحاجة الإصلاحية لا بالتحصيل المجرد."],
+    outcomes: ["قدرة بحثية ومنهجية أعلى.", "مشاريع كتابة أو تحرير أو دراسة.", "وعي بأولويات البحث النافع."],
+    suitable: ["تخرجت من البناء المنهجي أو لديك أصل مكافئ.", "تصبر على القراءة والتحرير والتوثيق.", "تميل للعمل المعرفي الهادئ طويل النفس."],
+    caution: ["لا يناسب من يريد أثرًا سريعًا بلا صبر بحثي.", "يحتاج أصلًا علميًا ومنهجيًا قبل الدخول.", "إن كان ميلك للخطاب المباشر فقد يكون مسار الداعية أقرب."],
+  },
+  omr_talib_ilm: {
+    id: "omr_talib_ilm",
+    name: "مشروع العمر - مسار طالب العلم",
+    badge: "تأصيل وعطاء علمي",
+    icon: "📚",
+    duration: "نحو 5 سنوات",
+    audience: "غالبًا لمن بنى أصلًا منهجيًا سابقًا",
+    cost: "مجاني",
+    medium: "موقع البرنامج + تلجرام",
+    officialUrl: "",
+    telegramUrl: "",
+    registrationStatus: "يفتح على دفعات متباعدة",
+    selectivity: "انتقائي، وغالبًا لخريجي البناء المنهجي أو من في معناهم",
+    color: "#345f3f",
+    soft: "#edf7ef",
+    dimensions: { sharia: 90, intellectual: 75, tazkiyah: 70, reform: 85, skills: 80 },
+    description: "مسار داخل مشروع العمر لمن يريد أن يكون طلب العلم مركز العطاء، مع توجيهه لخدمة الإصلاح والدعوة والتعليم.",
+    goals: ["تعميق التأصيل العلمي.", "توظيف العلم في خدمة الواقع.", "بناء نفس طويل في الطلب والعطاء."],
+    outcomes: ["وجهة علمية أوضح.", "قدرة على التعليم أو الخدمة العلمية.", "ربط العلم بالمشروع الإصلاحي."],
+    suitable: ["تخرجت من البناء المنهجي أو لديك أصل مكافئ.", "يميل قلبك إلى العلم والتعليم والتأصيل.", "تستطيع الالتزام بمسار طويل."],
+    caution: ["إن كان هدفك تأصيلًا أوسع جدًا فقد يكون برنامج عالِم أسبق أو أعلى بحسب الشروط.", "لا تجعله بديلًا عن الأساس إن لم تتأسس بعد.", "انتبه لثقل المسار وتباعد دفعاته."],
+  },
+  omr_daiya: {
+    id: "omr_daiya",
+    name: "مشروع العمر - مسار الداعية",
+    badge: "بلاغ وتأثير",
+    icon: "📣",
+    duration: "نحو 5 سنوات",
+    audience: "غالبًا لمن بنى أصلًا منهجيًا سابقًا",
+    cost: "مجاني",
+    medium: "موقع البرنامج + تلجرام",
+    officialUrl: "",
+    telegramUrl: "",
+    registrationStatus: "يفتح على دفعات متباعدة",
+    selectivity: "انتقائي، وغالبًا لخريجي البناء المنهجي أو من في معناهم",
+    color: "#7c4a24",
+    soft: "#fff1e6",
+    dimensions: { sharia: 65, intellectual: 80, tazkiyah: 75, reform: 95, skills: 90 },
+    description: "مسار داخل مشروع العمر لمن يغلب عليه هم البلاغ، مخاطبة الناس، تقريب المعاني، وتحويل العلم إلى دعوة مؤثرة.",
+    goals: ["بناء داعية واعٍ بالواقع.", "تحويل العلم إلى خطاب نافع.", "خدمة الناس بالبلاغ والتوجيه."],
+    outcomes: ["قدرة أفضل على الخطاب والتأثير.", "مشروع دعوي واضح.", "اتزان بين العلم والواقع والناس."],
+    suitable: ["تخرجت من البناء المنهجي أو لديك أصل مكافئ.", "تميل للتواصل والخطاب وتعليم الناس.", "تريد أثرًا واقعيًا مباشرًا مع بناء طويل."],
+    caution: ["لا يكفي الحماس الدعوي دون أصل علمي.", "إن كنت تحتاج بيئة تربوية أولًا فقد يكون إشراق أو خديجة أقرب.", "دفعاته ليست دائمة، فتهيأ بمواد رديفة."],
+  },
+  omr_murabbi: {
+    id: "omr_murabbi",
+    name: "مشروع العمر - مسار المربي",
+    badge: "تربية وبناء نفوس",
+    icon: "🤝",
+    duration: "نحو 5 سنوات",
+    audience: "غالبًا لمن بنى أصلًا منهجيًا سابقًا",
+    cost: "مجاني",
+    medium: "موقع البرنامج + تلجرام",
+    officialUrl: "",
+    telegramUrl: "",
+    registrationStatus: "يفتح على دفعات متباعدة",
+    selectivity: "انتقائي، وغالبًا لخريجي البناء المنهجي أو من في معناهم",
+    color: "#7a6a1f",
+    soft: "#fbf7df",
+    dimensions: { sharia: 60, intellectual: 70, tazkiyah: 85, reform: 95, skills: 85 },
+    description: "مسار داخل مشروع العمر لمن يغلب عليه هم تربية النفوس، بناء البيئات، مرافقة الناس، وصناعة أثر إصلاحي عبر المحاضن.",
+    goals: ["بناء مربي واعٍ بالإنسان والواقع.", "تكوين قدرة على المرافقة والتوجيه.", "خدمة الإصلاح من بوابة المحاضن والتربية."],
+    outcomes: ["حس تربوي أعمق.", "قدرة أعلى على بناء بيئة ومتابعة.", "مشروع تربوي أو محضني أو تعليمي."],
+    suitable: ["تخرجت من البناء المنهجي أو لديك أصل مكافئ.", "تميل للصحبة والمتابعة وبناء الناس.", "لديك صبر على التربية والمرافقة."],
+    caution: ["لا يناسب من يريد دراسة فردية فقط.", "يحتاج نضجًا وأصلًا سابقًا.", "إن كان الاحتياج بيئة شخصية قبل العطاء فابدأ بإشراق أو خديجة بحسب الحال."],
+  },
+  jeel_new: {
+    id: "jeel_new",
+    name: "أكاديمية الجيل الصاعد - المسار الجديد",
+    badge: "للأعمار 7–9",
+    icon: "🌼",
+    duration: "يحدد عند الإعلان",
+    audience: "7–9 سنوات",
+    cost: "مجاني",
+    medium: "موقع البرنامج + تلجرام",
+    officialUrl: "https://jeelacademy.app/",
+    telegramUrl: "https://t.me/JeelAcademySA",
+    registrationStatus: "سيتم تحديثه عند الإعلان",
+    selectivity: "مسار عمري مخصص",
+    color: "#d18a1d",
+    soft: "#fff4df",
+    dimensions: { sharia: 45, intellectual: 45, tazkiyah: 90, reform: 45, skills: 50 },
+    description:
+      "مسار ناشئ داخل أكاديمية الجيل الصاعد مخصص للأعمار الصغيرة 7–9، يقدَّم باعتباره مدخلًا تربويًا قبل بذور.",
+    goals: [
+      "بداية مبكرة تناسب سن الطفل قبل الدخول في مسارات 10 سنوات فما فوق.",
+      "غرس المعاني الإيمانية والآداب الأساسية بصورة لطيفة.",
+      "تهيئة الطفل لمسارات الأكاديمية اللاحقة عند بلوغ السن المناسب."
+    ],
+    outcomes: [
+      "ارتباط مبكر بالبيئة التربوية المناسبة للعمر.",
+      "تهيئة وجدانية وأخلاقية قبل المسارات الأطول.",
+      "خطة أوضح للأسرة بدل إدخال الطفل في مسار أكبر من سنه."
+    ],
+    suitable: [
+      "العمر بين 7 و9 سنوات.",
+      "تريد مسارًا تربويًا مبكرًا لا برنامج كبار.",
+      "تبحث لابنك أو ابنتك عن بداية لطيفة ومنضبطة."
+    ],
+    caution: [
+      "لا تجعل الطفل يدخل مسارات أكبر من عمره إن توفر هذا المسار أو بديله المناسب.",
+      "التفاصيل النهائية مرتبطة بإعلان الأكاديمية؛ راجع الشروط عند فتح التسجيل.",
+      "الأولوية هنا للتربية والتهيئة لا لكثرة المقررات."
+    ],
+  },
   buthur: {
     id: "buthur",
     name: "أكاديمية الجيل الصاعد - بذور",
@@ -338,7 +526,7 @@ const PROGRAMS = {
     selectivity: "غالبًا مفتوح",
     color: "#638b2f",
     soft: "#f1f7e8",
-    dimensions: { sharia: 40, intellectual: 30, tazkiyah: 90, reform: 30, skills: 40 },
+    dimensions: { sharia: 60, intellectual: 60, tazkiyah: 85, reform: 65, skills: 55 },
     description:
       "مدخل تربوي مبكر لغرس الإيمان والقيم ومحاسن الأخلاق بأسلوب يناسب سن الطفل.",
     goals: [
@@ -369,7 +557,7 @@ const PROGRAMS = {
     selectivity: "اختبار قبول ومتابعة خاصة",
     color: "#2f7a4f",
     soft: "#e9f6ef",
-    dimensions: { sharia: 75, intellectual: 70, tazkiyah: 85, reform: 60, skills: 60 },
+    dimensions: { sharia: 65, intellectual: 70, tazkiyah: 85, reform: 70, skills: 65 },
     description:
       "مسار خاص للجيل الصاعد في عمر 13–16، يجمع البناء الإيماني والمعرفي والتربوي مع متابعة أقرب.",
     goals: [
@@ -400,7 +588,7 @@ const PROGRAMS = {
     selectivity: "غالبًا أيسر من جذور",
     color: "#3d8a3a",
     soft: "#ecf8ec",
-    dimensions: { sharia: 70, intellectual: 65, tazkiyah: 80, reform: 50, skills: 50 },
+    dimensions: { sharia: 60, intellectual: 65, tazkiyah: 85, reform: 65, skills: 55 },
     description:
       "مسار عام للفئة 13–16، يراعي البناء الشمولي والبيئة الآمنة دون اشتراطات المسار الخاص نفسها.",
     goals: [
@@ -431,7 +619,7 @@ const PROGRAMS = {
     selectivity: "اختبار قبول",
     color: "#8b5a20",
     soft: "#fff3df",
-    dimensions: { sharia: 70, intellectual: 75, tazkiyah: 85, reform: 65, skills: 70 },
+    dimensions: { sharia: 60, intellectual: 70, tazkiyah: 85, reform: 70, skills: 65 },
     description:
       "مسار شبابي تربوي ومعرفي للمرحلة 17–20، يركز على البيئة والتحصين والصحبة ومهارات التعامل مع الواقع.",
     goals: [
@@ -462,7 +650,7 @@ const PROGRAMS = {
     selectivity: "لخريجي جذور وإشراق حصرًا",
     color: "#8a6828",
     soft: "#fff7e5",
-    dimensions: { sharia: 90, intellectual: 90, tazkiyah: 90, reform: 80, skills: 85 },
+    dimensions: { sharia: 75, intellectual: 80, tazkiyah: 85, reform: 80, skills: 75 },
     description:
       "درة التاج في أكاديمية الجيل الصاعد، لا يستقبل المبتدئين، بل نخبة المميزين من خريجي جذور وإشراق للانتقال إلى التخصص الدقيق.",
     goals: [
@@ -493,7 +681,7 @@ const PROGRAMS = {
     selectivity: "عدد محدود وتفاعل مباشر",
     color: "#9b3d64",
     soft: "#fdebf2",
-    dimensions: { sharia: 65, intellectual: 65, tazkiyah: 95, reform: 60, skills: 50 },
+    dimensions: { sharia: 55, intellectual: 65, tazkiyah: 75, reform: 90, skills: 70 },
     description:
       "بيئة نسائية تفاعلية تجمع البناء الإيماني والتربوي والعلمي واللقاءات، وهي أنسب لمن تحتاج محضنًا نسائيًا لا دراسة إلكترونية صامتة فقط.",
     goals: ["بناء المرأة إيمانيًا وتربويًا وعلميًا.", "توفير محضن نسائي آمن وتفاعلي.", "إحياء معنى الصحبة واللقاءات لا مجرد متابعة مواد."],
@@ -536,7 +724,7 @@ function isAgeAtLeast15(a) {
 }
 
 function isYouthAcademyAge(a) {
-  return ["10_12", "13_14", "15_16", "17_20"].includes(a.age);
+  return ["7_9", "10_12", "13_14", "15_16", "17_20"].includes(a.age);
 }
 
 function isCurrentStatus(a) {
@@ -591,6 +779,12 @@ const PROGRAM_OPTIONS = [
   option("fikri", "البناء الفكري", "", "🧠"),
   option("bard_yaqin", "برد اليقين", "", "💧"),
   option("hadith", "أكاديمية الحديث الإلكترونية", "", "📜"),
+  option("omr_mufakkir", "مشروع العمر - مسار المفكر", "", "🧠"),
+  option("omr_bahith", "مشروع العمر - مسار الباحث", "", "🔎"),
+  option("omr_talib_ilm", "مشروع العمر - مسار طالب العلم", "", "📚"),
+  option("omr_daiya", "مشروع العمر - مسار الداعية", "", "📣"),
+  option("omr_murabbi", "مشروع العمر - مسار المربي", "", "🤝"),
+  option("jeel_new", "أكاديمية الجيل الصاعد - المسار الجديد", "", "🌼"),
   option("buthur", "أكاديمية الجيل الصاعد - بذور", "", "🌱"),
   option("juthur", "أكاديمية الجيل الصاعد - جذور", "", "🌿"),
   option("ghiras", "أكاديمية الجيل الصاعد - غراس", "", "🌳"),
@@ -600,6 +794,112 @@ const PROGRAM_OPTIONS = [
   option("kharitat_thughur", "خارطة الثغور", "", "🗺️"),
   option("alim", "برنامج عالِم", "", "🕌"),
 ];
+
+const OMR_TRACK_IDS = ["omr_mufakkir", "omr_bahith", "omr_talib_ilm", "omr_daiya", "omr_murabbi"];
+
+const SELF_STUDY_BRIDGES = {
+  bina_asasi: [
+    { title: "شرح متن المنهاج من ميراث النبوة", source: "مورد", url: "https://mawred.io/details/courses/9" },
+    { title: "التزكية للمصلحين", source: "مورد", url: "https://mawred.io/student/courses/13" },
+    { title: "حقيبة إحياء منهاج النبوة", source: "مورد", url: "https://mawred.io/details/courses/10" },
+  ],
+  bina_muyassar: [
+    { title: "شرح متن المنهاج من ميراث النبوة", source: "مورد", url: "https://mawred.io/details/courses/9" },
+    { title: "المدرسة الرمضانية", source: "مورد", url: "https://mawred.io/student/courses/12" },
+    { title: "مدارسة سورة الأنعام", source: "مورد", url: "https://mawred.io/details/courses/5" },
+  ],
+  fikri: [
+    { title: "الدورة الفكرية", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/13" },
+    { title: "الأمة بين احتلالين", source: "مورد", url: "https://mawred.io/details/courses/6" },
+    { title: "حقيبة إحياء منهاج النبوة", source: "مورد", url: "https://mawred.io/details/courses/10" },
+  ],
+  bard_yaqin: [
+    { title: "التزكية للمصلحين", source: "مورد", url: "https://mawred.io/student/courses/13" },
+    { title: "الاستهداء بالقرآن", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/8" },
+    { title: "المدرسة الرمضانية", source: "مورد", url: "https://mawred.io/student/courses/12" },
+  ],
+  hadith: [
+    { title: "دورة حجية السنة", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/19" },
+    { title: "شرح متن المنهاج من ميراث النبوة", source: "مورد", url: "https://mawred.io/details/courses/9" },
+  ],
+  kharitat_thughur: [
+    { title: "بوصلة الإصلاح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons" },
+    { title: "كيفية تدريس المنهاج من ميراث النبوة", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/7" },
+    { title: "مركزيات الإصلاح", source: "مورد", url: "https://mawred.io/details/courses/8" },
+  ],
+  omr_mufakkir: [
+    { title: "مركزيات الإصلاح", source: "مورد", url: "https://mawred.io/details/courses/8" },
+    { title: "بوصلة الإصلاح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons" },
+    { title: "الدورة الفكرية", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/13" },
+  ],
+  omr_bahith: [
+    { title: "مركزيات الإصلاح", source: "مورد", url: "https://mawred.io/details/courses/8" },
+    { title: "شرح متن المنهاج من ميراث النبوة", source: "مورد", url: "https://mawred.io/details/courses/9" },
+    { title: "كيفية تدريس المنهاج من ميراث النبوة", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/7" },
+  ],
+  omr_talib_ilm: [
+    { title: "سلسلة خير القرون", source: "مورد", url: "https://mawred.io/details/courses/3" },
+    { title: "شرح متن المنهاج من ميراث النبوة", source: "مورد", url: "https://mawred.io/details/courses/9" },
+    { title: "دورة حجية السنة", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/19" },
+  ],
+  omr_daiya: [
+    { title: "مركزيات الإصلاح", source: "مورد", url: "https://mawred.io/details/courses/8" },
+    { title: "بوصلة الإصلاح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons" },
+    { title: "الاستهداء بالقرآن", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/8" },
+  ],
+  omr_murabbi: [
+    { title: "صناعة المربي", source: "مورد", url: "https://mawred.io/details/courses/11" },
+    { title: "الدورة التربوية", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/20" },
+    { title: "التزكية للمصلحين", source: "مورد", url: "https://mawred.io/student/courses/13" },
+  ],
+  khadija: [
+    { title: "الدورة التربوية", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/20" },
+    { title: "التزكية للمصلحين", source: "مورد", url: "https://mawred.io/student/courses/13" },
+    { title: "حقيبة إحياء منهاج النبوة", source: "مورد", url: "https://mawred.io/details/courses/10" },
+  ],
+  jeel_new: [
+    { title: "حقيبة الصيام ورمضان للأسرة", source: "مورد", url: "https://mawred.io/page/12" },
+    { title: "مواد تربوية قصيرة مناسبة للأسرة", source: "مورد" },
+  ],
+  buthur: [
+    { title: "حقيبة الصيام ورمضان للأسرة", source: "مورد", url: "https://mawred.io/page/12" },
+    { title: "حقيبة إحياء منهاج النبوة", source: "مورد", url: "https://mawred.io/details/courses/10" },
+  ],
+  ghiras: [
+    { title: "مدارسة سورة الأنعام", source: "مورد", url: "https://mawred.io/details/courses/5" },
+    { title: "حقيبة إحياء منهاج النبوة", source: "مورد", url: "https://mawred.io/details/courses/10" },
+  ],
+  juthur: [
+    { title: "مدارسة سورة الأنعام", source: "مورد", url: "https://mawred.io/details/courses/5" },
+    { title: "الدورة الفكرية", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/13" },
+  ],
+  ishraq: [
+    { title: "بوصلة الإصلاح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons" },
+    { title: "الاستهداء بالقرآن", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/8" },
+    { title: "الدورة الفكرية", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/13" },
+  ],
+  ithmar: [
+    { title: "بوصلة الإصلاح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons" },
+    { title: "كيفية تدريس المنهاج من ميراث النبوة", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/7" },
+  ],
+  alim: [
+    { title: "مراجعة القرآن وضبط الورد", source: "تهيئة ذاتية" },
+    { title: "تثبيت المتون أو المواد المطلوبة عند الإعلان", source: "تهيئة ذاتية" },
+  ],
+};
+
+function hasBinaAsasiFoundation(a) {
+  return hasKnown(a, "bina_asasi");
+}
+
+function canConsiderOmrTracks(a) {
+  return (
+    isAgeAtLeast15(a) &&
+    hasBinaAsasiFoundation(a) &&
+    ["expanded", "formation_project"].includes(a.dailyTime) &&
+    (hasChoice(a.needPattern, "reform_project") || a.prioritySignal === "reform_priority")
+  );
+}
 
 const QUESTIONS = [
   {
@@ -631,6 +931,7 @@ const QUESTIONS = [
     title: "ما عمر الشخص المستفيد؟",
     subtitle: "العمر يساعدنا على التفريق بين مسارات الجيل الصاعد وبرامج الكبار.",
     options: () => [
+      option("7_9", "7–9 سنوات", "المسار الجديد في أكاديمية الجيل الصاعد", "🌼"),
       option("10_12", "10–12 سنة", "غالبًا مرحلة بذور", "🌱"),
       option("13_14", "13–14 سنة", "بداية مرحلة اليافعين", "🌿"),
       option("15_16", "15–16 سنة", "مرحلة مشتركة بين اليافعين وبعض برامج +15", "🌳"),
@@ -643,7 +944,7 @@ const QUESTIONS = [
     id: "programStatus",
     title: "هل أنت طالب بالبرامج الإلكترونية؟",
     subtitle: "هذا يساعدنا أن نعرف: هل الأنسب أن تبدأ، أو تثبت فيما أنت فيه، أو تبني على برنامج سابق؟",
-    condition: (a) => a.age && a.age !== "10_12",
+    condition: (a) => a.age && !["7_9", "10_12"].includes(a.age),
     options: () => [
       option("studying_committed", "نعم، طالب مستمر في الدراسة ومتابِع", "ما زلت أدرس وأحاول الالتزام قدر الإمكان", "✅"),
       option("studying_struggling", "نعم، طالب متعثر أو قصّرت سابقًا", "دخلت برنامجًا لكن حصل تراكم أو فتور كبير", "🧩"),
@@ -701,7 +1002,7 @@ const QUESTIONS = [
     id: "dailyTime",
     title: "أي وصف أقرب لالتزامك الواقعي خلال الفترة القادمة؟",
     subtitle: "اختر ما تستطيع الاستمرار عليه غالبًا، لا ما تتمناه في أفضل الأيام.",
-    condition: (a) => a.age && a.age !== "10_12",
+    condition: (a) => a.age && !["7_9", "10_12"].includes(a.age),
     options: () => [
       option("light", "20–30 دقيقة يوميًا", "التزام خفيف ثابت؛ يناسب البداية الهادئة أو المسارات الأخف", "🌤️"),
       option("standard", "45–60 دقيقة يوميًا", "التزام يومي مناسب لغالب البرامج مثل مسارات الأكاديمية والبناء المنهجي والفكري", "🕰️"),
@@ -714,7 +1015,7 @@ const QUESTIONS = [
     title: "أي وصف أقرب لاحتياجك الآن؟",
     subtitle: () => (<span><strong>يمكنك اختيار أكثر من خيار؛</strong> اختر الإجابات بحسب أولويتها بالنسبة لك، فالأهم ثم ما يليه.</span>),
     multi: true,
-    condition: (a) => a.age && a.age !== "10_12",
+    condition: (a) => a.age && !["7_9", "10_12"].includes(a.age),
     options: (a) => {
       const base = [
         option("structured_path", "أحتاج مسارًا علميًا مرتبًا", "مواد واضحة، تدرج، اختبارات، وواجبات", "📚"),
@@ -770,10 +1071,24 @@ const QUESTIONS = [
     },
   },
   {
+    id: "omrTrack",
+    title: "أي مسار من مشروع العمر أقرب لعطائك؟",
+    subtitle: "لا يظهر هذا السؤال إلا إذا ظهرت قرائن قوية: أصل سابق كالبناء المنهجي، ووقت واسع، واحتياج إصلاحي.",
+    condition: (a) => canConsiderOmrTracks(a),
+    options: () => [
+      option("mufakkir", "المفكر", "بناء الرؤية وتحليل الأفكار وتحرير التصورات", "🧠"),
+      option("bahith", "الباحث", "جمع المادة والتحرير والمشاريع المعرفية", "🔎"),
+      option("talib_ilm", "طالب العلم", "تعميق التأصيل العلمي وتوجيهه للعطاء", "📚"),
+      option("daiya", "الداعية", "البلاغ والخطاب وتقريب المعاني للناس", "📣"),
+      option("murabbi", "المربي", "بناء النفوس والبيئات والمحاضن", "🤝"),
+      option("unsure", "لست متأكدًا بعد", "أحتاج أن تتولى الخوارزمية الترجيح من بقية الإجابات", "🧭"),
+    ],
+  },
+  {
     id: "selectivity",
     title: "كيف تتعامل مع الاختبارات والقبول الانتقائي؟",
     subtitle: "ليست الأفضلية دائمًا للأصعب؛ المهم ما يناسب مرحلتك.",
-    condition: (a) => a.age && a.age !== "10_12",
+    condition: (a) => a.age && !["7_9", "10_12"].includes(a.age) && !canConsiderOmrTracks(a),
     options: () => [
       option("open", "أفضل مسارًا مفتوحًا أو أيسر", "لا أريد أن يكون القبول عائقًا الآن", "🚪"),
       option("ok_test", "لا مانع من اختبار قبول", "إن كان البرنامج مناسبًا فأنا مستعد", "✅"),
@@ -800,6 +1115,8 @@ function cleanAnswers(answers) {
     next.needPattern = asArray(next.needPattern).filter((value) => value !== "women_space");
   }
   if (next.gender !== "female" && next.prioritySignal === "women_priority") delete next.prioritySignal;
+  if (!canConsiderOmrTracks(next)) delete next.omrTrack;
+  if (canConsiderOmrTracks(next)) delete next.selectivity;
   if (next.programStatus === "none" || !next.programStatus) delete next.knownPrograms;
   if (!isAgeAtLeast15(next)) {
     delete next.doubtImpact;
@@ -817,6 +1134,8 @@ function isEligible(programId, a) {
   const age = a.age;
   const adult = isAgeAtLeast15(a);
   switch (programId) {
+    case "jeel_new":
+      return age === "7_9";
     case "buthur":
       return ["10_12", "13_14"].includes(age);
     case "juthur":
@@ -837,6 +1156,14 @@ function isEligible(programId, a) {
     case "hadith":
     case "kharitat_thughur":
       return adult;
+    case "mashrou_al_omr":
+      return false;
+    case "omr_mufakkir":
+    case "omr_bahith":
+    case "omr_talib_ilm":
+    case "omr_daiya":
+    case "omr_murabbi":
+      return adult && hasBinaAsasiFoundation(a);
     default:
       return true;
   }
@@ -896,6 +1223,7 @@ function chooseBinaTrack(a) {
 }
 
 function chooseAcademyTrack(a) {
+  if (a.age === "7_9") return "jeel_new";
   if (a.age === "10_12") return "buthur";
   if (a.age === "13_14" || a.age === "15_16") {
     return a.selectivity === "ok_test" || a.selectivity === "high_selective" ? "juthur" : "ghiras";
@@ -1046,12 +1374,64 @@ function applyDecisionRules(scores, a) {
   }
 }
 
+function addOmrTrackScores(scores: Record<string, ScoreItem>, a) {
+  if (!hasChoice(a.needPattern, "reform_project") && a.prioritySignal !== "reform_priority") return;
+
+  if (!hasBinaAsasiFoundation(a)) {
+    addScore(scores, "bina_asasi", 24, "مشروع العمر غالبًا لا يكون بداية الطريق؛ الأسبق غالبًا بناء أصل كالبناء المنهجي");
+    addScore(scores, "kharitat_thughur", 24, "قبل مشروع العمر قد تحتاج فهم الثغر والتهيئة للعمل الإصلاحي");
+    return;
+  }
+
+  if (!["expanded", "formation_project"].includes(a.dailyTime)) {
+    addScore(scores, "kharitat_thughur", 28, "مشروع العمر ثقيل وطويل؛ ومع الوقت الحالي فخارطة الثغور أو مسار رديف أخف أقرب");
+    softenScores(scores, OMR_TRACK_IDS, 80, "تنبيه: مشروع العمر يحتاج استعدادًا واسعًا ونفسًا طويلًا");
+    return;
+  }
+
+  const selected = {
+    mufakkir: "omr_mufakkir",
+    bahith: "omr_bahith",
+    talib_ilm: "omr_talib_ilm",
+    daiya: "omr_daiya",
+    murabbi: "omr_murabbi",
+  }[a.omrTrack];
+
+  if (selected) {
+    ensurePriority(scores, selected, "اخترت هذا المسار داخل مشروع العمر، ومع وجود أصل سابق ووقت واسع صار الترشيح أكثر تحديدًا", 44);
+    return;
+  }
+
+  addScore(scores, "omr_mufakkir", 22, "مشروع العمر مناسب بعد الأصل السابق لمن يريد رؤية إصلاحية طويلة");
+  addScore(scores, "omr_daiya", 20, "العمل الإصلاحي قد يتجه إلى البلاغ والدعوة بحسب بقية الإجابات");
+  addScore(scores, "omr_murabbi", 20, "العمل الإصلاحي قد يتجه إلى التربية وبناء البيئات بحسب بقية الإجابات");
+
+  if (a.prioritySignal === "intellectual_priority" || hasChoice(a.needPattern, "intellectual_depth")) {
+    addScore(scores, "omr_mufakkir", 38, "العمق الفكري يرجح مسار المفكر داخل مشروع العمر");
+  }
+  if (a.prioritySignal === "depth_priority" || hasChoice(a.needPattern, "specialized_track")) {
+    addScore(scores, "omr_bahith", 28, "الميل للتخصص والعمق يرجح مسار الباحث");
+    addScore(scores, "omr_talib_ilm", 24, "الميل للتخصص قد يرجح مسار طالب العلم إذا كان العلم مركز العطاء");
+  }
+  if (a.prioritySignal === "environment_priority" || hasChoice(a.needPattern, "relational_growth")) {
+    addScore(scores, "omr_murabbi", 34, "البيئة والصحبة والمتابعة ترجح مسار المربي");
+  }
+  if (a.prioritySignal === "curriculum_priority" || hasChoice(a.needPattern, "structured_path")) {
+    addScore(scores, "omr_talib_ilm", 26, "حب الخطة العلمية والتأصيل يرجح مسار طالب العلم");
+  }
+  if (a.prioritySignal === "reform_priority") {
+    addScore(scores, "omr_daiya", 24, "الأثر العملي المباشر قد يرجح مسار الداعية");
+    addScore(scores, "omr_murabbi", 18, "الأثر العملي قد يكون تربويًا ومحضنيًا");
+  }
+}
+
 function calculateRecommendations(a: any) {
   const scores: Record<string, ScoreItem> = {};
   Object.keys(PROGRAMS).forEach((id) => {
     scores[id] = { id, score: isEligible(id, a) ? 0 : -999, reasons: [] };
   });
 
+  if (a.age === "7_9") addScore(scores, "jeel_new", 130, "العمر يعطي أولوية للمسار الجديد في أكاديمية الجيل الصاعد المخصص للأعمار 7–9");
   if (a.age === "10_12") addScore(scores, "buthur", 120, "العمر يعطي أولوية مطلقة لمسار بذور المخصص لهذه المرحلة");
   if (a.age === "13_14" || a.age === "15_16") {
     addScore(scores, "ghiras", 36, "العمر يعطي أولوية للمسار العام في الأكاديمية");
@@ -1165,6 +1545,7 @@ function calculateRecommendations(a: any) {
 
   addRankedScore(scores, a.needPattern, "reform_project", "kharitat_thughur", 58, "تريد معرفة ثغرك وتحويل التعلم إلى مشروع");
   addRankedScore(scores, a.needPattern, "reform_project", "bina_asasi", 8, "قد تحتاج أساسًا شرعيًا قبل العمل الإصلاحي");
+  addOmrTrackScores(scores, a);
 
   addRankedScore(scores, a.needPattern, "women_space", "khadija", 86, "اخترتِ محضنًا نسائيًا تفاعليًا");
 
@@ -1392,6 +1773,25 @@ function isBinaProgram(program) {
   return program?.id === "bina_asasi" || program?.id === "bina_muyassar";
 }
 
+function publicProgramsList() {
+  return Object.values(PROGRAMS).filter((program: any) => program.id !== "mashrou_al_omr");
+}
+
+function programFocusLabel(program: any) {
+  const labels = {
+    sharia: "التأصيل الشرعي",
+    intellectual: "الوعي الفكري",
+    tazkiyah: "التزكية",
+    reform: "العمل الإصلاحي",
+    skills: "المهارات",
+  };
+  return Object.entries(program.dimensions || {})
+    .sort(([, a], [, b]) => Number(b) - Number(a))
+    .slice(0, 2)
+    .map(([key]) => labels[key] || key)
+    .join("، ");
+}
+
 function AdviceCard({ advice, onOpen }: any) {
   if (!advice) return null;
   const tone = {
@@ -1526,7 +1926,7 @@ function ProgramDetail({ program, onBack, onHome }: any) {
 }
 
 function ComparisonTable({ onOpen, onBack }: any) {
-  const list = Object.values(PROGRAMS);
+  const list = publicProgramsList();
   return (
     <section className="comparison-page">
       <div className="section-head">
@@ -1534,16 +1934,14 @@ function ComparisonTable({ onOpen, onBack }: any) {
         <div><small>مقارنة عامة</small><h2>مقارنة مختصرة بين البرامج</h2><p>هذه المقارنة للاطلاع العام، أما الترشيح الأدق فابدأ اختبار الاختيار.</p></div>
       </div>
       <div className="comparison-table-wrap" style={{ overflowX: 'auto', borderRadius: '24px', padding: '16px', border: '1px solid var(--border)' }}>
-        <table className="comparison-table" style={{ width: '100%', minWidth: '800px', textAlign: 'right', borderCollapse: 'collapse' }}>
+        <table className="comparison-table" style={{ width: '100%', minWidth: '760px', textAlign: 'right', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ borderBottom: '2px solid var(--border)' }}>
               <th style={{ padding: '12px', color: 'var(--muted)' }}>البرنامج</th>
               <th style={{ padding: '12px', color: 'var(--muted)' }}>الفئة</th>
               <th style={{ padding: '12px', color: 'var(--muted)' }}>المدة</th>
               <th style={{ padding: '12px', color: 'var(--muted)' }}>طبيعة القبول</th>
-              <th style={{ padding: '12px', color: 'var(--muted)' }}>التكلفة</th>
-              <th style={{ padding: '12px', color: 'var(--muted)' }}>الوسيلة</th>
-              <th style={{ padding: '12px', color: 'var(--muted)' }}>التسجيل</th>
+              <th style={{ padding: '12px', color: 'var(--muted)' }}>التركيز الأبرز</th>
               <th style={{ padding: '12px', color: 'var(--muted)' }}></th>
             </tr>
           </thead>
@@ -1554,9 +1952,7 @@ function ComparisonTable({ onOpen, onBack }: any) {
                 <td style={{ padding: '12px', fontSize: '14px' }}>{program.audience}</td>
                 <td style={{ padding: '12px', fontSize: '14px' }}>{program.duration}</td>
                 <td style={{ padding: '12px', fontSize: '14px' }}>{program.selectivity}</td>
-                <td style={{ padding: '12px', fontSize: '14px' }}>{program.cost}</td>
-                <td style={{ padding: '12px', fontSize: '14px' }}>{program.medium}</td>
-                <td style={{ padding: '12px', fontSize: '14px' }}>{program.registrationStatus}</td>
+                <td style={{ padding: '12px', fontSize: '14px' }}>{programFocusLabel(program)}</td>
                 <td style={{ padding: '12px' }}><button className="table-link ghost-btn" style={{ padding: '6px 12px', fontSize: '13px' }} type="button" onClick={() => onOpen(program.id)}>تفاصيل</button></td>
               </tr>
             ))}
@@ -1593,7 +1989,7 @@ function HomeView({ onStart, onPrograms, onCompare, onCompareDynamic }: any) {
 }
 
 function ProgramDirectory({ onOpen, onBack }: any) {
-  const list = Object.values(PROGRAMS);
+  const list = publicProgramsList();
   return (
     <section className="directory-page">
       <div className="section-head">
@@ -1618,7 +2014,7 @@ function ProgramDirectory({ onOpen, onBack }: any) {
 function DynamicComparison({ onOpen, onBack }: any) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const list = Object.values(PROGRAMS);
+  const list = publicProgramsList();
 
   const toggleSelect = (id: string) => {
     if (selectedIds.includes(id)) {
@@ -1799,11 +2195,50 @@ function DimensionChart({ profile, program }: any) {
   );
 }
 
+function getBridgePlan(primary, answers) {
+  const items = SELF_STUDY_BRIDGES[primary.id] || [];
+  if (!items.length) return null;
+
+  let note = "هذه ليست بديلًا عن البرنامج، بل مسار خفيف ريثما تفتح الدفعة القادمة أو لتتهيأ قبل الدخول.";
+  if (primary.id === "alim") {
+    note = "إن ظهر لك برنامج عالِم، فالأصل ألا تجمع معه برنامجًا آخر؛ اجعل هذه المواد للتهيئة والتثبيت فقط.";
+  } else if (answers.dailyTime === "light") {
+    note = "بما أن الوقت محدود، اختر مادة واحدة فقط ولا تجعل المسار الرديف سببًا في الانقطاع.";
+  } else if (OMR_TRACK_IDS.includes(primary.id)) {
+    note = "مشروع العمر يفتح على دفعات، وغالبًا يحتاج أصلًا سابقًا كالبناء المنهجي؛ هذه المواد للتهيئة وفهم سؤال الثغر لا للاستبدال.";
+  } else if (primary.id === "kharitat_thughur") {
+    note = "خارطة الثغور برنامج دفعات مدته قرابة 3–4 أشهر، وهذه مواد قبلية تساعدك على التجهز حتى تفتح دفعة مناسبة.";
+  }
+
+  return { items: items.slice(0, 3), note };
+}
+
+function BridgePlan({ plan }: any) {
+  if (!plan) return null;
+
+  return (
+    <div className="bridge-box">
+      <h3>مسار ذاتي رديف</h3>
+      <p>{plan.note}</p>
+      <div className="bridge-list">
+        {plan.items.map((item, index) => (
+          <div className="bridge-item" key={`${item.title}-${index}`}>
+            <strong>{item.title}</strong>
+            <span>{item.source}</span>
+            {item.url && <a href={item.url} target="_blank" rel="noreferrer">فتح المادة</a>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
   const list = result.list;
   const primary = list[0];
   const alternatives = list.slice(1, 4);
   const showBinaComparison = isBinaProgram(primary);
+  const bridgePlan = getBridgePlan(primary, answers);
   const resultRef = useRef<HTMLDivElement>(null);
 
   const handleShare = async () => {
@@ -1884,6 +2319,8 @@ function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
             <h3>انتبه قبل التسجيل…</h3>
             <ul>{primary.caution?.slice(0, 4).map((item, index) => <li key={index}>{item}</li>)}</ul>
           </div>
+
+          <BridgePlan plan={bridgePlan} />
 
           <div className="result-actions" data-html2canvas-ignore="true">
             <button className="main-btn" type="button" onClick={() => onOpen(primary.id)}>افتح تفاصيل البرنامج</button>
@@ -2561,10 +2998,17 @@ button { font-family: inherit; }
 .detail-grid > div { background: #f8f2e8; border: 1px solid #eee2cf; border-radius: 18px; padding: 14px; }
 .detail-grid small { color: var(--muted); display: block; margin-bottom: 5px; }
 .detail-grid strong { display: block; line-height: 1.6; }
-.why-box, .notice-box { border-radius: 22px; padding: 18px; margin: 18px 0; }
+.why-box, .notice-box, .bridge-box { border-radius: 22px; padding: 18px; margin: 18px 0; }
 .why-box { background: #edf8f3; border: 1px solid #cfeade; }
 .notice-box { background: #fff5df; border: 1px solid #f0d8a7; }
-.why-box h3, .notice-box h3, .alternatives-box h3, .compare-title { margin: 0 0 10px; }
+.bridge-box { background: #eef5ff; border: 1px solid #c9dbf4; }
+.why-box h3, .notice-box h3, .bridge-box h3, .alternatives-box h3, .compare-title { margin: 0 0 10px; }
+.bridge-box p { color: var(--muted); line-height: 1.9; margin: 0 0 12px; }
+.bridge-list { display: grid; gap: 10px; }
+.bridge-item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px; background: white; border: 1px solid #dbe7f7; border-radius: 16px; padding: 12px; }
+.bridge-item strong { line-height: 1.6; }
+.bridge-item span { color: var(--muted); font-size: 13px; font-weight: 700; white-space: nowrap; }
+.bridge-item a { color: var(--green); font-weight: 800; text-decoration: none; white-space: nowrap; }
 ul { margin: 0; padding-right: 22px; }
 li { margin: 8px 0; line-height: 1.8; }
 
@@ -2689,6 +3133,7 @@ li { margin: 8px 0; line-height: 1.8; }
   .result-actions button { font-size: 13px; padding: 10px; }
   .option-card { padding: 14px; }
   .mini-program { align-items: flex-start; flex-wrap: wrap; }
+  .bridge-item { grid-template-columns: 1fr; align-items: start; }
 }
 
 @media print {
@@ -2761,7 +3206,7 @@ html.dark .analytics-login { background: #1e293b; border-color: #334155; }
 html.dark .analytics-note code { background: #0f172a; border-color: #334155; color: #f8fafc; }
 html.dark .home-hero .hero-card { background: linear-gradient(135deg, #1e293b, #0f172a); }
 html.dark .hero-card h1 { color: #f8fafc; }
-html.dark .cc-details > div, html.dark .ds-blue, html.dark .ds-green, html.dark .ds-amber, html.dark .ds-rose, html.dark .why-box, html.dark .notice-box { background: #0f172a; border-color: #334155; }
+html.dark .cc-details > div, html.dark .ds-blue, html.dark .ds-green, html.dark .ds-amber, html.dark .ds-rose, html.dark .why-box, html.dark .notice-box, html.dark .bridge-box, html.dark .bridge-item { background: #0f172a; border-color: #334155; }
 html.dark .ds-blue h3, html.dark .ds-green h3, html.dark .ds-amber h3, html.dark .ds-rose h3 { color: #f8fafc; }
 html.dark .program-link { color: #34d399; }
 html.dark .option-card, html.dark .mini-program, html.dark .directory-card { background: #1e293b; border-color: #334155; color: #f8fafc; }
