@@ -2,9 +2,15 @@ import { useMemo, useState, useRef, useEffect } from "react";
 import { Bar, BarChart, CartesianGrid, Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { motion, AnimatePresence } from "motion/react";
 import { Moon, Sun } from "lucide-react";
-import { loadAnalyticsSummary, trackAnalyticsEvent, type AnalyticsSummary } from "./analytics";
-
-const ANALYTICS_PASSWORD = "admin2026";
+import {
+  getAnalyticsSession,
+  loadAnalyticsSummary,
+  signInToAnalytics,
+  signOutFromAnalytics,
+  trackAnalyticsEvent,
+  type AnalyticsSummary,
+} from "./analytics";
+import { isSupabaseEnabled } from "./supabaseClient";
 
 const COUNTRY_OPTIONS = [
   option("saudi_arabia", "السعودية", "", "🇸🇦"),
@@ -2033,8 +2039,9 @@ function AnalyticsBarSection({ title, description, data }: any) {
 }
 
 function AnalyticsDashboard({ onBack }: any) {
-  const [password, setPassword] = useState("");
-  const [authorized, setAuthorized] = useState(() => localStorage.getItem("program_selector_analytics_auth") === "true");
+  const [email, setEmail] = useState("");
+  const [authMessage, setAuthMessage] = useState("");
+  const [authorized, setAuthorized] = useState(!isSupabaseEnabled);
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -2046,14 +2053,24 @@ function AnalyticsDashboard({ onBack }: any) {
   }
 
   useEffect(() => {
+    getAnalyticsSession().then((session) => {
+      if (session) setAuthorized(true);
+      else if (isSupabaseEnabled) setLoading(false);
+    });
+  }, []);
+
+  useEffect(() => {
     refresh();
   }, [authorized]);
 
-  function unlock(event: any) {
+  async function unlock(event: any) {
     event.preventDefault();
-    if (password === ANALYTICS_PASSWORD) {
-      localStorage.setItem("program_selector_analytics_auth", "true");
-      setAuthorized(true);
+    setAuthMessage("");
+    try {
+      await signInToAnalytics(email.trim());
+      setAuthMessage("تم إرسال رابط الدخول إلى بريدك. افتحه من نفس الجهاز أو المتصفح.");
+    } catch {
+      setAuthMessage("لم نستطع إرسال رابط الدخول. تأكد من البريد وإعدادات Supabase.");
     }
   }
 
@@ -2062,17 +2079,19 @@ function AnalyticsDashboard({ onBack }: any) {
       <section className="analytics-page">
         <div className="analytics-login">
           <small>لوحة خاصة</small>
-          <h2>إدخال كلمة السر</h2>
+          <h2>تسجيل دخول الإحصائيات</h2>
           <form onSubmit={unlock}>
             <input
               className="text-answer-input"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="كلمة السر"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="بريدك المسموح في Supabase"
+              required
             />
-            <button className="main-btn" type="submit">دخول</button>
+            <button className="main-btn" type="submit">أرسل رابط الدخول</button>
           </form>
+          {authMessage && <p className="analytics-auth-message">{authMessage}</p>}
           <button className="ghost-btn" type="button" onClick={onBack}>العودة للرئيسية</button>
         </div>
       </section>
@@ -2124,7 +2143,18 @@ function AnalyticsDashboard({ onBack }: any) {
           <small>نسبة إتمام الاختبار</small>
           <strong>{loading ? "..." : `${summary?.completionRate ?? 0}%`}</strong>
         </div>
-        <button className="main-btn" type="button" onClick={refresh}>تحديث البيانات</button>
+        <div className="analytics-actions">
+          <button className="main-btn" type="button" onClick={refresh}>تحديث البيانات</button>
+          {isSupabaseEnabled && (
+            <button className="ghost-btn" type="button" onClick={async () => {
+              await signOutFromAnalytics();
+              setAuthorized(false);
+              setSummary(null);
+            }}>
+              تسجيل الخروج
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="analytics-panel analytics-note">
@@ -2474,6 +2504,8 @@ button { font-family: inherit; }
 .analytics-login h2 { margin: 8px 0 18px; }
 .analytics-login small { color: var(--green); font-weight: 800; }
 .analytics-login form { display: grid; gap: 12px; margin-bottom: 12px; }
+.analytics-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.analytics-auth-message { color: var(--green); line-height: 1.8; margin: 0 0 12px; }
 .analytics-event { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; }
 .analytics-event strong, .analytics-event small { display: block; }
 .analytics-event small { color: var(--muted); margin: 4px 0 8px; }
