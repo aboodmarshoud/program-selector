@@ -1945,11 +1945,19 @@ function AnalyticsDashboard({ onBack }: any) {
 }
 
 export default function ProgramSelector() {
+  const initialMode = () => {
+    const url = new URL(window.location.href);
+    if (url.pathname.endsWith("/analytics") || url.searchParams.has("analytics") || url.hash === "#analytics") {
+      return "analytics";
+    }
+    return "home";
+  };
+
   const [answers, setAnswers] = useState({});
   const [step, setStep] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [openedProgramId, setOpenedProgramId] = useState(null);
-  const [mode, setMode] = useState(() => (window.location.pathname === "/analytics" ? "analytics" : "home"));
+  const [mode, setMode] = useState(initialMode);
   const [darkMode, setDarkMode] = useState(false);
   const completionTrackedRef = useRef(false);
 
