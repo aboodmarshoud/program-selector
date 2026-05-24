@@ -1,10 +1,46 @@
 import { useMemo, useState, useRef, useEffect } from "react";
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
+import { Bar, BarChart, CartesianGrid, Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { motion, AnimatePresence } from "motion/react";
 import { Moon, Sun } from "lucide-react";
 import { loadAnalyticsSummary, trackAnalyticsEvent, type AnalyticsSummary } from "./analytics";
 
 const ANALYTICS_PASSWORD = "admin2026";
+
+const COUNTRY_OPTIONS = [
+  option("saudi_arabia", "السعودية", "", "🇸🇦"),
+  option("jordan", "الأردن", "", "🇯🇴"),
+  option("lebanon", "لبنان", "", "🇱🇧"),
+  option("turkey", "تركيا", "", "🇹🇷"),
+  option("egypt", "مصر", "", "🇪🇬"),
+  option("syria", "سوريا", "", "🇸🇾"),
+  option("palestine", "فلسطين", "", "🇵🇸"),
+  option("iraq", "العراق", "", "🇮🇶"),
+  option("kuwait", "الكويت", "", "🇰🇼"),
+  option("qatar", "قطر", "", "🇶🇦"),
+  option("uae", "الإمارات", "", "🇦🇪"),
+  option("oman", "عمان", "", "🇴🇲"),
+  option("bahrain", "البحرين", "", "🇧🇭"),
+  option("yemen", "اليمن", "", "🇾🇪"),
+  option("morocco", "المغرب", "", "🇲🇦"),
+  option("algeria", "الجزائر", "", "🇩🇿"),
+  option("tunisia", "تونس", "", "🇹🇳"),
+  option("libya", "ليبيا", "", "🇱🇾"),
+  option("sudan", "السودان", "", "🇸🇩"),
+  option("mauritania", "موريتانيا", "", "🇲🇷"),
+  option("somalia", "الصومال", "", "🇸🇴"),
+  option("djibouti", "جيبوتي", "", "🇩🇯"),
+  option("comoros", "جزر القمر", "", "🇰🇲"),
+  option("afghanistan", "أفغانستان", "", "🇦🇫"),
+  option("pakistan", "باكستان", "", "🇵🇰"),
+  option("indonesia", "إندونيسيا", "", "🇮🇩"),
+  option("malaysia", "ماليزيا", "", "🇲🇾"),
+  option("europe", "أوروبا", "", "🌍"),
+  option("north_america", "أمريكا الشمالية", "", "🌎"),
+  option("south_america", "أمريكا الجنوبية", "", "🌎"),
+  option("africa_other", "دولة إفريقية أخرى", "", "🌍"),
+  option("asia_other", "دولة آسيوية أخرى", "", "🌏"),
+  option("other", "بلد آخر", "", "🌐"),
+];
 
 const PROGRAMS = {
   alim: {
@@ -579,9 +615,8 @@ const QUESTIONS = [
   {
     id: "country",
     title: "ما البلد؟",
-    subtitle: "اكتب البلد فقط. هذا يساعد في فهم انتشار الأداة بين الزوار.",
-    inputType: "text",
-    placeholder: "مثال: الأردن، تركيا، السعودية...",
+    subtitle: "اختر البلد حتى تبقى الإحصائيات موحدة وقابلة للمقارنة.",
+    options: () => COUNTRY_OPTIONS,
   },
   {
     id: "age",
@@ -1882,7 +1917,7 @@ function AnswersSummary({ answers }: any) {
           if (!hasAnswer(ans)) return null;
           const title = typeof q.title === 'function' ? q.title(answers) : q.title;
           const opts = typeof q.options === 'function' ? q.options(answers) : [];
-          const chosenOpts = q.inputType === "text"
+          const chosenOpts = (q as any).inputType === "text"
             ? String(ans).trim()
             : asArray(ans)
               .map((v) => opts.find((o: any) => o.value === v)?.title || v)
@@ -1936,6 +1971,63 @@ function buildCompletionAnalytics(answers: any, result: any, qs: any[]) {
       viewport: `${window.innerWidth}x${window.innerHeight}`,
     },
   };
+}
+
+function analyticsAnswerValue(event: any, id: string) {
+  const answer = event.readableAnswers?.find((item: any) => item.id === id);
+  if (answer?.label) return answer.label;
+  const value = event.rawAnswers?.[id];
+  return Array.isArray(value) ? value.join("، ") : value;
+}
+
+function countBy(events: any[], getLabel: (event: any) => any) {
+  const counts = new Map<string, number>();
+  events.forEach((event) => {
+    const label = getLabel(event);
+    if (!label) return;
+    counts.set(String(label), (counts.get(String(label)) || 0) + 1);
+  });
+
+  return [...counts.entries()]
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
+}
+
+function AnalyticsBarSection({ title, description, data }: any) {
+  const chartData = data.slice(0, 10);
+  return (
+    <div className="analytics-chart-card">
+      <div className="chart-header">
+        <h3>{title}</h3>
+        {description && <p>{description}</p>}
+      </div>
+      {chartData.length ? (
+        <>
+          <div className="analytics-chart">
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={chartData} layout="vertical" margin={{ top: 8, right: 18, bottom: 8, left: 18 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis type="number" allowDecimals={false} tick={{ fill: "var(--muted)", fontSize: 12 }} />
+                <YAxis dataKey="name" type="category" width={115} tick={{ fill: "var(--ink)", fontSize: 12 }} />
+                <Tooltip />
+                <Bar dataKey="value" fill="#176b54" radius={[0, 8, 8, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="analytics-list">
+            {chartData.map((item: any) => (
+              <div key={item.name}>
+                <span>{item.name}</span>
+                <strong>{item.value}</strong>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <p className="analytics-empty">لا توجد بيانات كافية بعد.</p>
+      )}
+    </div>
+  );
 }
 
 function AnalyticsDashboard({ onBack }: any) {
@@ -1992,6 +2084,19 @@ function AnalyticsDashboard({ onBack }: any) {
     { label: "دخلوا ولم يتموا", value: summary?.quizAbandoned ?? 0 },
   ];
 
+  const completedEvents = (summary?.events || []).filter((event) => event.event === "quiz_completed");
+  const countryData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "country"));
+  const ageData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "age"));
+  const genderData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "gender"));
+  const programData = countBy(completedEvents, (event) => event.recommendations?.[0]?.name || event.resultProgramId);
+  const sourceData = countBy(completedEvents, (event) => {
+    try {
+      return event.context?.referrer ? new URL(event.context.referrer).hostname : "دخول مباشر";
+    } catch {
+      return "دخول مباشر";
+    }
+  });
+
   return (
     <section className="analytics-page">
       <div className="section-head">
@@ -2025,18 +2130,14 @@ function AnalyticsDashboard({ onBack }: any) {
       </div>
 
       <div className="analytics-panel analytics-note">
-        <h3>آخر الاختبارات المكتملة</h3>
-        {(summary?.events || [])
-          .filter((event) => event.event === "quiz_completed")
-          .slice(-10)
-          .reverse()
-          .map((event) => (
-            <div className="analytics-event" key={`${event.sessionId}-${event.timestamp}`}>
-              <strong>{event.recommendations?.[0]?.name || event.resultProgramId || "نتيجة غير محددة"}</strong>
-              <small>{new Date(event.timestamp).toLocaleString("ar")}</small>
-              <p>{event.readableAnswers?.map((answer) => `${answer.title}: ${answer.label}`).join(" | ")}</p>
-            </div>
-          ))}
+        <h3>تحليلات مجمعة</h3>
+        <div className="analytics-charts-grid">
+          <AnalyticsBarSection title="الدول الأكثر حضوراً" description="حسب إجابات من أتموا الاختبار." data={countryData} />
+          <AnalyticsBarSection title="توزيع الأعمار" description="الفئات العمرية التي وصلت إلى النتيجة." data={ageData} />
+          <AnalyticsBarSection title="توزيع الجنس" description="للتأكد من ملاءمة الترشيحات والمسارات." data={genderData} />
+          <AnalyticsBarSection title="البرامج الأكثر ترشيحاً" description="أكثر نتيجة أولى ظهرت للمستخدمين." data={programData} />
+          <AnalyticsBarSection title="مصادر الدخول" description="من أين وصل المستخدمون عند توفر المصدر." data={sourceData} />
+        </div>
       </div>
     </section>
   );
@@ -2362,6 +2463,14 @@ button { font-family: inherit; }
 .analytics-event strong, .analytics-event small { display: block; }
 .analytics-event small { color: var(--muted); margin: 4px 0 8px; }
 .analytics-event p { font-size: 13px; }
+.analytics-charts-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; width: 100%; margin-top: 14px; }
+.analytics-chart-card { background: white; border: 1px solid var(--border); border-radius: 18px; padding: 16px; min-width: 0; }
+.analytics-chart { direction: ltr; }
+.analytics-list { display: grid; gap: 8px; margin-top: 10px; }
+.analytics-list div { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px dashed var(--border); padding-top: 8px; }
+.analytics-list span { color: var(--muted); }
+.analytics-list strong { color: var(--green); }
+.analytics-empty { color: var(--muted); margin: 0; }
 .quiz-card { padding: clamp(20px, 4vw, 34px); }
 .quiz-topline, .progress-row, .nav-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .quiz-topline span { color: var(--muted); font-weight: 700; }
@@ -2519,7 +2628,7 @@ li { margin: 8px 0; line-height: 1.8; }
 .program-link:hover { opacity: 0.8; }
 
 @media (max-width: 840px) {
-  .intro-grid, .program-grid, .detail-grid, .analytics-grid { grid-template-columns: 1fr; }
+  .intro-grid, .program-grid, .detail-grid, .analytics-grid, .analytics-charts-grid { grid-template-columns: 1fr; }
   .result-top, .program-hero { flex-direction: column; }
   .compare-grid, .links-box { grid-template-columns: 1fr; }
   .section-head { flex-direction: column; }
@@ -2603,6 +2712,7 @@ html.dark .theme-toggle, html.dark .cc-card, html.dark .picker-btn, html.dark .g
 html.dark .picker-btn.selected { background: rgba(15, 138, 104, 0.5); border-color: var(--green); }
 html.dark .hero-card, html.dark .quiz-card, html.dark .result-main, html.dark .comparison-page, html.dark .program-detail > .detail-section, html.dark .alternatives-box, html.dark .compare-box, html.dark .answers-summary { background: #1e293b; border-color: #334155; }
 html.dark .analytics-card, html.dark .analytics-panel { background: #1e293b; border-color: #334155; }
+html.dark .analytics-chart-card { background: #0f172a; border-color: #334155; }
 html.dark .analytics-login { background: #1e293b; border-color: #334155; }
 html.dark .analytics-note code { background: #0f172a; border-color: #334155; color: #f8fafc; }
 html.dark .home-hero .hero-card { background: linear-gradient(135deg, #1e293b, #0f172a); }
