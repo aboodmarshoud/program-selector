@@ -2158,10 +2158,6 @@ function AnalyticsDashboard({ onBack }: any) {
       </div>
 
       <div className="analytics-panel analytics-note">
-        <p>لجمع بيانات كل الزوار يجب تشغيل الموقع عبر السيرفر المرفق بعد البناء: <code>npm run build</code> ثم <code>npm start</code>. عند النشر كصفحة ثابتة فقط ستظهر بيانات هذا المتصفح فقط.</p>
-      </div>
-
-      <div className="analytics-panel analytics-note">
         <h3>تحليلات مجمعة</h3>
         <div className="analytics-charts-grid">
           <AnalyticsBarSection title="الدول الأكثر حضوراً" description="حسب إجابات من أتموا الاختبار." data={countryData} />
