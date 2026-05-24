@@ -2069,8 +2069,8 @@ function AnalyticsDashboard({ onBack }: any) {
     try {
       await signInToAnalytics(email.trim());
       setAuthMessage("تم إرسال رابط الدخول إلى بريدك. افتحه من نفس الجهاز أو المتصفح.");
-    } catch {
-      setAuthMessage("لم نستطع إرسال رابط الدخول. تأكد من البريد وإعدادات Supabase.");
+    } catch (error) {
+      setAuthMessage(`لم نستطع إرسال رابط الدخول: ${error instanceof Error ? error.message : "خطأ غير معروف"}`);
     }
   }
 
