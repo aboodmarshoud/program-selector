@@ -616,6 +616,8 @@ const QUESTIONS = [
     id: "country",
     title: "ما البلد؟",
     subtitle: "اختر البلد حتى تبقى الإحصائيات موحدة وقابلة للمقارنة.",
+    inputType: "select",
+    placeholder: "اختر البلد...",
     options: () => COUNTRY_OPTIONS,
   },
   {
@@ -2320,6 +2322,19 @@ export default function ProgramSelector() {
                     autoComplete="country-name"
                   />
                 </div>
+              ) : current.inputType === "select" ? (
+                <div className="text-answer-wrap">
+                  <select
+                    className="text-answer-input select-answer-input"
+                    value={answers[current.id] || ""}
+                    onChange={(event) => choose(current.id, event.target.value)}
+                  >
+                    <option value="" disabled>{current.placeholder || "اختر..."}</option>
+                    {currentOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.icon ? `${opt.icon} ` : ""}{opt.title}</option>
+                    ))}
+                  </select>
+                </div>
               ) : (
                 <div className="options-grid">
                   {currentOptions.map((opt) => (
@@ -2494,6 +2509,7 @@ button { font-family: inherit; }
   transition: .18s ease;
 }
 .text-answer-input:focus { border-color: var(--green-2); box-shadow: 0 0 0 4px rgba(15, 138, 104, .12); }
+.select-answer-input { cursor: pointer; appearance: auto; }
 .options-grid { display: grid; gap: 12px; margin: 24px 0; }
 .option-card { width: 100%; display: flex; align-items: center; gap: 14px; text-align: right; border: 1.5px solid var(--border); background: white; border-radius: 20px; padding: 16px; cursor: pointer; transition: .18s ease; color: var(--ink); }
 .option-card:hover { border-color: #a7cfbf; transform: translateY(-1px); }
