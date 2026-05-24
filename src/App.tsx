@@ -2,6 +2,7 @@ import { useMemo, useState, useRef, useEffect } from "react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
 import { motion, AnimatePresence } from "motion/react";
 import { Moon, Sun } from "lucide-react";
+import { loadAnalyticsSummary, trackAnalyticsEvent, type AnalyticsSummary } from "./analytics";
 
 const PROGRAMS = {
   alim: {
@@ -1887,13 +1888,74 @@ function AnswersSummary({ answers }: any) {
   );
 }
 
+function AnalyticsDashboard({ onBack }: any) {
+  const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  async function refresh() {
+    setLoading(true);
+    setSummary(await loadAnalyticsSummary());
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  const cards = [
+    { label: "عدد الداخلين إلى الموقع", value: summary?.visitors ?? 0 },
+    { label: "دخلوا الاختبار", value: summary?.quizStarted ?? 0 },
+    { label: "أتموا الاختبار", value: summary?.quizCompleted ?? 0 },
+    { label: "دخلوا ولم يتموا", value: summary?.quizAbandoned ?? 0 },
+  ];
+
+  return (
+    <section className="analytics-page">
+      <div className="section-head">
+        <button className="ghost-btn" type="button" onClick={onBack}>العودة للرئيسية</button>
+        <div>
+          <small>أداة قياس</small>
+          <h2>لوحة متابعة الاختبار</h2>
+          <p>هذه اللوحة تعرض الزيارات، وبدايات الاختبار، والإتمام، وعدد من بدأوا ولم يصلوا للنتيجة.</p>
+        </div>
+      </div>
+
+      <div className="analytics-grid">
+        {cards.map((card) => (
+          <div className="analytics-card" key={card.label}>
+            <span>{card.label}</span>
+            <strong>{loading ? "..." : card.value}</strong>
+          </div>
+        ))}
+      </div>
+
+      <div className="analytics-panel">
+        <div>
+          <small>نسبة إتمام الاختبار</small>
+          <strong>{loading ? "..." : `${summary?.completionRate ?? 0}%`}</strong>
+        </div>
+        <button className="main-btn" type="button" onClick={refresh}>تحديث البيانات</button>
+      </div>
+
+      <div className="analytics-panel analytics-note">
+        <p>لجمع بيانات كل الزوار يجب تشغيل الموقع عبر السيرفر المرفق بعد البناء: <code>npm run build</code> ثم <code>npm start</code>. عند النشر كصفحة ثابتة فقط ستظهر بيانات هذا المتصفح فقط.</p>
+      </div>
+    </section>
+  );
+}
+
 export default function ProgramSelector() {
   const [answers, setAnswers] = useState({});
   const [step, setStep] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [openedProgramId, setOpenedProgramId] = useState(null);
-  const [mode, setMode] = useState("home");
+  const [mode, setMode] = useState(() => (window.location.pathname === "/analytics" ? "analytics" : "home"));
   const [darkMode, setDarkMode] = useState(false);
+  const completionTrackedRef = useRef(false);
+
+  useEffect(() => {
+    trackAnalyticsEvent("visit");
+  }, []);
 
   useEffect(() => {
     if (darkMode) document.documentElement.classList.add("dark");
@@ -1925,14 +1987,24 @@ export default function ProgramSelector() {
     setStep(0);
     setShowResult(false);
     setOpenedProgramId(null);
+    completionTrackedRef.current = false;
+    trackAnalyticsEvent("quiz_started");
     setMode("quiz");
   }
 
   function next() {
     const safeStep = Math.min(step, qs.length - 1);
     if (!current || !hasAnswer(answers[current.id])) return;
-    if (safeStep >= qs.length - 1) setShowResult(true);
-    else setStep(safeStep + 1);
+    if (safeStep >= qs.length - 1) {
+      setShowResult(true);
+      if (!completionTrackedRef.current) {
+        completionTrackedRef.current = true;
+        trackAnalyticsEvent("quiz_completed", {
+          resultProgramId: result.list[0]?.id,
+          stepCount: qs.length,
+        });
+      }
+    } else setStep(safeStep + 1);
   }
 
   function back() {
@@ -1948,6 +2020,8 @@ export default function ProgramSelector() {
     setStep(0);
     setShowResult(false);
     setOpenedProgramId(null);
+    completionTrackedRef.current = false;
+    trackAnalyticsEvent("quiz_started");
     setMode("quiz");
   }
 
@@ -1985,6 +2059,12 @@ export default function ProgramSelector() {
           {mode === "home" && !openedProgram && (
             <motion.div key="home" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }}>
               <HomeView onStart={startQuiz} onPrograms={() => setMode("programs")} onCompare={() => setMode("compare")} onCompareDynamic={() => setMode("compareDynamic")} />
+            </motion.div>
+          )}
+
+          {mode === "analytics" && !openedProgram && (
+            <motion.div key="analytics" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }}>
+              <AnalyticsDashboard onBack={goHome} />
             </motion.div>
           )}
 
@@ -2124,13 +2204,28 @@ button { font-family: inherit; }
 .intro-card h3 { margin: 12px 0 8px; }
 .intro-card p { margin: 0; color: var(--muted); line-height: 1.8; }
 
-.quiz-card, .result-wrap, .directory-page, .comparison-page, .program-detail { max-width: 900px; margin: 0 auto; }
+.quiz-card, .result-wrap, .directory-page, .comparison-page, .program-detail, .analytics-page { max-width: 900px; margin: 0 auto; }
 .quiz-card, .result-main, .alternatives-box, .compare-box, .advice-card, .program-detail > .detail-section {
   background: rgba(255,253,248,.95);
   border: 1px solid var(--border);
   border-radius: 28px;
   box-shadow: 0 18px 52px rgba(39,32,20,.08);
 }
+.analytics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
+.analytics-card, .analytics-panel {
+  background: rgba(255,253,248,.95);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: 0 12px 34px rgba(39,32,20,.06);
+  padding: 18px;
+}
+.analytics-card span, .analytics-panel small { display: block; color: var(--muted); font-weight: 700; margin-bottom: 8px; }
+.analytics-card strong { display: block; font-size: 34px; color: var(--green); }
+.analytics-panel { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 12px; }
+.analytics-panel strong { font-size: 28px; color: var(--amber); }
+.analytics-note { display: block; }
+.analytics-note p { margin: 0; color: var(--muted); line-height: 1.9; }
+.analytics-note code { background: #f6efe3; border: 1px solid var(--border); border-radius: 8px; padding: 2px 6px; color: var(--ink); }
 .quiz-card { padding: clamp(20px, 4vw, 34px); }
 .quiz-topline, .progress-row, .nav-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .quiz-topline span { color: var(--muted); font-weight: 700; }
@@ -2274,10 +2369,11 @@ li { margin: 8px 0; line-height: 1.8; }
 .program-link:hover { opacity: 0.8; }
 
 @media (max-width: 840px) {
-  .intro-grid, .program-grid, .detail-grid { grid-template-columns: 1fr; }
+  .intro-grid, .program-grid, .detail-grid, .analytics-grid { grid-template-columns: 1fr; }
   .result-top, .program-hero { flex-direction: column; }
   .compare-grid, .links-box { grid-template-columns: 1fr; }
   .section-head { flex-direction: column; }
+  .analytics-panel { align-items: stretch; flex-direction: column; }
 }
 
 @media (max-width: 520px) {
@@ -2356,6 +2452,8 @@ html.dark .selector-root {
 html.dark .theme-toggle, html.dark .cc-card, html.dark .picker-btn, html.dark .ghost-btn, html.dark .share-btn { background: #1e293b; border-color: #334155; color: #f8fafc !important; }
 html.dark .picker-btn.selected { background: rgba(15, 138, 104, 0.5); border-color: var(--green); }
 html.dark .hero-card, html.dark .quiz-card, html.dark .result-main, html.dark .comparison-page, html.dark .program-detail > .detail-section, html.dark .alternatives-box, html.dark .compare-box, html.dark .answers-summary { background: #1e293b; border-color: #334155; }
+html.dark .analytics-card, html.dark .analytics-panel { background: #1e293b; border-color: #334155; }
+html.dark .analytics-note code { background: #0f172a; border-color: #334155; color: #f8fafc; }
 html.dark .home-hero .hero-card { background: linear-gradient(135deg, #1e293b, #0f172a); }
 html.dark .hero-card h1 { color: #f8fafc; }
 html.dark .cc-details > div, html.dark .ds-blue, html.dark .ds-green, html.dark .ds-amber, html.dark .ds-rose, html.dark .why-box, html.dark .notice-box { background: #0f172a; border-color: #334155; }
