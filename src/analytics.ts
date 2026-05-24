@@ -127,7 +127,8 @@ export async function getAnalyticsSession() {
 
 export async function signInToAnalytics(email: string) {
   if (!supabase) throw new Error("Supabase is not configured");
-  const redirectTo = `${window.location.origin}${window.location.pathname}?analytics=1`;
+  const configuredRedirect = import.meta.env.VITE_AUTH_REDIRECT_URL as string | undefined;
+  const redirectTo = configuredRedirect || `${window.location.origin}${window.location.pathname}?analytics=1`;
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: { emailRedirectTo: redirectTo },
