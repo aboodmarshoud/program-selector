@@ -319,7 +319,7 @@ export const QUESTIONS = [
   {
     id: "needPattern",
     title: "أي وصف أقرب لاحتياجك الآن؟",
-    subtitle: () => (<span><strong>يمكنك اختيار أكثر من خيار؛</strong> اختر الإجابات بحسب أولويتها بالنسبة لك، فالأهم ثم ما يليه.</span>),
+    subtitle: "يمكنك اختيار أكثر من خيار؛ اختر الإجابات بحسب أولويتها بالنسبة لك، فالأهم ثم ما يليه.",
     multi: true,
     condition: (a) => a.age && !["7_9", "10_12"].includes(a.age),
     options: (a) => {

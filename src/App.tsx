@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useEffect } from "react";
+import { useMemo, useState, useRef, useEffect, type CSSProperties } from "react";
 import { Bar, BarChart, CartesianGrid, Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { motion, AnimatePresence } from "motion/react";
 import { Moon, Sun } from "lucide-react";
@@ -14,7 +14,6 @@ import { isSupabaseEnabled } from "./supabaseClient";
 import { PROGRAMS } from "./programData";
 import { calculateRecommendations } from "./recommendations";
 import { asArray, choiceRank, hasAnswer, hasChoice } from "./answerUtils";
-import { styles } from "./appStyles";
 import { NEED_BRIDGE_ITEMS, OMR_TRACK_IDS, QUESTIONS, SELF_STUDY_BRIDGES, cleanAnswers, questionSubtitle, questionTitle, visibleQuestions } from "./quizFlow";
 
 
@@ -125,6 +124,25 @@ function DetailSection({ title, items, icon, colorClass = "default" }: any) {
   );
 }
 
+function ResultMatchMeter({ percent = 100 }: { percent?: number }) {
+  return (
+    <div className="result-match-meter" style={{ "--match": `${percent * 3.6}deg` } as CSSProperties}>
+      <strong>{percent}%</strong>
+      <small>الأعلى توافقًا</small>
+    </div>
+  );
+}
+
+function ResultConfetti() {
+  return (
+    <div className="result-confetti" aria-hidden="true">
+      {Array.from({ length: 12 }).map((_, index) => (
+        <span key={index} />
+      ))}
+    </div>
+  );
+}
+
 function ProgramDetail({ program, onBack, onHome }: any) {
   if (!program) return null;
   return (
@@ -213,7 +231,7 @@ function ComparisonTable({ onOpen, onBack }: any) {
   );
 }
 
-function HomeView({ onStart, onPrograms, onCompare, onCompareDynamic }: any) {
+function HomeView({ onStart, onPrograms, onSelfStudy, onCompare, onCompareDynamic }: any) {
   return (
     <>
       <section className="home-hero">
@@ -224,6 +242,7 @@ function HomeView({ onStart, onPrograms, onCompare, onCompareDynamic }: any) {
           <div className="hero-actions">
             <button className="main-btn hero-btn" type="button" onClick={onStart}>ابدأ اختبار الاختيار</button>
             <button className="ghost-btn hero-btn" type="button" onClick={onPrograms}>استعراض كل البرامج</button>
+            <button className="ghost-btn hero-btn" type="button" onClick={onSelfStudy}>الدراسة الذاتية</button>
             <button className="ghost-btn hero-btn" type="button" onClick={onCompare}>مقارنة عامة</button>
             <button className="ghost-btn hero-btn" type="button" onClick={onCompareDynamic}>مقارنة مخصصة</button>
           </div>
@@ -234,7 +253,87 @@ function HomeView({ onStart, onPrograms, onCompare, onCompareDynamic }: any) {
         <div className="intro-card"><span>🎓</span><h3>يراعي التجربة السابقة</h3><p>إذا كنت طالبًا حاليًا أو خريجًا أو منسحبًا، فالنتيجة تتعامل مع ذلك مباشرة.</p></div>
         <div className="intro-card"><span>📚</span><h3>نتيجة مع بدائل</h3><p>يعرض البرنامج الأقرب، ثم بدائل قريبة مع نسبة مناسبة.</p></div>
       </section>
+      <section className="program-map">
+        <div className="section-head compact-head">
+          <div><small>خريطة البرامج</small><h2>ليست كل المواد من النوع نفسه</h2><p>الفكرة المركزية: فرّق بين برنامج شامل بدفعات ومسار ذاتي متخصص، ثم اختر بقدر طاقتك.</p></div>
+        </div>
+        <div className="map-grid">
+          <div className="map-column">
+            <span className="map-icon">🗓️</span>
+            <h3>جماعية بدفعات وخطة زمنية</h3>
+            <p>برامج لها بداية ونهاية ومتابعة ودفعات، والأصل أن تدخل واحدًا منها بوعي لا أن تجمعها كلها.</p>
+            <div className="map-list">
+              <strong>طويلة</strong>
+              <span>برد اليقين، البناء المنهجي، البناء الفكري، مشروع العمر، أكاديمية الحديث، الجيل الصاعد، عالِم، مدرسة خديجة.</span>
+            </div>
+            <div className="map-list">
+              <strong>قصيرة</strong>
+              <span>خارطة الثغور، بوصلة المصلح، الدورات التربوية، الموسمية، وما شابهها.</span>
+            </div>
+          </div>
+          <div className="map-column self-study-column">
+            <span className="map-icon">🎧</span>
+            <h3>دراسة ذاتية</h3>
+            <p>مواد مسجلة وسلاسل متخصصة، ليست برنامجًا شاملاً، لكنها نافعة كتهيئة أو تعميق أو مسار رديف بحسب الحاجة.</p>
+            <button className="main-btn" type="button" onClick={onSelfStudy}>استعراض مواد الدراسة الذاتية</button>
+          </div>
+        </div>
+      </section>
+      <section className="guidance-strip">
+        <div><strong>قليل دائم خير من كثير منقطع</strong><span>لا تجعل الحماس المؤقت يفتح عليك أكثر مما تطيق.</span></div>
+        <div><strong>الأصل لغير المتفرغ: برنامج واحد</strong><span>اجعل معيارك الاستمرار لا كثرة التسجيل.</span></div>
+        <div><strong>من عنده وقت: غالبًا برنامجان بحد أقصى</strong><span>وذلك عند وضوح الحاجة وعدم تزاحم الواجبات.</span></div>
+        <div><strong>من دخل عالِم لا يجمع معه غيره</strong><span>لأنه مسار ثقيل وطويل يحتاج نفسًا وتفرغًا ذهنيًا.</span></div>
+      </section>
     </>
+  );
+}
+
+const SELF_STUDY_CATALOG = [
+  { title: "التزكية للمصلحين", source: "مورد", url: "https://mawred.io/student/courses/13", kind: "تزكية", use: "لمن يحتاج تثبيت القلب وترتيب الباعث قبل أو أثناء البرنامج." },
+  { title: "شرح المنهاج من ميراث النبوة", source: "مورد", url: "https://mawred.io/details/courses/9", kind: "تأسيس", use: "مادة تأسيسية تصلح قبل البناء أو كتمهيد لمن يحتاج ضبط الرؤية العامة." },
+  { title: "حقيبة إحياء منهاج النبوة", source: "مورد", url: "https://mawred.io/details/courses/10", kind: "منهج وإصلاح", use: "نافعة لمن يريد فهم معنى الإحياء وربط العلم بالعمل." },
+  { title: "مركزيات الإصلاح", source: "مورد", url: "https://mawred.io/details/courses/8", kind: "إصلاح", use: "مناسبة قبل المسارات الإصلاحية وخارطة الثغور ومشروع العمر." },
+  { title: "الأمة بين احتلالين", source: "مورد", url: "https://mawred.io/details/courses/6", kind: "وعي", use: "لمن يريد فهمًا أوسع للواقع والسياق الحضاري والسياسي." },
+  { title: "سلسلة خير القرون", source: "مورد", url: "https://mawred.io/details/courses/3", kind: "علم وسيرة", use: "تعين على بناء التصور الشرعي والتاريخي من القرون المفضلة." },
+  { title: "مدارسة سورة الأنعام", source: "مورد", url: "https://mawred.io/details/courses/5", kind: "قرآن", use: "لمن يحتاج مادة قرآنية مركزة تقوي اليقين والرؤية." },
+  { title: "صناعة المربي", source: "مورد", url: "https://mawred.io/details/courses/11", kind: "تربية", use: "لمن يميل إلى التربية وبناء البيئات ومرافقة الناس." },
+  { title: "الاستهداء بالقرآن", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/8", kind: "قرآن", use: "لمن يريد تصحيح علاقته بالقرآن باعتباره هاديًا لا مادة سماع فقط." },
+  { title: "الدورة الفكرية", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/13", kind: "فكر", use: "لمن عنده أسئلة فكرية أو يريد مدخلًا إلى نقد التيارات." },
+  { title: "الدورة التربوية", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/20", kind: "تربية", use: "نافعة لمن يحتاج مدخلًا تربويًا عمليًا قبل المحاضن أو معها." },
+  { title: "حجية السنة", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/19", kind: "حديث", use: "لمن يميل لتخصص الحديث أو يحتاج تثبيت مركزية السنة." },
+  { title: "بوصلة الإصلاح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons", kind: "إصلاح", use: "تمهيد عملي لمن يسأل عن الثغر والعمل والمشروع." },
+];
+
+function SelfStudyPage({ onBack }: any) {
+  return (
+    <section className="self-study-page">
+      <div className="section-head">
+        <button className="ghost-btn" type="button" onClick={onBack}>العودة للرئيسية</button>
+        <div>
+          <small>الدراسة الذاتية</small>
+          <h2>مواد رديفة لا تزاحم البرنامج الأساسي</h2>
+          <p>هذه ليست برامج شاملة بديلة، بل مواد متخصصة تختار منها بحسب حاجتك ووقتك، خاصة ريثما تفتح دفعة مناسبة.</p>
+        </div>
+      </div>
+      <div className="study-grid">
+        {SELF_STUDY_CATALOG.map((item) => (
+          <article className="study-card" key={item.title}>
+            <div>
+              <span>{item.kind}</span>
+              <h3>{item.title}</h3>
+              <small>{item.source}</small>
+            </div>
+            <p>{item.use}</p>
+            <a href={item.url} target="_blank" rel="noreferrer">فتح المادة</a>
+          </article>
+        ))}
+      </div>
+      <div className="notice-box study-note">
+        <h3>كيف تستخدم هذه الصفحة؟</h3>
+        <p>اختر مادة واحدة توافق احتياجك الحالي. إن كنت داخل برنامج دفعات فاجعلها خادمة له لا منافسة له، وإن كنت تنتظر فتح التسجيل فاجعلها تهيئة مؤقتة.</p>
+      </div>
+    </section>
   );
 }
 
@@ -595,6 +694,7 @@ function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
 
   return (
     <section className="result-wrap" ref={resultRef} dir="rtl">
+      <ResultConfetti />
       <div className="share-top" data-html2canvas-ignore="true" style={{ display: 'flex', justifyContent: 'space-between' }}>
         <button className="share-btn home-btn-fix2" type="button" onClick={onHome}>
           <span>🏠</span> الرئيسية
@@ -619,6 +719,7 @@ function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
             <h2>{primary.name}</h2>
             <p>{primary.description}</p>
           </div>
+          <ResultMatchMeter />
         </div>
         <div className="result-body">
           <div className="detail-grid">
@@ -1034,8 +1135,6 @@ export default function ProgramSelector() {
 
   return (
     <div className={`selector-root ${darkMode ? 'dark' : ''}`} dir="rtl">
-      <style>{styles}</style>
-      
       <button 
         className="theme-toggle" 
         onClick={() => setDarkMode(!darkMode)}
@@ -1055,7 +1154,7 @@ export default function ProgramSelector() {
 
           {mode === "home" && !openedProgram && (
             <motion.div key="home" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }}>
-              <HomeView onStart={startQuiz} onPrograms={() => setMode("programs")} onCompare={() => setMode("compare")} onCompareDynamic={() => setMode("compareDynamic")} />
+              <HomeView onStart={startQuiz} onPrograms={() => setMode("programs")} onSelfStudy={() => setMode("selfStudy")} onCompare={() => setMode("compare")} onCompareDynamic={() => setMode("compareDynamic")} />
             </motion.div>
           )}
 
@@ -1068,6 +1167,12 @@ export default function ProgramSelector() {
           {mode === "programs" && !openedProgram && (
             <motion.div key="programs" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }}>
               <ProgramDirectory onOpen={setOpenedProgramId} onBack={goHome} />
+            </motion.div>
+          )}
+
+          {mode === "selfStudy" && !openedProgram && (
+            <motion.div key="selfStudy" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }}>
+              <SelfStudyPage onBack={goHome} />
             </motion.div>
           )}
 
@@ -1092,53 +1197,64 @@ export default function ProgramSelector() {
               <div className="progress-row"><span>السؤال {Math.min(step, qs.length - 1) + 1} من {qs.length}</span><span>{progress}%</span></div>
               <div className="progress"><span style={{ width: `${progress}%` }} /></div>
 
-              <div className="question-head">
-                <h2>{questionTitle(current, answers)}</h2>
-                {questionSubtitle(current, answers) && <p>{questionSubtitle(current, answers)}</p>}
-                {current.multi && <p className="multi-hint">يمكنك اختيار أكثر من خيار.</p>}
-              </div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={current.id}
+                  className="question-panel"
+                  initial={{ opacity: 0, x: 26 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -26 }}
+                  transition={{ duration: 0.22, ease: "easeOut" }}
+                >
+                  <div className="question-head">
+                    <h2>{questionTitle(current, answers)}</h2>
+                    {questionSubtitle(current, answers) && <p>{questionSubtitle(current, answers)}</p>}
+                    {current.multi && <p className="multi-hint">يمكنك اختيار أكثر من خيار.</p>}
+                  </div>
 
-              {current.inputType === "text" ? (
-                <div className="text-answer-wrap">
-                  <input
-                    className="text-answer-input"
-                    type="text"
-                    value={answers[current.id] || ""}
-                    onChange={(event) => choose(current.id, event.target.value)}
-                    placeholder={current.placeholder || ""}
-                    autoComplete="country-name"
-                  />
-                </div>
-              ) : current.inputType === "select" ? (
-                <div className="text-answer-wrap">
-                  <select
-                    className="text-answer-input select-answer-input"
-                    value={answers[current.id] || ""}
-                    onChange={(event) => choose(current.id, event.target.value)}
-                  >
-                    <option value="" disabled>{current.placeholder || "اختر..."}</option>
-                    {currentOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.icon ? `${opt.icon} ` : ""}{opt.title}</option>
-                    ))}
-                  </select>
-                </div>
-              ) : (
-                <div className="options-grid">
-                  {currentOptions.map((opt) => (
-                    <button
-                      className={`option-card ${hasChoice(answers[current.id], opt.value) ? "selected" : ""}`}
-                      type="button"
-                      key={opt.value}
-                      onClick={() => choose(current.id, opt.value)}
-                    >
-                      <span className="option-icon">
-                        {current.multi && hasChoice(answers[current.id], opt.value) ? <b className="rank-badge">{choiceRank(answers[current.id], opt.value) + 1}</b> : opt.icon}
-                      </span>
-                      <span className="option-copy"><strong>{opt.title}</strong>{opt.sub && <small>{opt.sub}</small>}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+                  {current.inputType === "text" ? (
+                    <div className="text-answer-wrap">
+                      <input
+                        className="text-answer-input"
+                        type="text"
+                        value={answers[current.id] || ""}
+                        onChange={(event) => choose(current.id, event.target.value)}
+                        placeholder={current.placeholder || ""}
+                        autoComplete="country-name"
+                      />
+                    </div>
+                  ) : current.inputType === "select" ? (
+                    <div className="text-answer-wrap">
+                      <select
+                        className="text-answer-input select-answer-input"
+                        value={answers[current.id] || ""}
+                        onChange={(event) => choose(current.id, event.target.value)}
+                      >
+                        <option value="" disabled>{current.placeholder || "اختر..."}</option>
+                        {currentOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>{opt.icon ? `${opt.icon} ` : ""}{opt.title}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="options-grid">
+                      {currentOptions.map((opt) => (
+                        <button
+                          className={`option-card ${hasChoice(answers[current.id], opt.value) ? "selected" : ""}`}
+                          type="button"
+                          key={opt.value}
+                          onClick={() => choose(current.id, opt.value)}
+                        >
+                          <span className="option-icon">
+                            {current.multi && hasChoice(answers[current.id], opt.value) ? <b className="rank-badge">{choiceRank(answers[current.id], opt.value) + 1}</b> : opt.icon}
+                          </span>
+                          <span className="option-copy"><strong>{opt.title}</strong>{opt.sub && <small>{opt.sub}</small>}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
 
               <div className="nav-row">
                 <button className="ghost-btn" type="button" onClick={back} disabled={step === 0}>السابق</button>
