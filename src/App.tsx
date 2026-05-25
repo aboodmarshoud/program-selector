@@ -888,6 +888,37 @@ const SELF_STUDY_BRIDGES = {
   ],
 };
 
+const NEED_BRIDGE_ITEMS = {
+  structured_path: [
+    { title: "شرح متن المنهاج من ميراث النبوة", source: "مورد", url: "https://mawred.io/details/courses/9" },
+    { title: "سلسلة خير القرون", source: "مورد", url: "https://mawred.io/details/courses/3" },
+  ],
+  certainty: [
+    { title: "التزكية للمصلحين", source: "مورد", url: "https://mawred.io/student/courses/13" },
+    { title: "الاستهداء بالقرآن", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/8" },
+  ],
+  intellectual_depth: [
+    { title: "الدورة الفكرية", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/13" },
+    { title: "الأمة بين احتلالين", source: "مورد", url: "https://mawred.io/details/courses/6" },
+  ],
+  specialized_track: [
+    { title: "دورة حجية السنة", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/19" },
+    { title: "شرح متن المنهاج من ميراث النبوة", source: "مورد", url: "https://mawred.io/details/courses/9" },
+  ],
+  reform_project: [
+    { title: "مركزيات الإصلاح", source: "مورد", url: "https://mawred.io/details/courses/8" },
+    { title: "بوصلة الإصلاح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons" },
+  ],
+  relational_growth: [
+    { title: "صناعة المربي", source: "مورد", url: "https://mawred.io/details/courses/11" },
+    { title: "التزكية للمصلحين", source: "مورد", url: "https://mawred.io/student/courses/13" },
+  ],
+  women_space: [
+    { title: "الدورة التربوية", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/20" },
+    { title: "التزكية للمصلحين", source: "مورد", url: "https://mawred.io/student/courses/13" },
+  ],
+};
+
 function hasBinaAsasiFoundation(a) {
   return hasKnown(a, "bina_asasi");
 }
@@ -2195,8 +2226,70 @@ function DimensionChart({ profile, program }: any) {
   );
 }
 
+function bridgeReason(item, primary, answers) {
+  const title = item.title || "";
+  if (answers.dailyTime === "light") return "لأن الوقت محدود؛ اجعلها مادة واحدة خفيفة لا خطة مزدحمة.";
+  if (title.includes("التزكية") || title.includes("الاستهداء")) return "لأن إجاباتك تشير إلى حاجة إيمانية أو تثبيت قلبي.";
+  if (title.includes("الفكرية") || title.includes("احتلالين")) return "لأن في إجاباتك ميلًا لفهم الأفكار والواقع المعاصر.";
+  if (title.includes("مركزيات") || title.includes("بوصلة")) return "لأن النتيجة تميل إلى العمل الإصلاحي وفهم الثغر.";
+  if (title.includes("المربي") || title.includes("التربوية")) return "لأن الاحتياج قريب من التربية والبيئة والمتابعة.";
+  if (title.includes("حجية السنة") || title.includes("خير القرون")) return "لأن المسار المقترح يحتاج تعميقًا علميًا منضبطًا.";
+  if (title.includes("المنهاج")) return "لأنها مادة تأسيسية نافعة قبل أو أثناء كثير من المسارات.";
+  if (OMR_TRACK_IDS.includes(primary.id)) return "لتهيئة المسار قبل فتح دفعات مشروع العمر.";
+  return "لأنها أقرب مادة رديفة لطبيعة البرنامج المقترح.";
+}
+
+function bridgeScore(item, primary, answers, index) {
+  let score = 100 - index;
+  const title = item.title || "";
+  const needs = asArray(answers.needPattern);
+
+  if (needs.includes("certainty") || answers.prioritySignal === "certainty_priority" || answers.doubtImpact === "high") {
+    if (title.includes("التزكية") || title.includes("الاستهداء") || title.includes("المدرسة الرمضانية")) score += 45;
+  }
+  if (needs.includes("intellectual_depth") || answers.prioritySignal === "intellectual_priority" || answers.doubtImpact === "theoretical") {
+    if (title.includes("الفكرية") || title.includes("احتلالين")) score += 45;
+  }
+  if (needs.includes("reform_project") || answers.prioritySignal === "reform_priority" || primary.id === "kharitat_thughur" || OMR_TRACK_IDS.includes(primary.id)) {
+    if (title.includes("مركزيات") || title.includes("بوصلة") || title.includes("إحياء")) score += 45;
+  }
+  if (needs.includes("relational_growth") || answers.prioritySignal === "environment_priority" || primary.id === "khadija") {
+    if (title.includes("المربي") || title.includes("التربوية") || title.includes("التزكية")) score += 38;
+  }
+  if (needs.includes("structured_path") || answers.prioritySignal === "curriculum_priority" || primary.id.includes("bina")) {
+    if (title.includes("المنهاج") || title.includes("خير القرون")) score += 34;
+  }
+  if (needs.includes("specialized_track") || answers.prioritySignal === "depth_priority" || primary.id === "hadith") {
+    if (title.includes("حجية السنة") || title.includes("المنهاج")) score += 34;
+  }
+  if (answers.dailyTime === "light") score -= index * 8;
+
+  return score;
+}
+
+function uniqueBridgeItems(items) {
+  const seen = new Set();
+  return items.filter((item) => {
+    const key = item.url || item.title;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function getBridgePlan(primary, answers) {
-  const items = SELF_STUDY_BRIDGES[primary.id] || [];
+  const baseItems = SELF_STUDY_BRIDGES[primary.id] || [];
+  const needItems = asArray(answers.needPattern).flatMap((need) => NEED_BRIDGE_ITEMS[need] || []);
+  const priorityItems = {
+    curriculum_priority: NEED_BRIDGE_ITEMS.structured_path,
+    certainty_priority: NEED_BRIDGE_ITEMS.certainty,
+    intellectual_priority: NEED_BRIDGE_ITEMS.intellectual_depth,
+    depth_priority: NEED_BRIDGE_ITEMS.specialized_track,
+    reform_priority: NEED_BRIDGE_ITEMS.reform_project,
+    environment_priority: NEED_BRIDGE_ITEMS.relational_growth,
+    women_priority: NEED_BRIDGE_ITEMS.women_space,
+  }[answers.prioritySignal] || [];
+  const items = uniqueBridgeItems([...baseItems, ...needItems, ...priorityItems]);
   if (!items.length) return null;
 
   let note = "هذه ليست بديلًا عن البرنامج، بل مسار خفيف ريثما تفتح الدفعة القادمة أو لتتهيأ قبل الدخول.";
@@ -2210,7 +2303,16 @@ function getBridgePlan(primary, answers) {
     note = "خارطة الثغور برنامج دفعات مدته قرابة 3–4 أشهر، وهذه مواد قبلية تساعدك على التجهز حتى تفتح دفعة مناسبة.";
   }
 
-  return { items: items.slice(0, 3), note };
+  const plannedItems = items
+    .map((item, index) => ({
+      ...item,
+      reason: bridgeReason(item, primary, answers),
+      score: bridgeScore(item, primary, answers, index),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, answers.dailyTime === "light" ? 2 : 3);
+
+  return { items: plannedItems, note };
 }
 
 function BridgePlan({ plan }: any) {
@@ -2218,12 +2320,15 @@ function BridgePlan({ plan }: any) {
 
   return (
     <div className="bridge-box">
-      <h3>مسار ذاتي رديف</h3>
+      <h3>مسار ذاتي رديف مدروس</h3>
       <p>{plan.note}</p>
       <div className="bridge-list">
         {plan.items.map((item, index) => (
           <div className="bridge-item" key={`${item.title}-${index}`}>
-            <strong>{item.title}</strong>
+            <div>
+              <strong>{item.title}</strong>
+              {item.reason && <small>{item.reason}</small>}
+            </div>
             <span>{item.source}</span>
             {item.url && <a href={item.url} target="_blank" rel="noreferrer">فتح المادة</a>}
           </div>
@@ -2306,8 +2411,6 @@ function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
             <div><small>التسجيل</small><strong>{primary.registrationStatus}</strong></div>
           </div>
 
-          <DimensionChart profile={result.profile} program={primary} />
-
           {primary.reasons?.length > 0 && (
             <div className="why-box">
               <h3>لماذا ظهر هذا الترشيح؟</h3>
@@ -2320,8 +2423,6 @@ function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
             <ul>{primary.caution?.slice(0, 4).map((item, index) => <li key={index}>{item}</li>)}</ul>
           </div>
 
-          <BridgePlan plan={bridgePlan} />
-
           <div className="result-actions" data-html2canvas-ignore="true">
             <button className="main-btn" type="button" onClick={() => onOpen(primary.id)}>افتح تفاصيل البرنامج</button>
             <button className="ghost-btn restart-btn-fix" type="button" onClick={onRestart}>
@@ -2330,6 +2431,10 @@ function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
           </div>
         </div>
       </div>
+
+      <BridgePlan plan={bridgePlan} />
+
+      <DimensionChart profile={result.profile} program={primary} />
 
       {showBinaComparison && <BinaComparison />}
 
@@ -3006,7 +3111,9 @@ button { font-family: inherit; }
 .bridge-box p { color: var(--muted); line-height: 1.9; margin: 0 0 12px; }
 .bridge-list { display: grid; gap: 10px; }
 .bridge-item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px; background: white; border: 1px solid #dbe7f7; border-radius: 16px; padding: 12px; }
+.bridge-item strong, .bridge-item small { display: block; }
 .bridge-item strong { line-height: 1.6; }
+.bridge-item small { color: var(--muted); line-height: 1.7; margin-top: 4px; }
 .bridge-item span { color: var(--muted); font-size: 13px; font-weight: 700; white-space: nowrap; }
 .bridge-item a { color: var(--green); font-weight: 800; text-decoration: none; white-space: nowrap; }
 ul { margin: 0; padding-right: 22px; }
