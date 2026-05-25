@@ -3,6 +3,22 @@ import { Bar, BarChart, CartesianGrid, Radar, RadarChart, PolarGrid, PolarAngleA
 import { motion, AnimatePresence } from "motion/react";
 import { Moon, Sun } from "lucide-react";
 import {
+  IconBook2,
+  IconBooks,
+  IconBulb,
+  IconCalendarStats,
+  IconCompass,
+  IconExternalLink,
+  IconHeartHandshake,
+  IconLifebuoy,
+  IconMap2,
+  IconNotebook,
+  IconRoute,
+  IconSchool,
+  IconSparkles,
+  IconTargetArrow,
+} from "@tabler/icons-react";
+import {
   getAnalyticsSession,
   loadAnalyticsSummary,
   signInToAnalytics,
@@ -39,6 +55,38 @@ function programFocusLabel(program: any) {
     .slice(0, 2)
     .map(([key]) => labels[key] || key)
     .join("، ");
+}
+
+function SiteHeader({ mode, onHome, onPrograms, onSelfStudy, onCompare, onCompareDynamic, onStart }: any) {
+  const [compareOpen, setCompareOpen] = useState(false);
+
+  return (
+    <header className="site-header">
+      <button className="site-logo" type="button" onClick={onHome}>
+        <span className="site-logo-dot" />
+        <span>دليل اختيار البرامج</span>
+      </button>
+      <nav className="site-nav" aria-label="التنقل الرئيسي">
+        <button className={mode === "programs" ? "active" : ""} type="button" onClick={onPrograms}>البرامج</button>
+        <button className={mode === "selfStudy" ? "active" : ""} type="button" onClick={onSelfStudy}>الدراسة الذاتية</button>
+        <div className={`site-menu ${compareOpen ? "open" : ""}`} onMouseEnter={() => setCompareOpen(true)} onMouseLeave={() => setCompareOpen(false)}>
+          <button
+            className={mode === "compare" || mode === "compareDynamic" ? "active" : ""}
+            type="button"
+            aria-expanded={compareOpen}
+            onClick={() => setCompareOpen((current) => !current)}
+          >
+            مقارنة
+          </button>
+          <div className="site-dropdown" role="menu">
+            <button type="button" onClick={() => { setCompareOpen(false); onCompare(); }} role="menuitem">مقارنة عامة</button>
+            <button type="button" onClick={() => { setCompareOpen(false); onCompareDynamic(); }} role="menuitem">مقارنة مخصصة</button>
+          </div>
+        </div>
+      </nav>
+      <button className="site-start-btn" type="button" onClick={onStart}>ابدأ الاختبار</button>
+    </header>
+  );
 }
 
 function AdviceCard({ advice, onOpen }: any) {
@@ -143,6 +191,20 @@ function ResultConfetti() {
   );
 }
 
+function FeatureIcon({ children }: any) {
+  return <span className="feature-icon" aria-hidden="true">{children}</span>;
+}
+
+function studyIconForKind(kind = "") {
+  if (kind.includes("تزكية")) return IconHeartHandshake;
+  if (kind.includes("تربية")) return IconSchool;
+  if (kind.includes("قرآن")) return IconBook2;
+  if (kind.includes("فكر")) return IconBulb;
+  if (kind.includes("إصلاح")) return IconTargetArrow;
+  if (kind.includes("حديث")) return IconBooks;
+  return IconNotebook;
+}
+
 function ProgramDetail({ program, onBack, onHome }: any) {
   if (!program) return null;
   return (
@@ -169,7 +231,7 @@ function ProgramDetail({ program, onBack, onHome }: any) {
       </div>
       <DetailSection title="أهداف البرنامج" items={program.goals} icon="🎯" colorClass="blue" />
       <DetailSection title="ماذا ستكتسب؟" items={program.outcomes} icon="✨" colorClass="green" />
-      <DetailSection title="يناسبك إذا…" items={program.suitable} icon="✅" colorClass="amber" />
+      <DetailSection title="يناسبك إذا…" items={program.suitable} icon="✅" colorClass="green" />
       <DetailSection title="انتبه قبل التسجيل…" items={program.caution} icon="⚠️" colorClass="rose" />
       <div className="links-box">
         <div>
@@ -232,58 +294,88 @@ function ComparisonTable({ onOpen, onBack }: any) {
 }
 
 function HomeView({ onStart, onPrograms, onSelfStudy, onCompare, onCompareDynamic }: any) {
+  const programCount = publicProgramsList().length;
+  const selfStudyCount = SELF_STUDY_CATALOG.length;
+
   return (
     <>
       <section className="home-hero">
         <div className="hero-card">
           <div className="hero-badge">دليل اختيار برامج الشيخ أحمد بن يوسف السيد</div>
-          <h1>لا تسجّل في كل برنامج تراه.</h1>
-          <p>تعرّف على احتياجك، ومرحلتك، وطريقة التعلم التي تناسبك، ثم اختر البرنامج الأقرب بدل التشتت بين البرامج.</p>
-          <div className="hero-actions">
-            <button className="main-btn hero-btn" type="button" onClick={onStart}>ابدأ اختبار الاختيار</button>
-            <button className="ghost-btn hero-btn" type="button" onClick={onPrograms}>استعراض كل البرامج</button>
-            <button className="ghost-btn hero-btn" type="button" onClick={onSelfStudy}>الدراسة الذاتية</button>
-            <button className="ghost-btn hero-btn" type="button" onClick={onCompare}>مقارنة عامة</button>
-            <button className="ghost-btn hero-btn" type="button" onClick={onCompareDynamic}>مقارنة مخصصة</button>
+          <h1>ما البرنامج الأنسب لك الآن؟</h1>
+          <p>لا تسجّل في كل برنامج تراه.. تعرّف على احتياجك، ومرحلتك، وطريقة التعلم التي تناسبك، ثم اختر البرنامج الأقرب بدل التشتت.</p>
+          <button className="main-btn hero-primary" type="button" onClick={onStart}>ابدأ اختبار الاختيار</button>
+          <span className="hero-secondary-note">نحو 5 دقائق · نتيجة مع أسباب وتنبيهات وبدائل</span>
+          <div className="home-stats">
+            <div><strong>{programCount}</strong><span>برنامجًا ومسارًا</span></div>
+            <div><strong>{selfStudyCount}</strong><span>مادة ذاتية رديفة</span></div>
           </div>
         </div>
       </section>
       <section className="intro-grid">
-        <div className="intro-card"><span>🧭</span><h3>اختيار بحسب الحاجة</h3><p>الأسئلة لا تفترض برنامجًا مسبقًا، بل تقرأ احتياج الطالب وواقعه.</p></div>
-        <div className="intro-card"><span>🎓</span><h3>يراعي التجربة السابقة</h3><p>إذا كنت طالبًا حاليًا أو خريجًا أو منسحبًا، فالنتيجة تتعامل مع ذلك مباشرة.</p></div>
-        <div className="intro-card"><span>📚</span><h3>نتيجة مع بدائل</h3><p>يعرض البرنامج الأقرب، ثم بدائل قريبة مع نسبة مناسبة.</p></div>
+        <div className="intro-card"><FeatureIcon><IconCompass size={30} stroke={1.8} /></FeatureIcon><h3>اختيار بحسب الحاجة</h3><p>الأسئلة لا تفترض برنامجًا مسبقًا، بل تقرأ احتياج الطالب وواقعه.</p></div>
+        <div className="intro-card"><FeatureIcon><IconSchool size={30} stroke={1.8} /></FeatureIcon><h3>يراعي التجربة السابقة</h3><p>إذا كنت طالبًا حاليًا أو خريجًا أو منسحبًا، فالنتيجة تتعامل مع ذلك مباشرة.</p></div>
+        <div className="intro-card"><FeatureIcon><IconBooks size={30} stroke={1.8} /></FeatureIcon><h3>نتيجة مع بدائل</h3><p>يعرض البرنامج الأقرب، ثم بدائل قريبة مع نسبة مناسبة.</p></div>
       </section>
+      <div className="home-secondary-actions">
+        <button className="ghost-btn" type="button" onClick={onPrograms}>استعراض البرامج</button>
+        <button className="ghost-btn" type="button" onClick={onSelfStudy}>مواد الدراسة الذاتية</button>
+        <button className="ghost-btn" type="button" onClick={onCompare}>مقارنة عامة</button>
+        <button className="ghost-btn" type="button" onClick={onCompareDynamic}>مقارنة مخصصة</button>
+      </div>
       <section className="program-map">
         <div className="section-head compact-head">
-          <div><small>خريطة البرامج</small><h2>ليست كل المواد من النوع نفسه</h2><p>الفكرة المركزية: فرّق بين برنامج شامل بدفعات ومسار ذاتي متخصص، ثم اختر بقدر طاقتك.</p></div>
+          <div><small>خريطة البرامج</small><h2>ابدأ من نوع الالتزام لا من اسم البرنامج</h2><p>الاختيار يصير أوضح عندما تعرف: هل تحتاج برنامجًا طويلًا، تجربة قصيرة، أم مادة ذاتية رديفة؟</p></div>
         </div>
-        <div className="map-grid">
-          <div className="map-column">
-            <span className="map-icon">🗓️</span>
-            <h3>جماعية بدفعات وخطة زمنية</h3>
-            <p>برامج لها بداية ونهاية ومتابعة ودفعات، والأصل أن تدخل واحدًا منها بوعي لا أن تجمعها كلها.</p>
-            <div className="map-list">
-              <strong>طويلة</strong>
-              <span>برد اليقين، البناء المنهجي، البناء الفكري، مشروع العمر، أكاديمية الحديث، الجيل الصاعد، عالِم، مدرسة خديجة.</span>
+        <div className="program-map-flow">
+          <article className="map-step">
+            <span className="map-step-number">1</span>
+            <div>
+              <small>التزام طويل</small>
+              <h3>برامج جماعية ممتدة</h3>
+              <p>مناسبة لمن يريد بناءً منتظمًا وله نفس لمتابعة خطة طويلة بدفعات ومهام.</p>
+              <div className="map-chip-row">
+                <span>البناء المنهجي</span><span>برد اليقين</span><span>مشروع العمر</span><span>عالِم</span><span>أكاديمية الحديث</span>
+              </div>
             </div>
-            <div className="map-list">
-              <strong>قصيرة</strong>
-              <span>خارطة الثغور، بوصلة المصلح، الدورات التربوية، الموسمية، وما شابهها.</span>
+          </article>
+          <article className="map-step">
+            <span className="map-step-number">2</span>
+            <div>
+              <small>التزام قصير</small>
+              <h3>برامج بدفعات محدودة</h3>
+              <p>تصلح عند الحاجة إلى توجيه مركز في باب معين، دون الدخول مباشرة في مسار طويل.</p>
+              <div className="map-chip-row">
+                <span>خارطة الثغور</span><span>سقيا العشر</span>
+              </div>
             </div>
-          </div>
-          <div className="map-column self-study-column">
-            <span className="map-icon">🎧</span>
-            <h3>دراسة ذاتية</h3>
-            <p>مواد مسجلة وسلاسل متخصصة، ليست برنامجًا شاملاً، لكنها نافعة كتهيئة أو تعميق أو مسار رديف بحسب الحاجة.</p>
-            <button className="main-btn" type="button" onClick={onSelfStudy}>استعراض مواد الدراسة الذاتية</button>
-          </div>
+          </article>
+          <article className="map-step self-study-step">
+            <span className="map-step-number">3</span>
+            <div>
+              <small>مسار رديف</small>
+              <h3>مواد الدراسة الذاتية</h3>
+              <p>ليست بديلًا عن البرنامج الشامل، لكنها نافعة كتهيئة قبل الدفعة القادمة أو تعميق لحاجة محددة.</p>
+              <div className="map-chip-row">
+                <span>دورة بوصلة المصلح</span><span>دورة تدريس المنهاج</span><span>الدورة التربوية</span><span>الدورة الفكرية</span>
+              </div>
+              <button className="main-btn" type="button" onClick={onSelfStudy}>استعراض مواد الدراسة الذاتية</button>
+            </div>
+          </article>
         </div>
       </section>
-      <section className="guidance-strip">
-        <div><strong>قليل دائم خير من كثير منقطع</strong><span>لا تجعل الحماس المؤقت يفتح عليك أكثر مما تطيق.</span></div>
-        <div><strong>الأصل لغير المتفرغ: برنامج واحد</strong><span>اجعل معيارك الاستمرار لا كثرة التسجيل.</span></div>
-        <div><strong>من عنده وقت: غالبًا برنامجان بحد أقصى</strong><span>وذلك عند وضوح الحاجة وعدم تزاحم الواجبات.</span></div>
-        <div><strong>من دخل عالِم لا يجمع معه غيره</strong><span>لأنه مسار ثقيل وطويل يحتاج نفسًا وتفرغًا ذهنيًا.</span></div>
+      <section className="golden-tips">
+        <div className="golden-title">
+          <IconSparkles size={34} stroke={1.7} />
+          <h2>نصائح ذهبية</h2>
+        </div>
+        <div className="guidance-strip">
+          <div tabIndex={0}><strong>قليل دائم خير من كثير منقطع</strong><span>لا تجعل الحماس المؤقت يفتح عليك أكثر مما تطيق.</span></div>
+          <div tabIndex={0}><strong>الأصل لغير المتفرغ: برنامج واحد</strong><span>اجعل معيارك الاستمرار لا كثرة التسجيل.</span></div>
+          <div tabIndex={0}><strong>لمن عنده وقت: غالبًا برنامجان بحد أقصى</strong><span>وذلك عند وضوح الحاجة وعدم تزاحم الواجبات.</span></div>
+          <div tabIndex={0}><strong>من دخل عالِم لا يجمع معه غيره</strong><span>لأنه مسار ثقيل وطويل يحتاج نفسًا وتفرغًا ذهنيًا.</span></div>
+          <div tabIndex={0}><strong>إذا لم تعرف حاجتك بدقة: البناء المنهجي</strong><span>لأنه أصل واسع يصلح لمن يريد تأسيسًا عامًا قبل التخصص أو اختيار مسار أضيق.</span></div>
+        </div>
       </section>
     </>
   );
@@ -308,30 +400,40 @@ const SELF_STUDY_CATALOG = [
 function SelfStudyPage({ onBack }: any) {
   return (
     <section className="self-study-page">
-      <div className="section-head">
+      <div className="study-hero">
         <button className="ghost-btn" type="button" onClick={onBack}>العودة للرئيسية</button>
         <div>
           <small>الدراسة الذاتية</small>
-          <h2>مواد رديفة لا تزاحم البرنامج الأساسي</h2>
-          <p>هذه ليست برامج شاملة بديلة، بل مواد متخصصة تختار منها بحسب حاجتك ووقتك، أو ريثما تفتح دفعة للبرنامج المناسب لك.</p>
+          <h2>اختر مادة تخدم مرحلتك الآن</h2>
+          <p>مسارات قصيرة ومركزة: تهيئة قبل الدفعات، أو تعميق لنقطة تحتاجها، أو رفيق خفيف بجانب برنامجك الأساسي.</p>
+          <div className="study-hero-actions">
+            <span><IconRoute size={18} /> تهيئة</span>
+            <span><IconTargetArrow size={18} /> تعميق</span>
+            <span><IconLifebuoy size={18} /> رفيق مؤقت</span>
+          </div>
         </div>
+      </div>
+      <div className="study-lanes">
+        <div><IconMap2 size={24} /><strong>قبل البرنامج</strong><span>اختر مادة تمهيدية حتى تفتح الدفعة.</span></div>
+        <div><IconCalendarStats size={24} /><strong>أثناء البرنامج</strong><span>مادة واحدة فقط تخدم المسار ولا تزاحمه.</span></div>
+        <div><IconCompass size={24} /><strong>بعد النتيجة</strong><span>استعمل الترشيح الرديف بحسب احتياجك.</span></div>
       </div>
       <div className="study-grid">
         {SELF_STUDY_CATALOG.map((item) => (
           <article className="study-card" key={item.title}>
+            {(() => {
+              const StudyIcon = studyIconForKind(item.kind);
+              return <span className="study-card-icon" aria-hidden="true"><StudyIcon size={28} stroke={1.8} /></span>;
+            })()}
             <div>
-              <span>{item.kind}</span>
+              <span className="study-kind">{item.kind}</span>
               <h3>{item.title}</h3>
               <small>{item.source}</small>
             </div>
             <p>{item.use}</p>
-            <a href={item.url} target="_blank" rel="noreferrer">فتح المادة</a>
+            <a href={item.url} target="_blank" rel="noreferrer">فتح المادة <IconExternalLink size={16} /></a>
           </article>
         ))}
-      </div>
-      <div className="notice-box study-note">
-        <h3>كيف تستخدم هذه الصفحة؟</h3>
-        <p>اختر مادة واحدة توافق احتياجك الحالي. إن كنت داخل برنامج دفعات فاجعلها خادمة له لا منافسة له، وإن كنت تنتظر فتح التسجيل فاجعلها تهيئة مؤقتة.</p>
       </div>
     </section>
   );
@@ -1129,6 +1231,12 @@ export default function ProgramSelector() {
     setShowResult(false);
   }
 
+  function navigateMode(nextMode: string) {
+    setMode(nextMode);
+    setOpenedProgramId(null);
+    setShowResult(false);
+  }
+
   function closeProgram() {
     setOpenedProgramId(null);
   }
@@ -1143,6 +1251,16 @@ export default function ProgramSelector() {
       >
         {darkMode ? <Sun size={20} /> : <Moon size={20} />}
       </button>
+
+      <SiteHeader
+        mode={mode}
+        onHome={goHome}
+        onPrograms={() => navigateMode("programs")}
+        onSelfStudy={() => navigateMode("selfStudy")}
+        onCompare={() => navigateMode("compare")}
+        onCompareDynamic={() => navigateMode("compareDynamic")}
+        onStart={startQuiz}
+      />
 
       <main className="app-shell">
         <AnimatePresence mode="wait">
