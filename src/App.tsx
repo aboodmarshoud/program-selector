@@ -4,19 +4,45 @@ import { motion, AnimatePresence } from "motion/react";
 import { Moon, Sun } from "lucide-react";
 import {
   IconBook2,
+  IconAlertTriangle,
+  IconArrowUp,
+  IconBookmark,
   IconBooks,
+  IconBrain,
   IconBulb,
   IconCalendarStats,
+  IconCheck,
+  IconChevronDown,
   IconCompass,
+  IconDroplet,
   IconExternalLink,
+  IconFileTypePdf,
+  IconFlower,
   IconHeartHandshake,
+  IconHome,
+  IconLeaf,
   IconLifebuoy,
+  IconLink,
+  IconMap,
   IconMap2,
+  IconMosque,
   IconNotebook,
+  IconPlant,
   IconRoute,
   IconSchool,
+  IconScript,
+  IconSearch,
+  IconSeedling,
+  IconSpeakerphone,
   IconSparkles,
+  IconSun,
   IconTargetArrow,
+  IconTree,
+  IconUser,
+  IconUserHeart,
+  IconUsers,
+  IconUsersGroup,
+  IconWorld,
 } from "@tabler/icons-react";
 import {
   getAnalyticsSession,
@@ -102,7 +128,7 @@ function AdviceCard({ advice, onOpen }: any) {
 
   return (
     <div className={`advice-card advice-${tone}`}>
-      <div className="advice-kicker">تنبيه قبل التسجيل</div>
+      <div className="advice-kicker"><AdviceToneIcon tone={tone} />تنبيه قبل التسجيل</div>
       <h2>{advice.title}</h2>
       <p>{advice.message}</p>
 
@@ -147,7 +173,7 @@ function ProgramMini({ program, index, onOpen, primaryScore }: any) {
   return (
     <button className="mini-program" onClick={() => onOpen(program.id)} type="button">
       <span className="mini-rank">{index + 1}</span>
-      <span className="mini-icon">{program.icon}</span>
+      <ProgramIcon id={program.id} className="mini-icon" size={24} />
       <span className="mini-text">
         <strong>{program.name}</strong>
         <small>{program.badge} · {program.duration}</small>
@@ -162,7 +188,7 @@ function DetailSection({ title, items, icon, colorClass = "default" }: any) {
   if (!items?.length) return null;
   return (
     <div className={`detail-section ds-${colorClass}`}>
-      <h3><span className="ds-icon">{icon}</span> {title}</h3>
+      <h3><span className="ds-icon" aria-hidden="true">{icon}</span> {title}</h3>
       <ul>
         {items.map((item: any, index: number) => (
           <li key={index}>{item}</li>
@@ -205,6 +231,70 @@ function studyIconForKind(kind = "") {
   return IconNotebook;
 }
 
+const PROGRAM_ICON_MAP: Record<string, any> = {
+  alim: IconMosque,
+  bina_asasi: IconBooks,
+  bina_muyassar: IconBookmark,
+  fikri: IconBrain,
+  bard_yaqin: IconDroplet,
+  hadith: IconScript,
+  kharitat_thughur: IconMap,
+  mashrou_al_omr: IconTargetArrow,
+  omr_mufakkir: IconBrain,
+  omr_bahith: IconSearch,
+  omr_talib_ilm: IconBooks,
+  omr_daiya: IconSpeakerphone,
+  omr_murabbi: IconUsersGroup,
+  jeel_new: IconFlower,
+  buthur: IconSeedling,
+  juthur: IconPlant,
+  ghiras: IconTree,
+  ishraq: IconSun,
+  ithmar: IconSparkles,
+  khadija: IconUserHeart,
+};
+
+function ProgramIcon({ id, className = "program-icon", size = 28 }: any) {
+  const Icon = PROGRAM_ICON_MAP[id] || IconBook2;
+  return <span className={className} aria-hidden="true"><Icon size={size} stroke={1.8} /></span>;
+}
+
+function optionIconForValue(value = "", questionId = "") {
+  if (questionId === "country" || ["europe", "north_america", "south_america", "africa_other", "asia_other", "other"].includes(value)) return IconWorld;
+  if (["self", "male"].includes(value)) return IconUser;
+  if (["child", "friend"].includes(value)) return IconUsers;
+  if (["female", "women_space", "women_priority"].includes(value)) return IconUserHeart;
+  if (value.includes("bina") || value.includes("talib") || value.includes("structured") || value.includes("curriculum")) return IconBooks;
+  if (value.includes("fikri") || value.includes("mufakkir") || value.includes("intellectual") || value.includes("theoretical")) return IconBrain;
+  if (value.includes("hadith") || value.includes("specialized")) return IconScript;
+  if (value.includes("omr") || value.includes("reform") || value.includes("depth") || value.includes("kharitat")) return IconTargetArrow;
+  if (value.includes("yaqin") || value.includes("certainty")) return IconDroplet;
+  if (value.includes("khadija")) return IconUserHeart;
+  if (value.includes("buthur") || value.includes("none") || value.includes("did_not_try") || value.includes("10_12")) return IconSeedling;
+  if (value.includes("juthur")) return IconPlant;
+  if (value.includes("ghiras")) return IconTree;
+  if (value.includes("ishraq") || value.includes("ithmar") || value.includes("light") || value.includes("gentle") || value.includes("17_20")) return IconSun;
+  if (value.includes("bahith")) return IconSearch;
+  if (value.includes("daiya")) return IconSpeakerphone;
+  if (value.includes("murabbi") || value.includes("relational")) return IconUsersGroup;
+  if (value.includes("graduated")) return IconSchool;
+  if (value.includes("struggling") || value.includes("difficulty")) return IconLifebuoy;
+  if (value.includes("standard") || value.includes("medium")) return IconCalendarStats;
+  if (value.includes("ok") || value.includes("studying_committed")) return IconCheck;
+  if (questionId === "ageRange" || questionId === "dailyTime") return IconCalendarStats;
+  return IconCompass;
+}
+
+function OptionGlyph({ option, questionId, size = 24 }: any) {
+  const Icon = optionIconForValue(option?.value, questionId);
+  return <Icon size={size} stroke={1.8} />;
+}
+
+function AdviceToneIcon({ tone }: any) {
+  const Icon = tone === "green" ? IconCheck : tone === "blue" ? IconSchool : tone === "rose" ? IconAlertTriangle : IconAlertTriangle;
+  return <Icon size={18} stroke={1.9} aria-hidden="true" />;
+}
+
 function ProgramDetail({ program, onBack, onHome }: any) {
   if (!program) return null;
   return (
@@ -214,7 +304,7 @@ function ProgramDetail({ program, onBack, onHome }: any) {
         <button className="ghost-btn home-btn-fix" type="button" onClick={onHome}>الرئيسية</button>
       </div>
       <div className="program-hero" style={{ background: `linear-gradient(135deg, ${program.soft}, #fff)` }}>
-        <span className="program-hero-icon">{program.icon}</span>
+        <ProgramIcon id={program.id} className="program-hero-icon" size={42} />
         <div>
           <small>{program.badge}</small>
           <h1>{program.name}</h1>
@@ -229,10 +319,10 @@ function ProgramDetail({ program, onBack, onHome }: any) {
         <div><small>الوسيلة</small><strong>{program.medium}</strong></div>
         <div><small>التسجيل</small><strong>{program.registrationStatus}</strong></div>
       </div>
-      <DetailSection title="أهداف البرنامج" items={program.goals} icon="🎯" colorClass="blue" />
-      <DetailSection title="ماذا ستكتسب؟" items={program.outcomes} icon="✨" colorClass="green" />
-      <DetailSection title="يناسبك إذا…" items={program.suitable} icon="✅" colorClass="green" />
-      <DetailSection title="انتبه قبل التسجيل…" items={program.caution} icon="⚠️" colorClass="rose" />
+      <DetailSection title="أهداف البرنامج" items={program.goals} icon={<IconTargetArrow size={24} stroke={1.8} />} colorClass="blue" />
+      <DetailSection title="ماذا ستكتسب؟" items={program.outcomes} icon={<IconSparkles size={24} stroke={1.8} />} colorClass="green" />
+      <DetailSection title="يناسبك إذا…" items={program.suitable} icon={<IconCheck size={24} stroke={1.8} />} colorClass="green" />
+      <DetailSection title="انتبه قبل التسجيل…" items={program.caution} icon={<IconAlertTriangle size={24} stroke={1.8} />} colorClass="rose" />
       <div className="links-box">
         <div>
           <small>رابط الموقع الرسمي</small>
@@ -278,7 +368,7 @@ function ComparisonTable({ onOpen, onBack }: any) {
           <tbody>
             {list.map((program) => (
               <tr key={program.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                <td style={{ padding: '12px' }}><strong>{program.icon} {program.name}</strong><br/><small style={{color:'var(--muted)'}}>{program.badge}</small></td>
+                <td style={{ padding: '12px' }}><strong className="inline-program-title"><ProgramIcon id={program.id} className="inline-program-icon" size={18} /> {program.name}</strong><br/><small style={{color:'var(--muted)'}}>{program.badge}</small></td>
                 <td style={{ padding: '12px', fontSize: '14px' }}>{program.audience}</td>
                 <td style={{ padding: '12px', fontSize: '14px' }}>{program.duration}</td>
                 <td style={{ padding: '12px', fontSize: '14px' }}>{program.selectivity}</td>
@@ -450,7 +540,7 @@ function ProgramDirectory({ onOpen, onBack }: any) {
       <div className="program-grid">
         {list.map((program) => (
           <button className="directory-card" type="button" key={program.id} onClick={() => onOpen(program.id)} style={{ borderColor: `${program.color}35` }}>
-            <span className="directory-icon">{program.icon}</span>
+            <ProgramIcon id={program.id} className="directory-icon" size={34} />
             <strong>{program.name}</strong>
             <small>{program.badge}</small>
             <p>{program.description}</p>
@@ -518,7 +608,7 @@ function DynamicComparison({ onOpen, onBack }: any) {
           type="button"
         >
           <span>{selectedIds.length > 0 ? `تم تحديد ${selectedIds.length} برامج` : 'اختر البرامج للمقارنة...'}</span>
-          <span>▼</span>
+          <IconChevronDown size={18} stroke={1.8} aria-hidden="true" />
         </button>
         
         {dropdownOpen && (
@@ -538,9 +628,9 @@ function DynamicComparison({ onOpen, onBack }: any) {
                     width: '18px', height: '18px', borderRadius: '4px', border: isSelected ? '0' : '1px solid var(--border)', 
                     backgroundColor: isSelected ? 'var(--bg)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '8px', flexShrink: 0 
                   }}>
-                    {isSelected && <span style={{ color: 'var(--green)', fontSize: '12px' }}>✓</span>}
+                    {isSelected && <IconCheck size={14} stroke={2.2} color="var(--green)" aria-hidden="true" />}
                   </div>
-                  <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{prog.icon} {prog.name}</span>
+                  <span className="picker-program-title"><ProgramIcon id={prog.id} className="picker-program-icon" size={18} /> {prog.name}</span>
                 </button>
               )
             })}
@@ -552,7 +642,7 @@ function DynamicComparison({ onOpen, onBack }: any) {
         {selectedPrograms.length > 0 ? (
           selectedPrograms.map((p) => (
             <motion.div key={p.id} className="cc-card" layoutId={`cc-card-${p.id}`} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-               <h3>{p.icon} {p.name}</h3>
+               <h3 className="cc-title"><ProgramIcon id={p.id} className="cc-title-icon" size={22} /> {p.name}</h3>
                <small>{p.badge}</small>
                <p>{p.description}</p>
                <div className="cc-details">
@@ -565,7 +655,7 @@ function DynamicComparison({ onOpen, onBack }: any) {
           ))
         ) : (
           <div className="cc-card empty-card" style={{ width: '100%' }}>
-             <span>👆</span>
+             <IconArrowUp size={34} stroke={1.8} aria-hidden="true" />
              <p>اختر البرامج من القائمة المنسدلة أعلاه</p>
           </div>
         )}
@@ -799,14 +889,14 @@ function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
       <ResultConfetti />
       <div className="share-top" data-html2canvas-ignore="true" style={{ display: 'flex', justifyContent: 'space-between' }}>
         <button className="share-btn home-btn-fix2" type="button" onClick={onHome}>
-          <span>🏠</span> الرئيسية
+          <IconHome size={18} stroke={1.8} aria-hidden="true" /> الرئيسية
         </button>
         <div style={{ display: 'flex', gap: '10px' }}>
           <button className="share-btn" type="button" onClick={handleDownloadPDF}>
-            <span>📄</span> حفظ كملف PDF
+            <IconFileTypePdf size={18} stroke={1.8} aria-hidden="true" /> حفظ كملف PDF
           </button>
           <button className="share-btn" type="button" onClick={handleShare}>
-            <span>🔗</span> مشاركة الرابط
+            <IconLink size={18} stroke={1.8} aria-hidden="true" /> مشاركة الرابط
           </button>
         </div>
       </div>
@@ -815,7 +905,7 @@ function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
 
       <div className="result-main" style={{ borderColor: `${primary.color}55` }}>
         <div className="result-top" style={{ background: `linear-gradient(135deg, ${primary.soft}, #ffffff)` }}>
-          <span className="result-icon">{primary.icon}</span>
+          <ProgramIcon id={primary.id} className="result-icon" size={42} />
           <div>
             <div className="result-label">البرنامج الأقرب لاحتياجك الآن</div>
             <h2>{primary.name}</h2>
@@ -848,7 +938,7 @@ function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
           <div className="result-actions" data-html2canvas-ignore="true">
             <button className="main-btn" type="button" onClick={() => onOpen(primary.id)}>افتح تفاصيل البرنامج</button>
             <button className="ghost-btn restart-btn-fix" type="button" onClick={onRestart}>
-              <span style={{ fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"' }}>🔄</span> إعــادة الاختبــار
+              <IconRoute size={18} stroke={1.8} aria-hidden="true" /> إعــادة الاختبــار
             </button>
           </div>
         </div>
@@ -1350,7 +1440,7 @@ export default function ProgramSelector() {
                       >
                         <option value="" disabled>{current.placeholder || "اختر..."}</option>
                         {currentOptions.map((opt) => (
-                          <option key={opt.value} value={opt.value}>{opt.icon ? `${opt.icon} ` : ""}{opt.title}</option>
+                          <option key={opt.value} value={opt.value}>{opt.title}</option>
                         ))}
                       </select>
                     </div>
@@ -1364,7 +1454,7 @@ export default function ProgramSelector() {
                           onClick={() => choose(current.id, opt.value)}
                         >
                           <span className="option-icon">
-                            {current.multi && hasChoice(answers[current.id], opt.value) ? <b className="rank-badge">{choiceRank(answers[current.id], opt.value) + 1}</b> : opt.icon}
+                            {current.multi && hasChoice(answers[current.id], opt.value) ? <b className="rank-badge">{choiceRank(answers[current.id], opt.value) + 1}</b> : <OptionGlyph option={opt} questionId={current.id} />}
                           </span>
                           <span className="option-copy"><strong>{opt.title}</strong>{opt.sub && <small>{opt.sub}</small>}</span>
                         </button>
