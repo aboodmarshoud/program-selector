@@ -21,6 +21,11 @@ function hasBinaAsasiFoundation(a) {
   return hasKnown(a, "bina_asasi");
 }
 
+function hasCompletedReformFoundation(a) {
+  const graduated = getGraduatedPrograms(a);
+  return ["bina_asasi", "fikri", "khadija", "ishraq", "juthur"].some((id) => graduated.includes(id));
+}
+
 function isEligible(programId, a) {
   if (!a.age) return true;
 
@@ -100,6 +105,26 @@ function ensurePriority(scores: Record<string, ScoreItem>, id: string, reason: s
   const target = highestScore(scores, id) + margin;
   if (scores[id].score < target) scores[id].score = target;
   if (reason && !scores[id].reasons.includes(reason)) scores[id].reasons.unshift(reason);
+}
+
+function preferCurrentProgram(scores: Record<string, ScoreItem>, a: any, reason: string, margin = 24) {
+  const current = getCurrentPrograms(a).filter((id) => isRecommendable(scores, id));
+  if (!current.length) return false;
+
+  current.forEach((id) => addScore(scores, id, 38, reason));
+  const strongestCurrent = current.reduce((best, id) => (scores[id].score > scores[best].score ? id : best), current[0]);
+  ensurePriority(scores, strongestCurrent, reason, margin);
+  return true;
+}
+
+function recommendationRole(programId: string, a: any) {
+  if (getCurrentPrograms(a).includes(programId)) return "برنامجك الحالي";
+  if (programId === "kharitat_thughur") {
+    return hasCompletedReformFoundation(a) ? "مسار قصير بعد أصل سابق" : "رديف بعد التأسيس";
+  }
+  if (OMR_TRACK_IDS.includes(programId)) return "خطوة لاحقة متقدمة";
+  if (programId === "ithmar") return "خطوة لاحقة";
+  return "برنامج أساسي";
 }
 
 function softenScores(scores: Record<string, ScoreItem>, ids: string[], amount: number, reason?: string) {
@@ -218,6 +243,16 @@ function applyDecisionRules(scores, a) {
   }
 
   if (wantsReform) {
+    if (preferCurrentProgram(scores, a, "أنت داخل برنامج قائم؛ والأصل ألا تتركه لأجل مسار قصير، بل تجعل الحاجة الإصلاحية رديفة أو لاحقة", 32)) {
+      addScore(scores, "kharitat_thughur", 18, "خارطة الثغور تصلح هنا كمسار رديف قصير بعد ضبط الاستمرار في برنامجك الحالي");
+      return;
+    }
+    if (!hasCompletedReformFoundation(a)) {
+      const bina = chooseBinaTrack(a);
+      ensurePriority(scores, bina, "الرغبة في العمل الإصلاحي تحتاج أصلًا بنائيًا أسبق؛ ابدأ بما يبني القاعدة ثم اجعل الثغر خطوة لاحقة", 34);
+      addScore(scores, "kharitat_thughur", 18, "خارطة الثغور تصلح كتهيئة أو خطوة لاحقة بعد بناء الأصل، لا كبديل عن التأسيس");
+      return;
+    }
     ensurePriority(scores, "kharitat_thughur", "لأن احتياجك انتقل من مجرد الدراسة إلى معرفة الثغر والعمل الإصلاحي", 38);
     addScore(scores, "bina_asasi", 14, "البناء الشرعي يبقى أساسًا مساعدًا قبل العمل");
     return;
@@ -521,12 +556,17 @@ export function calculateRecommendations(a: any) {
     .sort((x, y) => y.score - x.score)
     .map((item) => {
       const prog = PROGRAMS[item.id as keyof typeof PROGRAMS];
-      return { ...prog, score: Math.max(0, item.score), reasons: item.reasons.slice(0, 5) };
+      return { ...prog, score: Math.max(0, item.score), reasons: item.reasons.slice(0, 5), recommendationRole: recommendationRole(item.id, a) };
     });
 
   const list = (sorted.length
     ? sorted
-    : [PROGRAMS.bina_muyassar, PROGRAMS.bina_asasi].map((program) => ({ ...program, score: 50, reasons: ["اختيار احتياطي آمن عند نقص المعطيات"] }))
+    : [PROGRAMS.bina_muyassar, PROGRAMS.bina_asasi].map((program) => ({
+        ...program,
+        score: 50,
+        reasons: ["اختيار احتياطي آمن عند نقص المعطيات"],
+        recommendationRole: recommendationRole(program.id, a),
+      }))
   ).map((item) => {
     let ageCaution = null;
     if (item.id === "buthur" && ["13_14"].includes(a.age)) {
@@ -579,7 +619,80 @@ export function calculateRecommendations(a: any) {
     }
   }
 
-  return { list, profile, advice };
+  const pathPlan = buildPathPlan(a, list);
+
+  return { list, profile, advice, pathPlan };
+}
+
+function buildPathPlan(a, list) {
+  const primary = list[0];
+  if (!primary) return null;
+
+  const current = getCurrentPrograms(a).map((id) => PROGRAMS[id]).filter(Boolean);
+  const wantsReform = hasChoice(a.needPattern, "reform_project") || a.prioritySignal === "reform_priority";
+
+  if (current.length) {
+    return {
+      label: a.programStatus === "studying_struggling" ? "استدراك قبل الانتقال" : "استمرار",
+      title: "القرار العملي الآن: ثبّت برنامجك الحالي",
+      message: "وجود احتياج جديد لا يعني فتح مسار جديد فورًا. الأصل أن تضبط البرنامج الذي أنت فيه، ثم تجعل البرامج القصيرة أو المواد الرديفة خادمة له.",
+      points: [
+        "ابدأ بخطة أسبوعين للاستدراك أو تثبيت الورد الدراسي.",
+        "لا تدخل برنامجًا آخر إلا إذا كان خفيفًا ولا يزاحم أصل الالتزام.",
+        "اجعل سؤال الثغر والعمل الإصلاحي خطوة لاحقة بعد قدر من الاستقرار.",
+      ],
+    };
+  }
+
+  if (isGraduatedStatus(a)) {
+    return {
+      label: "بناء على أصل سابق",
+      title: "القرار العملي الآن: ابحث عن الخطوة التي تضيف معنى جديدًا",
+      message: "بما أن لديك تجربة مكتملة أو قريبة من الاكتمال، فالترشيح هنا لا يقصد تكرار الطريق نفسه، بل اختيار خطوة لاحقة مناسبة.",
+      points: [
+        "قد تكون الخطوة تعميقًا فكريًا، تخصصًا علميًا، أو توجيهًا إصلاحيًا.",
+        "لا تعد إلى البرنامج نفسه إلا لسبب واضح.",
+        "وازن بين فتح الدفعات وقدرتك الواقعية قبل التسجيل.",
+      ],
+    };
+  }
+
+  if (wantsReform && primary.id !== "kharitat_thughur") {
+    return {
+      label: "تأسيس قبل الثغر",
+      title: "القرار العملي الآن: ابنِ الأصل أولًا",
+      message: "رغبتك في العمل الإصلاحي معتبرة، لكنها لا تجعل الدورة القصيرة بديلًا عن البناء. ابدأ ببرنامج يؤسس القاعدة، واجعل مواد الإصلاح أو خارطة الثغور رديفًا أو خطوة لاحقة.",
+      points: [
+        "اختر برنامجًا أساسيًا تستطيع الاستمرار فيه.",
+        "خذ مادة إصلاحية واحدة فقط إن لم تزاحم البرنامج.",
+        "ارجع لخارطة الثغور عندما يكون عندك أصل أبين ووقت مناسب.",
+      ],
+    };
+  }
+
+  if (primary.id === "kharitat_thughur") {
+    return {
+      label: "مسار قصير",
+      title: "القرار العملي الآن: اجعلها توجيهًا للثغر لا بديلًا عن البناء",
+      message: "ظهور خارطة الثغور يعني أن سؤال العمل حاضر بقوة، لا أن كل برامج البناء صارت غير لازمة.",
+      points: [
+        "تأكد من المواد القبلية وشروط الدفعة.",
+        "لا تجمع معها برنامجًا ثقيلًا إلا عند سعة واضحة.",
+        "ليكن هدفك مشروعًا عمليًا محددًا بعد الدورة.",
+      ],
+    };
+  }
+
+  return {
+    label: "بداية أساسية",
+    title: "القرار العملي الآن: ابدأ ببرنامج واحد واضح",
+    message: "الترشيح هنا يقترح المسار الأقرب كبداية عملية، والأهم أن يكون برنامجًا قابلًا للاستمرار لا مجرد حماس تسجيل.",
+    points: [
+      "اقرأ شروط البرنامج قبل التسجيل.",
+      "لا تجمع أكثر من برنامج إلا عند وضوح الحاجة وسعة الوقت.",
+      "اجعل الردائف خادمة للمسار لا منافسة له.",
+    ],
+  };
 }
 
 function buildContextAdvice(a, list) {
@@ -614,16 +727,16 @@ function buildContextAdvice(a, list) {
 
     if (ratio < 0.55 && primary) {
       return {
-        type: "switch",
-        title: "قد يكون الأنسب أن تعيد النظر في مسارك الحالي",
-        program: primary,
-        currentProgram: bestKnown,
+        type: "caution",
+        title: "لا تجعل الترشيح سببًا لترك برنامجك الحالي",
+        program: bestKnown,
+        alternative: primary,
         message:
-          "يبدو أن طبيعة تطلعك واحتياجك الحالي تميل بوضوح لمسار آخر غير الذي تدرسه الآن. راجع بصدق: هل المشكلة في كسل مؤقت (هنا ننصح بالاستمرار) أم أن المادة العلمية ومستوى الضغط لا يناسبك نهائياً؟",
+          `ظهر برنامج ${primary.name} قريبًا من بعض احتياجك، لكن وجود حاجة جديدة لا يعني أن تترك برنامجك الحالي. تعامل معه كخيار رديف أو لاحق بعد ضبط الاستمرار، لا كبديل مباشر.`,
         points: [
-          "إذا كان البرنامج الحالي يسبب لك ضغطاً نفسياً يعيقك عن أصل الاستفادة، فالانتقال لمسار أرفق (مثل الميسر) أولى من الانقطاع الكلي.",
-          "تأكد من إغلاق التزاماتك في البرنامج الحالي بشكل لائق قبل الانتقال لغيره.",
-          "لا تجعل هذا الاختبار 'رخصة' سهلة للانسحاب؛ استشر مشرفك أو صحابتك في البرنامج قبل القرار النهائي.",
+          "الأصل أن تكمل البرنامج الذي بدأت به ما دام أصل مناسبته قائمًا.",
+          "إن كان البرنامج الآخر قصيرًا أو محدد الهدف، فاجعله رديفًا خفيفًا أو خطوة بعدية لا سببًا للتشتت.",
+          "لا تغيّر المسار إلا عند عائق حقيقي واضح، وبعد استشارة من يعرف برنامجك وحالك.",
         ],
       };
     }

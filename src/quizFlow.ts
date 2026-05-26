@@ -290,12 +290,9 @@ export const QUESTIONS = [
   },
   {
     id: "struggleReason",
-    title: (a: any) => {
-      if (a.programStatus === "none") return "لماذا لم تدخل برنامجًا من قبل، أو ما سبب انسحابك إن كنت قد بدأت؟";
-      return "ما السبب الأساسي للتعثر أو الانقطاع؟";
-    },
+    title: "ما السبب الأساسي للتعثر أو الانقطاع؟",
     subtitle: "فهم السبب يساعدنا في توجيهك لمعالجة المشكلة، لا تكرارها.",
-    condition: (a) => a.programStatus === "studying_struggling" || a.programStatus === "none",
+    condition: (a) => a.programStatus === "studying_struggling",
     options: () => [
       option("time", "ضيق الوقت وحجم المواد كبير", "دراستي أو عملي يمنعني من الالتزام بكثافة", ""),
       option("difficulty", "صعوبة المحتوى", "المستوى أعلى من قدرتي الحالية ويحتاج تأسيس أبسط", ""),
@@ -424,6 +421,7 @@ export function cleanAnswers(answers) {
   if (!canConsiderOmrTracks(next)) delete next.omrTrack;
   if (canConsiderOmrTracks(next)) delete next.selectivity;
   if (next.programStatus === "none" || !next.programStatus) delete next.knownPrograms;
+  if (next.programStatus !== "studying_struggling") delete next.struggleReason;
   if (!isAgeAtLeast15(next)) {
     delete next.doubtImpact;
     delete next.prioritySignal;

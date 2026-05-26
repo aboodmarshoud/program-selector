@@ -147,6 +147,22 @@ function AdviceCard({ advice, onOpen }: any) {
   );
 }
 
+function PathPlanCard({ plan }: any) {
+  if (!plan) return null;
+  return (
+    <div className="path-plan-card">
+      <div className="path-plan-kicker"><IconRoute size={18} stroke={1.8} />{plan.label}</div>
+      <h2>{plan.title}</h2>
+      <p>{plan.message}</p>
+      {plan.points?.length > 0 && (
+        <ul>
+          {plan.points.map((point, index) => <li key={index}>{point}</li>)}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function BinaComparison() {
   return (
     <div className="compare-box">
@@ -902,6 +918,7 @@ function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
       </div>
 
       <AdviceCard advice={result.advice} onOpen={onOpen} />
+      <PathPlanCard plan={result.pathPlan} />
 
       <div className="result-main" style={{ borderColor: `${primary.color}55` }}>
         <div className="result-top" style={{ background: `linear-gradient(135deg, ${primary.soft}, #ffffff)` }}>
@@ -921,6 +938,7 @@ function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
             <div><small>التكلفة</small><strong>{primary.cost}</strong></div>
             <div><small>الوسيلة</small><strong>{primary.medium}</strong></div>
             <div><small>التسجيل</small><strong>{primary.registrationStatus}</strong></div>
+            <div><small>طبيعة الترشيح</small><strong>{primary.recommendationRole || "برنامج أساسي"}</strong></div>
           </div>
 
           {primary.reasons?.length > 0 && (
@@ -958,9 +976,9 @@ function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
         </div>
       )}
 
-      <div className="notice-box disclaimer-box" style={{ background: '#f8fafc', borderColor: '#cbd5e1' }}>
-        <h3 style={{ color: 'var(--ink)' }}>تنبيه ختامي</h3>
-        <p style={{ margin: 0, color: 'var(--muted)', fontSize: '15px' }}>
+      <div className="notice-box disclaimer-box">
+        <h3>تنبيه</h3>
+        <p>
           هذه النتيجة هي بناءً على الإجابات التي قمت بتقديمها مع محاولة البرنامج للموائمة بينها وبين البرامج الإلكترونية بحسب أهدافها وما تتطلبه وتُحققه بإذن الله. لكن يبقى القرار تتدخل فيه عوامل أخرى (نفسية، ذاتية، أو اجتماعية). لذلك اجعل هذا الاختبار مؤشراً يساعدك، وحاول أن تطّلع على البرامج تفصيلياً وعلى تجارب الطلاب الخريجين منها. وإن تيسّرت لك الاستشارة لأحد الملمين بهذه البرامج فهذا خير. وفقكم الله وفتح عليكم.
         </p>
       </div>
