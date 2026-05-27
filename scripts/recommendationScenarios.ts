@@ -48,7 +48,10 @@ const scenarios: Scenario[] = [
       const ids = topIds(result);
       assert(ids[0] === "bina_asasi", `expected bina_asasi first, got ${ids.join(", ")}`);
       assert(result.pathPlan?.label === "استمرار", "expected a continue path plan");
+      assert(result.advice?.title?.includes("الثغر رديفًا"), "expected advice title to make the companion meaning explicit");
       assert(result.notNowItems?.some((item: any) => item.id === "kharitat_thughur"), "expected kharitat to be explained as not first now");
+      assert(result.pathPlan?.points?.some((point: string) => point.includes("وقت زائد") && point.includes("خارطة الثغور")), "expected kharitat to be allowed as an extra-time companion");
+      assert(result.pathPlan?.points?.some((point: string) => point.includes("بعد التخرج")), "expected later/after graduation deferral");
     },
   },
   {
@@ -70,6 +73,30 @@ const scenarios: Scenario[] = [
       assert(["bina_asasi", "bina_muyassar"].includes(ids[0]), `expected a bina track first, got ${ids.join(", ")}`);
       assert(result.pathPlan?.label === "تأسيس قبل الثغر", "expected foundation-before-reform path plan");
       assert(result.notNowItems?.some((item: any) => item.id === "kharitat_thughur"), "expected kharitat deferral explanation");
+      assert(result.pathPlan?.points?.some((point: string) => point.includes("وقتًا زائدًا") && point.includes("رديفًا")), "expected kharitat to be framed as an extra-time companion");
+      assert(result.notNowItems?.some((item: any) => item.id === "kharitat_thughur" && item.reason.includes("كرديف خفيف")), "expected kharitat not-now reason to allow light companion use");
+    },
+  },
+  {
+    name: "female friend reform case keeps foundation first and kharitat as companion or later",
+    answers: {
+      forWhom: "friend",
+      gender: "female",
+      country: "أفغانستان",
+      age: "23_plus",
+      programStatus: "none",
+      dailyTime: "standard",
+      needClarity: "specific_need",
+      needPattern: ["reform_project"],
+      prioritySignal: "reform_priority",
+      selectivity: "high_selective",
+      doubtImpact: "low",
+    },
+    expect: (result) => {
+      const ids = topIds(result);
+      assert(ids[0] === "bina_asasi", `expected bina_asasi first, got ${ids.join(", ")}`);
+      assert(ids[1] === "kharitat_thughur", `expected kharitat as the close companion option, got ${ids.join(", ")}`);
+      assert(result.pathPlan?.points?.some((point: string) => point.includes("بعد إتمام مرحلة") || point.includes("تخرج")), "expected kharitat to be deferred if extra time is unavailable");
     },
   },
   {

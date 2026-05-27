@@ -98,13 +98,13 @@ export const SELF_STUDY_BRIDGES = {
     { title: "شرح متن المنهاج من ميراث النبوة", source: "مورد", url: "https://mawred.io/details/courses/9" },
   ],
   kharitat_thughur: [
-    { title: "بوصلة الإصلاح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons" },
-    { title: "كيفية تدريس المنهاج من ميراث النبوة", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/7" },
+    { title: "دورة بوصلة المصلح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons" },
     { title: "مركزيات الإصلاح", source: "مورد", url: "https://mawred.io/details/courses/8" },
+    { title: "شرح متن المنهاج من ميراث النبوة", source: "مورد", url: "https://mawred.io/details/courses/9" },
   ],
   omr_mufakkir: [
     { title: "مركزيات الإصلاح", source: "مورد", url: "https://mawred.io/details/courses/8" },
-    { title: "بوصلة الإصلاح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons" },
+    { title: "دورة بوصلة المصلح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons" },
     { title: "الدورة الفكرية", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/13" },
   ],
   omr_bahith: [
@@ -119,7 +119,7 @@ export const SELF_STUDY_BRIDGES = {
   ],
   omr_daiya: [
     { title: "مركزيات الإصلاح", source: "مورد", url: "https://mawred.io/details/courses/8" },
-    { title: "بوصلة الإصلاح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons" },
+    { title: "دورة بوصلة المصلح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons" },
     { title: "الاستهداء بالقرآن", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/8" },
   ],
   omr_murabbi: [
@@ -149,12 +149,12 @@ export const SELF_STUDY_BRIDGES = {
     { title: "الدورة الفكرية", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/13" },
   ],
   ishraq: [
-    { title: "بوصلة الإصلاح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons" },
+    { title: "دورة بوصلة المصلح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons" },
     { title: "الاستهداء بالقرآن", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/8" },
     { title: "الدورة الفكرية", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/13" },
   ],
   ithmar: [
-    { title: "بوصلة الإصلاح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons" },
+    { title: "دورة بوصلة المصلح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons" },
     { title: "كيفية تدريس المنهاج من ميراث النبوة", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/7" },
   ],
   alim: [
@@ -182,7 +182,7 @@ export const NEED_BRIDGE_ITEMS = {
   ],
   reform_project: [
     { title: "مركزيات الإصلاح", source: "مورد", url: "https://mawred.io/details/courses/8" },
-    { title: "بوصلة الإصلاح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons" },
+    { title: "دورة بوصلة المصلح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons" },
   ],
   relational_growth: [
     { title: "صناعة المربي", source: "مورد", url: "https://mawred.io/details/courses/11" },

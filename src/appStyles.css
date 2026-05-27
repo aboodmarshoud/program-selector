@@ -594,6 +594,12 @@ li { margin: 8px 0; line-height: 1.8; }
   background: #fffaf0;
   border: 1px solid #eed9aa;
 }
+.not-now-lead {
+  margin: -4px 0 16px;
+  color: #76521a;
+  line-height: 1.9;
+  font-weight: 700;
+}
 .not-now-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

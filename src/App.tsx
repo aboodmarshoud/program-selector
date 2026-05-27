@@ -184,9 +184,15 @@ function PathPlanCard({ plan }: any) {
 
 function NotNowCard({ items }: any) {
   if (!items?.length) return null;
+  const hasKharitatCompanion = items.some((item) => item.id === "kharitat_thughur" && item.reason?.includes("رديف"));
   return (
     <div className="not-now-card">
-      <h3>ليس الخيار الأول الآن</h3>
+      <h3>{hasKharitatCompanion ? "رديف ممكن لا بديل" : "ليس الخيار الأول الآن"}</h3>
+      {hasKharitatCompanion && (
+        <p className="not-now-lead">
+          ظهور خارطة الثغور هنا لا يعني ترك البرنامج الحالي أو تقديمها على البناء، بل دخولها فقط إن بقي وقت زائد واضح.
+        </p>
+      )}
       <div className="not-now-list">
         {items.map((item) => (
           <div className="not-now-item" key={item.id}>
@@ -536,7 +542,7 @@ const SELF_STUDY_CATALOG = [
   { title: "الدورة الفكرية", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/13", kind: "فكر", use: "لمن عنده أسئلة فكرية أو يريد مدخلًا إلى نقد التيارات." },
   { title: "الدورة التربوية", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/20", kind: "تربية", use: "نافعة لمن يحتاج مدخلًا تربويًا عمليًا قبل المحاضن أو معها." },
   { title: "حجية السنة", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/19", kind: "حديث", use: "لمن يميل لتخصص الحديث أو يحتاج تثبيت مركزية السنة." },
-  { title: "بوصلة الإصلاح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons", kind: "إصلاح", use: "تمهيد عملي لمن يسأل عن الثغر والعمل والمشروع." },
+  { title: "دورة بوصلة المصلح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons", kind: "إصلاح", use: "تمهيد عملي لمن يسأل عن الثغر والعمل والمشروع." },
 ];
 
 function SelfStudyPage({ onBack }: any) {
@@ -818,7 +824,9 @@ function bridgeScore(item, primary, answers, index) {
     if (title.includes("الفكرية") || title.includes("احتلالين")) score += 45;
   }
   if (needs.includes("reform_project") || answers.prioritySignal === "reform_priority" || primary.id === "kharitat_thughur" || OMR_TRACK_IDS.includes(primary.id)) {
-    if (title.includes("مركزيات") || title.includes("بوصلة") || title.includes("إحياء")) score += 45;
+    if (title.includes("بوصلة")) score += 150;
+    if (title.includes("مركزيات")) score += 140;
+    if (title.includes("المنهاج")) score += 72;
   }
   if (needs.includes("relational_growth") || answers.prioritySignal === "environment_priority" || primary.id === "khadija") {
     if (title.includes("المربي") || title.includes("التربوية") || title.includes("التزكية")) score += 38;
@@ -846,6 +854,10 @@ function uniqueBridgeItems(items) {
 
 function getBridgePlan(primary, answers) {
   const baseItems = SELF_STUDY_BRIDGES[primary.id] || [];
+  const wantsReformBridge = hasChoice(answers.needPattern, "reform_project") || answers.prioritySignal === "reform_priority";
+  const kharitatCompanionItems = wantsReformBridge && primary.id !== "kharitat_thughur"
+    ? SELF_STUDY_BRIDGES.kharitat_thughur || []
+    : [];
   const needItems = asArray(answers.needPattern).flatMap((need) => NEED_BRIDGE_ITEMS[need] || []);
   const priorityItems = {
     curriculum_priority: NEED_BRIDGE_ITEMS.structured_path,
@@ -856,7 +868,7 @@ function getBridgePlan(primary, answers) {
     environment_priority: NEED_BRIDGE_ITEMS.relational_growth,
     women_priority: NEED_BRIDGE_ITEMS.women_space,
   }[answers.prioritySignal] || [];
-  const items = uniqueBridgeItems([...baseItems, ...needItems, ...priorityItems]);
+  const items = uniqueBridgeItems([...kharitatCompanionItems, ...baseItems, ...needItems, ...priorityItems]);
   if (!items.length) return null;
 
   let note = "هذه ليست بديلًا عن البرنامج، بل مسار خفيف ريثما تفتح الدفعة القادمة أو لتتهيأ قبل الدخول.";
@@ -868,6 +880,8 @@ function getBridgePlan(primary, answers) {
     note = "مشروع العمر يفتح على دفعات، وغالبًا يحتاج أصلًا سابقًا كالبناء المنهجي؛ هذه المواد للتهيئة وفهم سؤال الثغر لا للاستبدال.";
   } else if (primary.id === "kharitat_thughur") {
     note = "خارطة الثغور برنامج دفعات مدته قرابة 3–4 أشهر، وهذه مواد قبلية تساعدك على التجهز حتى تفتح دفعة مناسبة.";
+  } else if (wantsReformBridge) {
+    note = "بما أن سؤال العمل الإصلاحي حاضر، فهذه مواد رديفة خفيفة لخدمة فهم الثغر، لا بديل عن البرنامج الأساسي ولا سبب لتركه.";
   }
 
   const plannedItems = items
