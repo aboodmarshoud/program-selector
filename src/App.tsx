@@ -68,6 +68,24 @@ function publicProgramsList() {
   return Object.values(PROGRAMS).filter((program: any) => program.id !== "mashrou_al_omr");
 }
 
+const RADAR_COLORS = [
+  "#2563eb",
+  "#dc2626",
+  "#16a34a",
+  "#7c3aed",
+  "#0891b2",
+  "#be123c",
+  "#ca8a04",
+  "#0f766e",
+];
+
+const RESULT_USER_RADAR = "#f97316";
+const RESULT_PROGRAM_RADAR = "#2563eb";
+
+function radarColor(index: number) {
+  return RADAR_COLORS[index % RADAR_COLORS.length];
+}
+
 function programFocusLabel(program: any) {
   const labels = {
     sharia: "التأصيل الشرعي",
@@ -159,6 +177,23 @@ function PathPlanCard({ plan }: any) {
           {plan.points.map((point, index) => <li key={index}>{point}</li>)}
         </ul>
       )}
+    </div>
+  );
+}
+
+function NotNowCard({ items }: any) {
+  if (!items?.length) return null;
+  return (
+    <div className="not-now-card">
+      <h3>ليس الخيار الأول الآن</h3>
+      <div className="not-now-list">
+        {items.map((item) => (
+          <div className="not-now-item" key={item.id}>
+            <strong>{item.title}</strong>
+            <p>{item.reason}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -333,7 +368,7 @@ function ProgramDetail({ program, onBack, onHome }: any) {
         <div><small>طبيعة القبول</small><strong>{program.selectivity}</strong></div>
         <div><small>التكلفة</small><strong>{program.cost}</strong></div>
         <div><small>الوسيلة</small><strong>{program.medium}</strong></div>
-        <div><small>التسجيل</small><strong>{program.registrationStatus}</strong></div>
+        <div><small>وقت التسجيل</small><strong>{program.registrationStatus}</strong></div>
       </div>
       <DetailSection title="أهداف البرنامج" items={program.goals} icon={<IconTargetArrow size={24} stroke={1.8} />} colorClass="blue" />
       <DetailSection title="ماذا ستكتسب؟" items={program.outcomes} icon={<IconSparkles size={24} stroke={1.8} />} colorClass="green" />
@@ -689,14 +724,14 @@ function DynamicComparison({ onOpen, onBack }: any) {
                     <PolarGrid stroke="var(--border)" />
                     <PolarAngleAxis dataKey="subject" tick={{ fill: "var(--ink)", fontSize: 13, fontWeight: 700 }} />
                     {selectedPrograms.map((p, i) => (
-                      <Radar key={p.id} name={p.name} dataKey={`P${i}`} stroke={p.color} fill={p.color} fillOpacity={0.25} strokeWidth={2} />
+                      <Radar key={p.id} name={p.name} dataKey={`P${i}`} stroke={radarColor(i)} fill={radarColor(i)} fillOpacity={0.22} strokeWidth={2.5} />
                     ))}
                   </RadarChart>
                 </ResponsiveContainer>
              </div>
              <div className="chart-legend">
-                {selectedPrograms.map((p) => (
-                  <div key={p.id} className="legend-item"><div className="legend-dot" style={{ backgroundColor: p.color }} /> {p.name}</div>
+                {selectedPrograms.map((p, i) => (
+                  <div key={p.id} className="legend-item"><div className="legend-dot" style={{ backgroundColor: radarColor(i) }} /> {p.name}</div>
                 ))}
              </div>
         </motion.div>
@@ -728,25 +763,25 @@ function DimensionChart({ profile, program }: any) {
             <Radar
               name="احتياجك"
               dataKey="A"
-              stroke="#f97316"
-              fill="#f97316"
-              fillOpacity={0.3}
+              stroke={RESULT_USER_RADAR}
+              fill={RESULT_USER_RADAR}
+              fillOpacity={0.26}
               strokeWidth={2}
             />
             <Radar
               name={program.name}
               dataKey="B"
-              stroke={program.color}
-              fill={program.color}
-              fillOpacity={0.25}
-              strokeWidth={2}
+              stroke={RESULT_PROGRAM_RADAR}
+              fill={RESULT_PROGRAM_RADAR}
+              fillOpacity={0.2}
+              strokeWidth={2.5}
             />
           </RadarChart>
         </ResponsiveContainer>
       </div>
       <div className="chart-legend">
         <div className="legend-item"><span className="legend-dot user-dot" /> احتياجك</div>
-        <div className="legend-item"><span className="legend-dot program-dot" style={{ background: program.color }} /> تركيز البرنامج</div>
+        <div className="legend-item"><span className="legend-dot program-dot" /> تركيز البرنامج</div>
       </div>
     </div>
   );
@@ -773,7 +808,12 @@ function bridgeScore(item, primary, answers, index) {
   if (needs.includes("certainty") || answers.prioritySignal === "certainty_priority" || answers.doubtImpact === "high") {
     if (title.includes("التزكية") || title.includes("الاستهداء") || title.includes("المدرسة الرمضانية")) score += 45;
   }
-  if (needs.includes("intellectual_depth") || answers.prioritySignal === "intellectual_priority" || answers.doubtImpact === "theoretical") {
+  if (
+    needs.includes("intellectual_depth") ||
+    answers.prioritySignal === "intellectual_priority" ||
+    answers.doubtImpact === "theoretical" ||
+    answers.doubtImpact === "ideological_environment"
+  ) {
     if (title.includes("الفكرية") || title.includes("احتلالين")) score += 45;
   }
   if (needs.includes("reform_project") || answers.prioritySignal === "reform_priority" || primary.id === "kharitat_thughur" || OMR_TRACK_IDS.includes(primary.id)) {
@@ -870,6 +910,7 @@ function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
   const alternatives = list.slice(1, 4);
   const showBinaComparison = isBinaProgram(primary);
   const bridgePlan = getBridgePlan(primary, answers);
+  const showPathPlan = !result.advice;
   const resultRef = useRef<HTMLDivElement>(null);
 
   const handleShare = async () => {
@@ -918,15 +959,16 @@ function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
       </div>
 
       <AdviceCard advice={result.advice} onOpen={onOpen} />
-      <PathPlanCard plan={result.pathPlan} />
+      <PathPlanCard plan={showPathPlan ? result.pathPlan : null} />
 
       <div className="result-main" style={{ borderColor: `${primary.color}55` }}>
         <div className="result-top" style={{ background: `linear-gradient(135deg, ${primary.soft}, #ffffff)` }}>
           <ProgramIcon id={primary.id} className="result-icon" size={42} />
           <div>
-            <div className="result-label">البرنامج الأقرب لاحتياجك الآن</div>
+            <div className="result-label">{result.stageInfo?.label || "البرنامج الأقرب لاحتياجك الآن"}</div>
             <h2>{primary.name}</h2>
             <p>{primary.description}</p>
+            {result.stageInfo?.summary && <p className="stage-summary">{result.stageInfo.summary}</p>}
           </div>
           <ResultMatchMeter />
         </div>
@@ -935,10 +977,6 @@ function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
             <div><small>المدة</small><strong>{primary.duration}</strong></div>
             <div><small>الفئة</small><strong>{primary.audience}</strong></div>
             <div><small>طبيعة القبول</small><strong>{primary.selectivity}</strong></div>
-            <div><small>التكلفة</small><strong>{primary.cost}</strong></div>
-            <div><small>الوسيلة</small><strong>{primary.medium}</strong></div>
-            <div><small>التسجيل</small><strong>{primary.registrationStatus}</strong></div>
-            <div><small>طبيعة الترشيح</small><strong>{primary.recommendationRole || "برنامج أساسي"}</strong></div>
           </div>
 
           {primary.reasons?.length > 0 && (
@@ -963,6 +1001,7 @@ function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
       </div>
 
       <BridgePlan plan={bridgePlan} />
+      <NotNowCard items={result.notNowItems} />
 
       <DimensionChart profile={result.profile} program={primary} />
 

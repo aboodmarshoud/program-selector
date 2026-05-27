@@ -16,9 +16,32 @@ import {
 } from "./answerUtils";
 
 const OMR_TRACK_IDS = ["omr_mufakkir", "omr_bahith", "omr_talib_ilm", "omr_daiya", "omr_murabbi"];
+const OMR_TRACK_BY_CHOICE = {
+  mufakkir: "omr_mufakkir",
+  bahith: "omr_bahith",
+  talib_ilm: "omr_talib_ilm",
+  daiya: "omr_daiya",
+  murabbi: "omr_murabbi",
+};
 
 function hasBinaAsasiFoundation(a) {
   return hasKnown(a, "bina_asasi");
+}
+
+function hasCompletedBinaAsasiFoundation(a) {
+  return getGraduatedPrograms(a).includes("bina_asasi");
+}
+
+function selectedOmrTrackId(a) {
+  return OMR_TRACK_BY_CHOICE[a.omrTrack] || null;
+}
+
+function hasClearLongTermReformNeed(a) {
+  return (
+    a.needClarity === "specific_need" &&
+    ["expanded", "formation_project"].includes(a.dailyTime) &&
+    (hasChoice(a.needPattern, "reform_project") || a.prioritySignal === "reform_priority")
+  );
 }
 
 function hasCompletedReformFoundation(a) {
@@ -64,7 +87,7 @@ function isEligible(programId, a) {
     case "omr_talib_ilm":
     case "omr_daiya":
     case "omr_murabbi":
-      return adult && hasBinaAsasiFoundation(a);
+      return adult && hasCompletedBinaAsasiFoundation(a) && hasClearLongTermReformNeed(a);
     default:
       return true;
   }
@@ -219,14 +242,29 @@ function applyDecisionRules(scores, a) {
   const femaleAdult = a.gender === "female" && isAgeAtLeast15(a);
   const primaryNeed = asArray(a.needPattern)[0];
 
+  const needsGeneralFoundation = a.needClarity === "general_foundation" || a.needClarity === "unsure";
   const wantsWomenSpace = femaleAdult && (primaryNeed === "women_space" || a.prioritySignal === "women_priority");
   const wantsCurriculum = primaryNeed === "structured_path" || a.prioritySignal === "curriculum_priority";
   const wantsEnvironment = primaryNeed === "relational_growth" || a.prioritySignal === "environment_priority";
   const wantsGentle = a.prioritySignal === "gentle_priority" || a.dailyTime === "light" || a.struggleReason === "difficulty";
   const wantsSpecialization = primaryNeed === "specialized_track" || a.prioritySignal === "depth_priority";
-  const wantsReform = primaryNeed === "reform_project";
+  const wantsReform = primaryNeed === "reform_project" || a.prioritySignal === "reform_priority";
   const highDoubt = a.doubtImpact === "high" || primaryNeed === "certainty";
-  const theoreticalDoubt = a.doubtImpact === "theoretical" || primaryNeed === "intellectual_depth";
+  const theoreticalDoubt = a.doubtImpact === "ideological_environment" || a.doubtImpact === "theoretical" || primaryNeed === "intellectual_depth";
+
+  if (needsGeneralFoundation && !wantsWomenSpace && !highDoubt && !theoreticalDoubt) {
+    const bina = chooseBinaTrack(a);
+    ensurePriority(
+      scores,
+      bina,
+      a.needClarity === "unsure"
+        ? "لأن حاجتك غير محسومة بعد؛ فالأسلم أن تبدأ بمسار تأسيسي شامل لا بتخصص أو دورة قصيرة"
+        : "لأن حاجتك عامة وتحتاج بناءً شاملًا؛ فالبناء المنهجي هو الأصل عند عدم تحديد حاجة دقيقة",
+      36
+    );
+    softenScores(scores, ["kharitat_thughur", ...OMR_TRACK_IDS, "hadith"], 18, "هذا المسار أنسب بعد وضوح الحاجة أو بعد أصل سابق");
+    return;
+  }
 
   if (wantsWomenSpace) {
     ensurePriority(scores, "khadija", "لأن الاحتياج الأهم هو محضن نسائي تفاعلي", 55);
@@ -251,6 +289,12 @@ function applyDecisionRules(scores, a) {
       const bina = chooseBinaTrack(a);
       ensurePriority(scores, bina, "الرغبة في العمل الإصلاحي تحتاج أصلًا بنائيًا أسبق؛ ابدأ بما يبني القاعدة ثم اجعل الثغر خطوة لاحقة", 34);
       addScore(scores, "kharitat_thughur", 18, "خارطة الثغور تصلح كتهيئة أو خطوة لاحقة بعد بناء الأصل، لا كبديل عن التأسيس");
+      return;
+    }
+    const selectedOmr = selectedOmrTrackId(a);
+    if (hasCompletedBinaAsasiFoundation(a) && hasClearLongTermReformNeed(a) && selectedOmr && isRecommendable(scores, selectedOmr)) {
+      ensurePriority(scores, selectedOmr, "لأن عندك أصلًا سابقًا ووقتًا واسعًا وحاجة إصلاحية طويلة واضحة؛ يمكن أن ينتقل الترشيح إلى مشروع العمر بحذر", 40);
+      addScore(scores, "kharitat_thughur", 16, "خارطة الثغور تبقى خطوة مساعدة لتحديد المجال وخدمة مشروع العطاء");
       return;
     }
     ensurePriority(scores, "kharitat_thughur", "لأن احتياجك انتقل من مجرد الدراسة إلى معرفة الثغر والعمل الإصلاحي", 38);
@@ -308,9 +352,15 @@ function applyDecisionRules(scores, a) {
 function addOmrTrackScores(scores: Record<string, ScoreItem>, a) {
   if (!hasChoice(a.needPattern, "reform_project") && a.prioritySignal !== "reform_priority") return;
 
-  if (!hasBinaAsasiFoundation(a)) {
+  if (!hasCompletedBinaAsasiFoundation(a)) {
     addScore(scores, "bina_asasi", 24, "مشروع العمر غالبًا لا يكون بداية الطريق؛ الأسبق غالبًا بناء أصل كالبناء المنهجي");
     addScore(scores, "kharitat_thughur", 24, "قبل مشروع العمر قد تحتاج فهم الثغر والتهيئة للعمل الإصلاحي");
+    return;
+  }
+
+  if (a.needClarity !== "specific_need") {
+    addScore(scores, "kharitat_thughur", 24, "مشروع العمر لا يقدم عند الحاجة العامة؛ ابدأ بتحديد الثغر أو تثبيت الأصل أولًا");
+    softenScores(scores, OMR_TRACK_IDS, 80, "مشروع العمر يحتاج حاجة واضحة لا مجرد تأسيس عام");
     return;
   }
 
@@ -320,13 +370,7 @@ function addOmrTrackScores(scores: Record<string, ScoreItem>, a) {
     return;
   }
 
-  const selected = {
-    mufakkir: "omr_mufakkir",
-    bahith: "omr_bahith",
-    talib_ilm: "omr_talib_ilm",
-    daiya: "omr_daiya",
-    murabbi: "omr_murabbi",
-  }[a.omrTrack];
+  const selected = selectedOmrTrackId(a);
 
   if (selected) {
     ensurePriority(scores, selected, "اخترت هذا المسار داخل مشروع العمر، ومع وجود أصل سابق ووقت واسع صار الترشيح أكثر تحديدًا", 44);
@@ -354,6 +398,39 @@ function addOmrTrackScores(scores: Record<string, ScoreItem>, a) {
     addScore(scores, "omr_daiya", 24, "الأثر العملي المباشر قد يرجح مسار الداعية");
     addScore(scores, "omr_murabbi", 18, "الأثر العملي قد يكون تربويًا ومحضنيًا");
   }
+}
+
+function buildStageInfo(a, primary) {
+  const current = getCurrentPrograms(a);
+  if (current.includes(primary?.id)) {
+    return { label: "مرحلتك الآن: استمرار ورديف خفيف", summary: "أنت تحتاج تثبيت برنامجك الحالي، وأي دورة قصيرة تكون رديفًا لا برنامجًا جديدًا." };
+  }
+  if (OMR_TRACK_IDS.includes(primary?.id)) {
+    return { label: "مرحلتك الآن: عطاء طويل", summary: "الترشيح هنا لا يبدأ التأسيس من الصفر، بل يبني على أصل سابق ووقت واسع لخدمة مشروع عطاء ممتد." };
+  }
+  if (primary?.id === "kharitat_thughur") {
+    return { label: "مرحلتك الآن: عطاء موجّه", summary: "سؤال الثغر حاضر، والترشيح هنا لتوجيه العطاء لا للاستغناء عن أصل البناء." };
+  }
+  if (primary?.id === "ithmar" || primary?.id === "hadith" || primary?.id === "fikri") {
+    return { label: "مرحلتك الآن: تخصص", summary: "الترشيح يميل إلى تعميق باب محدد بعد تحقق قدر من الأهلية أو وضوح الحاجة." };
+  }
+  if (primary?.recommendationRole?.includes("رديف")) {
+    return { label: "مرحلتك الآن: رديف خفيف", summary: "هذا ليس مسارًا بديلًا عن البناء، بل مادة أو دورة تخدم احتياجًا محددًا." };
+  }
+  if (isGraduatedStatus(a)) {
+    return { label: "مرحلتك الآن: بناء على أصل سابق", summary: "الترشيح هنا يبحث عن خطوة تضيف معنى جديدًا بعد تجربة مكتملة أو قريبة من الاكتمال." };
+  }
+  return { label: "مرحلتك الآن: بناء", summary: "الترشيح يقدّم برنامجًا أساسيًا تبدأ به أو تثبت عليه قبل التخصص والتوسع." };
+}
+
+function commitmentGuidance(a) {
+  if (a.dailyTime === "formation_project") {
+    return "مع التفرغ العالي يمكن النظر في أكثر من برنامج، لكن يبقى برنامج عالِم استثناءً لا يجمع معه غيره.";
+  }
+  if (a.dailyTime === "expanded") {
+    return "مع الوقت الجيد لا تتجاوز غالبًا برنامجين، واجعل الجمع لحاجة واضحة لا لمجرد الحماس.";
+  }
+  return "الأصل لغير المتفرغ برنامج واحد، وأي دورة قصيرة تكون رديفًا خفيفًا لا التزامًا موازيًا.";
 }
 
 export function calculateRecommendations(a: any) {
@@ -455,6 +532,21 @@ export function calculateRecommendations(a: any) {
     addScore(scores, "ithmar", 18, "الاستعداد العالي يناسب إثمار إذا توفرت الأهلية");
   }
 
+  if (a.needClarity === "general_foundation") {
+    addScore(scores, chooseBinaTrack(a), 46, "عند عدم وجود حاجة دقيقة فالأصل مسار تأسيسي شامل كالبناء المنهجي");
+    softenScores(scores, ["kharitat_thughur", ...OMR_TRACK_IDS, "hadith"], 18, "هذا الخيار يحتاج حاجة أدق أو أصلًا سابقًا");
+  }
+  if (a.needClarity === "unsure") {
+    addScore(scores, chooseBinaTrack(a), 38, "لأن الحاجة غير محسومة، فالترشيح الآمن هو بداية بنائية واسعة");
+    addScore(scores, "bard_yaqin", 8, "يمكن أن يكون مسار اليقين مناسبًا إذا كان التردد مرتبطًا بالطمأنينة");
+    softenScores(scores, ["kharitat_thughur", ...OMR_TRACK_IDS], 16, "لا نقدّم المسارات القصيرة أو المتقدمة عند غموض الحاجة");
+  }
+  if (a.needClarity === "specific_need") {
+    addScore(scores, "fikri", 4, "وضوح الحاجة يسمح بترجيح مسار أدق إذا وافق بقية الإجابات");
+    addScore(scores, "hadith", 4, "وضوح الحاجة يسمح بالتخصص عند وجود ميل علمي محدد");
+    addScore(scores, "kharitat_thughur", 4, "وضوح الحاجة يسمح بدورة قصيرة إذا كانت لخدمة عطاء قائم");
+  }
+
   addRankedScore(scores, a.needPattern, "structured_path", "bina_asasi", 44, "تحتاج مسارًا علميًا منهجيًا مرتبًا");
   addRankedScore(scores, a.needPattern, "structured_path", "bina_muyassar", 34, "تحتاج ترتيبًا علميًا مع احتمال البداية الأخف");
   addRankedScore(scores, a.needPattern, "structured_path", "hadith", 10, "المسارات المتخصصة المنظمة قد تناسبك لاحقًا");
@@ -539,6 +631,10 @@ export function calculateRecommendations(a: any) {
     addScore(scores, "bard_yaqin", 30, "تحتاج تثبيتًا يقينيًا مع فهم");
     addScore(scores, "fikri", 10, "قد يفيدك البناء الفكري لاحقًا");
   }
+  if (a.doubtImpact === "ideological_environment") {
+    addScore(scores, "fikri", 58, "بيئتك الفكرية فيها تحديات علمانية أو ليبرالية أو حداثية أو إنكار للسنة؛ البناء الفكري أقرب لهذه الحاجة");
+    addScore(scores, "bina_asasi", 8, "التأسيس العام يبقى معينًا قبل التوسع الفكري أو معه");
+  }
   if (a.doubtImpact === "theoretical") addScore(scores, "fikri", 38, "تتعامل مع الشبهات كسؤال فكري تحليلي");
   if (a.doubtImpact === "low") addScore(scores, "bina_asasi", 4, "يمكنك البدء بالتأسيس العام دون أولوية علاجية خاصة");
 
@@ -620,8 +716,69 @@ export function calculateRecommendations(a: any) {
   }
 
   const pathPlan = buildPathPlan(a, list);
+  const notNowItems = buildNotNowItems(a, list);
+  const stageInfo = buildStageInfo(a, list[0]);
 
-  return { list, profile, advice, pathPlan };
+  return { list, profile, advice, pathPlan, notNowItems, stageInfo, commitmentGuidance: commitmentGuidance(a) };
+}
+
+function addNotNow(items, id, title, reason) {
+  if (items.some((item) => item.id === id)) return;
+  items.push({ id, title, reason });
+}
+
+function buildNotNowItems(a, list) {
+  const items: Array<{ id: string; title: string; reason: string }> = [];
+  const primary = list[0];
+  const current = getCurrentPrograms(a);
+  const wantsReform = hasChoice(a.needPattern, "reform_project") || a.prioritySignal === "reform_priority";
+
+  if (current.length && list.some((program) => program.id === "kharitat_thughur") && primary?.id !== "kharitat_thughur") {
+    addNotNow(
+      items,
+      "kharitat_thughur",
+      "خارطة الثغور",
+      "مناسبة كمسار قصير أو رديف، لكنها لا تستحق أن تترك لأجلها برنامجًا بنائيًا قائمًا."
+    );
+  }
+
+  if (wantsReform && !hasCompletedReformFoundation(a) && primary?.id !== "kharitat_thughur") {
+    addNotNow(
+      items,
+      "kharitat_thughur",
+      "خارطة الثغور",
+      "سؤال الثغر حاضر، لكن الأسبق غالبًا بناء أصل علمي أو تربوي حتى لا تتحول الدورة القصيرة إلى بديل عن التأسيس."
+    );
+  }
+
+  if (wantsReform && !hasCompletedBinaAsasiFoundation(a)) {
+    addNotNow(
+      items,
+      "omr_tracks",
+      "مشروع العمر",
+      "مسارات مشروع العمر متقدمة وطويلة، فلا تظهر كبداية صحيحة قبل أصل سابق وسعة وقت واضحة."
+    );
+  }
+
+  if (a.dailyTime === "light") {
+    addNotNow(
+      items,
+      "heavy_programs",
+      "المسارات الثقيلة",
+      "وقتك الحالي محدود؛ لذلك خففت الخوارزمية البرامج التي تحتاج نفسًا طويلًا حتى لا يكون التسجيل سببًا للانقطاع."
+    );
+  }
+
+  if (list.some((program) => program.id === "alim") && primary?.id !== "alim" && a.dailyTime !== "formation_project") {
+    addNotNow(
+      items,
+      "alim",
+      "برنامج عالِم",
+      "يحتاج استعدادًا طويلًا وشروطًا عالية؛ لذلك لا نقدمه إلا عند وضوح الوقت والأهلية."
+    );
+  }
+
+  return items.slice(0, 3);
 }
 
 function buildPathPlan(a, list) {

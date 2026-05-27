@@ -198,10 +198,18 @@ function hasBinaAsasiFoundation(a) {
   return hasKnown(a, "bina_asasi");
 }
 
+function hasCompletedBinaAsasi(a) {
+  return (
+    (asArray(a.knownPrograms).includes("bina_asasi") && a.programStatus === "graduated_or_near") ||
+    asArray(a.graduatedPrograms).includes("bina_asasi")
+  );
+}
+
 function canConsiderOmrTracks(a) {
   return (
     isAgeAtLeast15(a) &&
-    hasBinaAsasiFoundation(a) &&
+    a.needClarity === "specific_need" &&
+    hasCompletedBinaAsasi(a) &&
     ["expanded", "formation_project"].includes(a.dailyTime) &&
     (hasChoice(a.needPattern, "reform_project") || a.prioritySignal === "reform_priority")
   );
@@ -209,20 +217,23 @@ function canConsiderOmrTracks(a) {
 
 export const QUESTIONS = [
   {
-    id: "forWhom",
-    title: "لمن تبحث عن البرنامج؟",
-    subtitle: "نحتاجها فقط لصياغة الأسئلة بصورة ألطف.",
-    options: () => [
-      option("self", "لي أنا", "أبحث عن البرنامج الأنسب لي شخصيًا", ""),
-      option("child", "لابني أو ابنتي", "أريد ترشيحًا يناسب العمر والمرحلة", ""),
-      option("friend", "لصديق أو لصديقة", "أريد مساعدة شخص آخر على الاختيار", ""),
-    ],
-  },
-  {
     id: "gender",
     title: "ما الجنس؟",
     subtitle: "حتى لا تظهر خيارات خاصة لا تناسب المستفيد.",
     options: () => [option("male", "ذكر", "", ""), option("female", "أنثى", "", "")],
+  },
+  {
+    id: "forWhom",
+    title: "لمن تبحث عن البرنامج؟",
+    subtitle: "نحتاجها فقط لصياغة الأسئلة بصورة ألطف.",
+    condition: (a) => Boolean(a.gender),
+    options: (a) => [
+      option("self", "لي أنا", "أبحث عن البرنامج الأنسب لي شخصيًا", ""),
+      option("child", "لابني أو ابنتي", "أريد ترشيحًا يناسب العمر والمرحلة", ""),
+      a.gender === "female"
+        ? option("friend", "لصديقة", "أريد مساعدة صديقة على الاختيار", "")
+        : option("friend", "لصديق", "أريد مساعدة صديق على الاختيار", ""),
+    ],
   },
   {
     id: "country",
@@ -314,11 +325,22 @@ export const QUESTIONS = [
     ],
   },
   {
+    id: "needClarity",
+    title: "هل حاجتك الآن واضحة ومحددة؟",
+    subtitle: "إذا لم تكن الحاجة محددة، فالأصل اختيار مسار تأسيسي شامل بدل القفز إلى تخصص أو دورة قصيرة.",
+    condition: (a) => isAgeAtLeast15(a),
+    options: () => [
+      option("general_foundation", "حاجتي عامة: أريد بناءً شاملًا", "لا أملك احتياجًا دقيقًا، وأبحث عن أساس واسع أبدأ منه", ""),
+      option("specific_need", "حاجتي محددة بوضوح", "أعرف أنني أحتاج يقينًا، فكرًا، تخصصًا، محضنًا، أو عملًا إصلاحيًا", ""),
+      option("unsure", "لست متأكدًا بعد", "عندي ميول متفرقة وأحتاج ترشيحًا آمنًا لا يشتتني", ""),
+    ],
+  },
+  {
     id: "needPattern",
     title: "أي وصف أقرب لاحتياجك الآن؟",
     subtitle: "يمكنك اختيار أكثر من خيار؛ اختر الإجابات بحسب أولويتها بالنسبة لك، فالأهم ثم ما يليه.",
     multi: true,
-    condition: (a) => a.age && !["7_9", "10_12"].includes(a.age),
+    condition: (a) => a.age && !["7_9", "10_12"].includes(a.age) && a.needClarity && a.needClarity !== "general_foundation",
     options: (a) => {
       const base = [
         option("structured_path", "أحتاج مسارًا علميًا مرتبًا", "مواد واضحة، تدرج، اختبارات، وواجبات", ""),
@@ -400,20 +422,25 @@ export const QUESTIONS = [
   },
   {
     id: "doubtImpact",
-    title: "عند ورود الشبهات أو القلق الفكري، ما الأثر الغالب؟",
-    subtitle: "الفرق هنا بين معالجة يقينية تزكوية ومعالجة فكرية موسعة.",
+    title: "ما طبيعة حاجتك أمام الشبهات أو الأسئلة الفكرية؟",
+    subtitle: "نفرق هنا بين اضطراب إيماني يحتاج طمأنينة، وبيئة فكرية تحتاج أدوات نقد، وحاجة تأسيس عامة.",
     condition: (a) => isAgeAtLeast15(a),
     options: () => [
-      option("low", "أتعامل معها بهدوء غالبًا", "أحتاج معرفة وتوسيع أفق أكثر من ترميم داخلي", ""),
-      option("medium", "تؤثر أحيانًا وتحتاج ترتيبًا", "أحتاج تثبيتًا مع فهم", ""),
-      option("high", "تؤثر على السكينة والعبادة", "أحتاج يقينًا وتزكية قبل التوسع الجدلي", ""),
-      option("theoretical", "أراها أسئلة فكرية وتحليلية", "أريد أدوات نقد وفهم للتيارات", ""),
+      option("high", "تؤثر على السكينة والعبادة", "أحتاج طمأنينة ويقينًا وتزكية قبل التوسع الجدلي", ""),
+      option("ideological_environment", "أعيش في بيئة فكرية ضاغطة", "علمانية، ليبرالية، حداثة، إنكار السنة، أو شبهات متكررة تحتاج أدوات نقد", ""),
+      option("medium", "تؤثر أحيانًا وتحتاج ترتيبًا", "أحتاج تثبيتًا مع فهم دون توسع تخصصي كبير", ""),
+      option("low", "لا توجد مشكلة محددة", "أحتاج تأسيسًا عامًا ومعرفة هادئة أكثر من معالجة خاصة", ""),
     ],
   },
 ];
 
 export function cleanAnswers(answers) {
   const next = { ...answers };
+  if (!next.needClarity || next.needClarity === "general_foundation") {
+    delete next.needPattern;
+    delete next.prioritySignal;
+    delete next.omrTrack;
+  }
   if (next.gender !== "female" && hasChoice(next.needPattern, "women_space")) {
     next.needPattern = asArray(next.needPattern).filter((value) => value !== "women_space");
   }
@@ -423,6 +450,8 @@ export function cleanAnswers(answers) {
   if (next.programStatus === "none" || !next.programStatus) delete next.knownPrograms;
   if (next.programStatus !== "studying_struggling") delete next.struggleReason;
   if (!isAgeAtLeast15(next)) {
+    delete next.needClarity;
+    delete next.needPattern;
     delete next.doubtImpact;
     delete next.prioritySignal;
   }
