@@ -108,7 +108,7 @@ function SiteHeader({ mode, onHome, onPrograms, onSelfStudy, onCompare, onCompar
     <header className="site-header">
       <button className="site-logo" type="button" onClick={onHome}>
         <span className="site-logo-dot" />
-        <span>دليل اختيار البرامج</span>
+        <span>دليل اختيار البرامج الإلكترونية</span>
       </button>
       <nav className="site-nav" aria-label="التنقل الرئيسي">
         <button className={mode === "programs" ? "active" : ""} type="button" onClick={onPrograms}>البرامج</button>
@@ -442,7 +442,7 @@ function HomeView({ onStart, onPrograms, onSelfStudy, onCompare, onCompareDynami
     <>
       <section className="home-hero">
         <div className="hero-card">
-          <div className="hero-badge">دليل اختيار برامج الشيخ أحمد بن يوسف السيد</div>
+          <div className="hero-badge">دليل اختيار البرامج الإلكترونية التابعة للشيخ أحمد السيد</div>
           <h1>ما البرنامج الأنسب لك الآن؟</h1>
           <p>لا تسجّل في كل برنامج تراه.. تعرّف على احتياجك، ومرحلتك، وطريقة التعلم التي تناسبك، ثم اختر البرنامج الأقرب بدل التشتت.</p>
           <button className="main-btn hero-primary" type="button" onClick={onStart}>ابدأ اختبار الاختيار</button>
