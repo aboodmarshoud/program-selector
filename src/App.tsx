@@ -1087,16 +1087,28 @@ function buildCompletionAnalytics(answers: any, result: any, qs: any[]) {
       value: answers[question.id],
       label: answerLabel(question, answers[question.id], answers),
     }));
+  const mappedRecommendations = result.list.slice(0, 5).map((program: any) => ({
+    id: program.id,
+    name: program.name,
+    score: program.score,
+    badge: program.badge,
+    role: program.recommendationRole,
+  }));
+  const hasKharitatCompanion = result.notNowItems?.some((item: any) => item.id === "kharitat_thughur" && item.reason?.includes("رديف"));
+  if (hasKharitatCompanion && !mappedRecommendations.some((program: any) => program.id === "kharitat_thughur")) {
+    mappedRecommendations.push({
+      id: "kharitat_thughur",
+      name: PROGRAMS.kharitat_thughur.name,
+      score: 0,
+      badge: "رديف ممكن",
+      role: "رديف ممكن لا بديل",
+    });
+  }
 
   return {
     rawAnswers: answers,
     readableAnswers,
-    recommendations: result.list.slice(0, 5).map((program: any) => ({
-      id: program.id,
-      name: program.name,
-      score: program.score,
-      badge: program.badge,
-    })),
+    recommendations: mappedRecommendations,
     profile: result.profile,
     context: {
       referrer: document.referrer,
@@ -1162,6 +1174,12 @@ function averageProfile(events: any[]) {
 
 function programNameById(id: string) {
   return PROGRAMS[id as keyof typeof PROGRAMS]?.name || id;
+}
+
+function isCompanionRecommendation(program: any) {
+  if (program?.id !== "kharitat_thughur") return false;
+  const role = String(program.role || program.recommendationRole || program.badge || "");
+  return role.includes("رديف");
 }
 
 function AnalyticsBarSection({ title, description, data, limit = 10, height = 300, wide = false }: any) {
@@ -1307,6 +1325,19 @@ function AnalyticsDashboard({ onBack }: any) {
   const graduatedProgramsData = countAnswerChoices(completedEvents, "graduatedPrograms").map((item) => ({ ...item, name: programNameById(item.name) }));
   const currentProgramsData = countAnswerChoices(completedEvents, "currentPrograms").map((item) => ({ ...item, name: programNameById(item.name) }));
   const programData = countBy(completedEvents, (event) => event.recommendations?.[0]?.name || event.resultProgramId);
+  const recommendationCounterData = countBy(
+    completedEvents.flatMap((event) => {
+      const recommendations = event.recommendations || [];
+      const primary = recommendations[0] ? [recommendations[0]] : [];
+      const companions = recommendations.filter((program) => isCompanionRecommendation(program) && program.id !== recommendations[0]?.id);
+      return [...primary, ...companions];
+    }),
+    (program) => program.name || programNameById(program.id)
+  );
+  const companionProgramData = countBy(
+    completedEvents.flatMap((event) => (event.recommendations || []).filter(isCompanionRecommendation)),
+    (program) => program.name || programNameById(program.id)
+  );
   const alternativeProgramData = countBy(completedEvents.flatMap((event) => (event.recommendations || []).slice(1, 5)), (program) => program.name || program.id);
   const stepCountData = countBy(completedEvents, (event) => event.stepCount ? `${event.stepCount} سؤال` : null);
   const languageData = countBy(completedEvents, (event) => event.context?.language);
@@ -1381,6 +1412,8 @@ function AnalyticsDashboard({ onBack }: any) {
         <div className="analytics-charts-grid">
           <AnalyticsInsightList title="أهم المؤشرات السريعة" items={insightItems} />
           <AnalyticsBarSection title="البرامج الأكثر ترشيحاً" description="أكثر نتيجة أولى ظهرت للمستخدمين." data={programData} wide height={360} />
+          <AnalyticsBarSection title="عداد الترشيحات مع الردائف" description="يحسب النتيجة الأولى، ويضيف +1 لخارطة الثغور عندما تظهر كرديف لا كبديل." data={recommendationCounterData} wide height={360} />
+          <AnalyticsBarSection title="الردائف الصريحة" description="ما ظهر للمستخدم كمسار رديف ممكن، لا كنتيجة أولى." data={companionProgramData} />
           <AnalyticsBarSection title="الاحتياجات الأكثر اختياراً" description="كل اختيارات سؤال الاحتياج، لذلك قد يتكرر المستخدم في أكثر من بند." data={needPatternData} wide height={360} />
           <AnalyticsBarSection title="متوسط ملف الاحتياج" description="متوسط الأبعاد الخمسة لمن أتموا الاختبار." data={profileData} />
           <AnalyticsBarSection title="وضوح الحاجة" description="هل جاء الطالب لحاجة عامة أم محددة؟" data={needClarityData} />

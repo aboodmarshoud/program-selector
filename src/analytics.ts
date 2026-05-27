@@ -21,6 +21,7 @@ export type AnalyticsEventPayload = {
     name: string;
     score?: number;
     badge?: string;
+    role?: string;
   }>;
   profile?: Record<string, unknown>;
   context?: {
