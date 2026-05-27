@@ -58,6 +58,7 @@ import { calculateRecommendations } from "./recommendations";
 import { asArray, choiceRank, hasAnswer, hasChoice } from "./answerUtils";
 import { NEED_BRIDGE_ITEMS, OMR_TRACK_IDS, QUESTIONS, SELF_STUDY_BRIDGES, cleanAnswers, questionSubtitle, questionTitle, visibleQuestions } from "./quizFlow";
 
+const isLocalAnalyticsPreview = import.meta.env.DEV;
 
 
 function isBinaProgram(program) {
@@ -1112,10 +1113,47 @@ function countBy(events: any[], getLabel: (event: any) => any) {
     .sort((a, b) => b.value - a.value);
 }
 
-function AnalyticsBarSection({ title, description, data }: any) {
-  const chartData = data.slice(0, 10);
+function countAnswerChoices(events: any[], id: string) {
+  const counts = new Map<string, number>();
+  events.forEach((event) => {
+    const readable = event.readableAnswers?.find((item: any) => item.id === id);
+    const rawValue = event.rawAnswers?.[id];
+    const values = Array.isArray(rawValue) ? rawValue : rawValue ? [rawValue] : [];
+    const labels = readable?.label
+      ? String(readable.label).split("،").map((item) => item.trim()).filter(Boolean)
+      : values.map((value) => String(value));
+
+    labels.forEach((label) => counts.set(label, (counts.get(label) || 0) + 1));
+  });
+
+  return [...counts.entries()]
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
+}
+
+function averageProfile(events: any[]) {
+  const keys = [
+    ["sharia", "تأصيل شرعي"],
+    ["intellectual", "وعي فكري"],
+    ["tazkiyah", "تزكية"],
+    ["reform", "عمل إصلاحي"],
+    ["skills", "مهارات وأدوات"],
+  ];
+  const completed = events.filter((event) => event.profile);
+  return keys.map(([key, name]) => {
+    const total = completed.reduce((sum, event) => sum + Number(event.profile?.[key] || 0), 0);
+    return { name, value: completed.length ? Math.round(total / completed.length) : 0 };
+  }).filter((item) => item.value > 0);
+}
+
+function programNameById(id: string) {
+  return PROGRAMS[id as keyof typeof PROGRAMS]?.name || id;
+}
+
+function AnalyticsBarSection({ title, description, data, limit = 10, height = 300, wide = false }: any) {
+  const chartData = data.slice(0, limit);
   return (
-    <div className="analytics-chart-card">
+    <div className={`analytics-chart-card ${wide ? "analytics-chart-wide" : ""}`}>
       <div className="chart-header">
         <h3>{title}</h3>
         {description && <p>{description}</p>}
@@ -1123,11 +1161,11 @@ function AnalyticsBarSection({ title, description, data }: any) {
       {chartData.length ? (
         <>
           <div className="analytics-chart">
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={chartData} layout="vertical" margin={{ top: 8, right: 18, bottom: 8, left: 18 }}>
+            <ResponsiveContainer width="100%" height={height}>
+              <BarChart data={chartData} layout="vertical" margin={{ top: 8, right: 24, bottom: 8, left: 24 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                 <XAxis type="number" allowDecimals={false} tick={{ fill: "var(--muted)", fontSize: 12 }} />
-                <YAxis dataKey="name" type="category" width={115} tick={{ fill: "var(--ink)", fontSize: 12 }} />
+                <YAxis dataKey="name" type="category" width={160} tick={{ fill: "var(--ink)", fontSize: 12 }} />
                 <Tooltip />
                 <Bar dataKey="value" fill="#176b54" radius={[0, 8, 8, 0]} />
               </BarChart>
@@ -1149,10 +1187,32 @@ function AnalyticsBarSection({ title, description, data }: any) {
   );
 }
 
+function AnalyticsInsightList({ title, items }: any) {
+  return (
+    <div className="analytics-chart-card analytics-insight-card">
+      <div className="chart-header">
+        <h3>{title}</h3>
+      </div>
+      {items.length ? (
+        <div className="analytics-list">
+          {items.map((item: any) => (
+            <div key={item.label}>
+              <span>{item.label}</span>
+              <strong>{item.value}</strong>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="analytics-empty">لا توجد بيانات كافية بعد.</p>
+      )}
+    </div>
+  );
+}
+
 function AnalyticsDashboard({ onBack }: any) {
   const [email, setEmail] = useState("");
   const [authMessage, setAuthMessage] = useState("");
-  const [authorized, setAuthorized] = useState(!isSupabaseEnabled);
+  const [authorized, setAuthorized] = useState(isLocalAnalyticsPreview || !isSupabaseEnabled);
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -1220,7 +1280,32 @@ function AnalyticsDashboard({ onBack }: any) {
   const countryData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "country"));
   const ageData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "age"));
   const genderData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "gender"));
+  const forWhomData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "forWhom"));
+  const programStatusData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "programStatus"));
+  const dailyTimeData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "dailyTime"));
+  const needClarityData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "needClarity"));
+  const needPatternData = countAnswerChoices(completedEvents, "needPattern");
+  const prioritySignalData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "prioritySignal"));
+  const doubtImpactData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "doubtImpact"));
+  const selectivityData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "selectivity"));
+  const struggleReasonData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "struggleReason"));
+  const knownProgramsData = countAnswerChoices(completedEvents, "knownPrograms").map((item) => ({ ...item, name: programNameById(item.name) }));
+  const graduatedProgramsData = countAnswerChoices(completedEvents, "graduatedPrograms").map((item) => ({ ...item, name: programNameById(item.name) }));
+  const currentProgramsData = countAnswerChoices(completedEvents, "currentPrograms").map((item) => ({ ...item, name: programNameById(item.name) }));
   const programData = countBy(completedEvents, (event) => event.recommendations?.[0]?.name || event.resultProgramId);
+  const alternativeProgramData = countBy(completedEvents.flatMap((event) => (event.recommendations || []).slice(1, 5)), (program) => program.name || program.id);
+  const stepCountData = countBy(completedEvents, (event) => event.stepCount ? `${event.stepCount} سؤال` : null);
+  const languageData = countBy(completedEvents, (event) => event.context?.language);
+  const viewportData = countBy(completedEvents, (event) => {
+    const viewport = event.context?.viewport;
+    if (!viewport) return null;
+    const width = Number(String(viewport).split("x")[0]);
+    if (!width) return viewport;
+    if (width < 640) return "هاتف";
+    if (width < 1024) return "جهاز لوحي";
+    return "سطح مكتب";
+  });
+  const profileData = averageProfile(completedEvents);
   const sourceData = countBy(completedEvents, (event) => {
     try {
       return event.context?.referrer ? new URL(event.context.referrer).hostname : "دخول مباشر";
@@ -1228,6 +1313,15 @@ function AnalyticsDashboard({ onBack }: any) {
       return "دخول مباشر";
     }
   });
+  const topResult = programData[0];
+  const topNeed = needPatternData[0] || needClarityData[0];
+  const topCountry = countryData[0];
+  const insightItems = [
+    topResult ? { label: "أكثر نتيجة ظهورًا", value: `${topResult.name} (${topResult.value})` } : null,
+    topNeed ? { label: "أبرز احتياج معلن", value: `${topNeed.name} (${topNeed.value})` } : null,
+    topCountry ? { label: "أكثر بلد حضورًا", value: `${topCountry.name} (${topCountry.value})` } : null,
+    { label: "إجمالي النتائج المكتملة", value: completedEvents.length },
+  ].filter(Boolean);
 
   return (
     <section className="analytics-page">
@@ -1271,10 +1365,28 @@ function AnalyticsDashboard({ onBack }: any) {
       <div className="analytics-panel analytics-note">
         <h3>تحليلات مجمعة</h3>
         <div className="analytics-charts-grid">
+          <AnalyticsInsightList title="أهم المؤشرات السريعة" items={insightItems} />
+          <AnalyticsBarSection title="البرامج الأكثر ترشيحاً" description="أكثر نتيجة أولى ظهرت للمستخدمين." data={programData} wide height={360} />
+          <AnalyticsBarSection title="الاحتياجات الأكثر اختياراً" description="كل اختيارات سؤال الاحتياج، لذلك قد يتكرر المستخدم في أكثر من بند." data={needPatternData} wide height={360} />
+          <AnalyticsBarSection title="متوسط ملف الاحتياج" description="متوسط الأبعاد الخمسة لمن أتموا الاختبار." data={profileData} />
+          <AnalyticsBarSection title="وضوح الحاجة" description="هل جاء الطالب لحاجة عامة أم محددة؟" data={needClarityData} />
+          <AnalyticsBarSection title="طبيعة الشبهات والأسئلة الفكرية" description="تمييز بين الطمأنينة، البيئة الفكرية، والحاجة العامة." data={doubtImpactData} />
+          <AnalyticsBarSection title="حالة الطالب مع البرامج" description="هل هو طالب حالي، خريج، متعثر، أو جديد؟" data={programStatusData} />
+          <AnalyticsBarSection title="الوقت اليومي المتاح" description="مؤشر مهم لفهم قابلية الجمع أو الانقطاع." data={dailyTimeData} />
           <AnalyticsBarSection title="الدول الأكثر حضوراً" description="حسب إجابات من أتموا الاختبار." data={countryData} />
           <AnalyticsBarSection title="توزيع الأعمار" description="الفئات العمرية التي وصلت إلى النتيجة." data={ageData} />
           <AnalyticsBarSection title="توزيع الجنس" description="للتأكد من ملاءمة الترشيحات والمسارات." data={genderData} />
-          <AnalyticsBarSection title="البرامج الأكثر ترشيحاً" description="أكثر نتيجة أولى ظهرت للمستخدمين." data={programData} />
+          <AnalyticsBarSection title="لمن يبحث المستخدم؟" description="نفسه، ابن/ابنة، أو صديق/صديقة." data={forWhomData} />
+          <AnalyticsBarSection title="الأولوية عند تزاحم الاحتياجات" description="ما الذي اختاره المستخدم كأهم حاجة." data={prioritySignalData} />
+          <AnalyticsBarSection title="تفضيل القبول والاختبارات" description="مفتوح، اختبار قبول، أو مسار انتقائي." data={selectivityData} />
+          <AnalyticsBarSection title="أسباب التعثر" description="تظهر فقط لمن قال إنه متعثر في برنامج." data={struggleReasonData} />
+          <AnalyticsBarSection title="البرامج الحالية أو السابقة" description="من سؤال البرامج المعروفة عند الطالب." data={knownProgramsData} wide />
+          <AnalyticsBarSection title="برامج يدرسها المستخدم الآن" description="عند اختيار طالب وخريج معاً." data={currentProgramsData} />
+          <AnalyticsBarSection title="برامج تخرج منها المستخدم" description="عند اختيار طالب وخريج معاً." data={graduatedProgramsData} />
+          <AnalyticsBarSection title="البدائل الأكثر ظهوراً" description="الترشيحات من المرتبة الثانية إلى الخامسة." data={alternativeProgramData} wide />
+          <AnalyticsBarSection title="عدد أسئلة الاختبار المكتمل" description="يفيد في قياس طول المسار حسب الشروط الظاهرة." data={stepCountData} />
+          <AnalyticsBarSection title="لغة المتصفح" description="من سياق الجهاز عند إتمام الاختبار." data={languageData} />
+          <AnalyticsBarSection title="نوع الشاشة التقريبي" description="مصنف من عرض النافذة: هاتف، لوحي، سطح مكتب." data={viewportData} />
           <AnalyticsBarSection title="مصادر الدخول" description="من أين وصل المستخدمون عند توفر المصدر." data={sourceData} />
         </div>
       </div>

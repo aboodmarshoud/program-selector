@@ -38,7 +38,7 @@ function summarize(events) {
     quizCompleted: completers.size,
     quizAbandoned,
     completionRate: starters.size ? Math.round((completers.size / starters.size) * 100) : 0,
-    events: events.slice(-100),
+    events: events.slice(-5000),
   };
 }
 
