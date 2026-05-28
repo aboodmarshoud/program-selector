@@ -674,10 +674,9 @@ function DynamicComparison({ onOpen, onBack }: any) {
         <div><small>مقارنة مخصصة</small><h2>مقارنة بين البرامج</h2><p>اختر البرامج التي تريد المقارنة بينها بشكل مباشر.</p></div>
       </div>
       
-      <div style={{ position: 'relative', marginBottom: '24px', zIndex: 50 }}>
+      <div className="compare-dropdown-wrap">
         <button 
-          className="ghost-btn dropdown-trigger" 
-          style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--paper)' }}
+          className="ghost-btn dropdown-trigger compare-dropdown-trigger"
           onClick={() => setDropdownOpen(!dropdownOpen)}
           type="button"
         >
@@ -686,25 +685,21 @@ function DynamicComparison({ onOpen, onBack }: any) {
         </button>
         
         {dropdownOpen && (
-          <div className="dropdown-menu" style={{ position: 'absolute', top: '100%', right: 0, left: 0, background: 'var(--paper)', border: '1px solid var(--border)', borderRadius: '16px', padding: '16px', marginTop: '8px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px', maxHeight: '300px', overflowY: 'auto' }}>
+          <div className="dropdown-menu compare-dropdown-menu">
             {list.map((prog) => {
               const isSelected = selectedIds.includes(prog.id);
               return (
                 <button 
                   key={prog.id} 
                   onClick={() => toggleSelect(prog.id)} 
-                  className={`picker-btn ${isSelected ? 'selected' : ''}`} 
-                  style={{ justifyContent: 'flex-start', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                  className={`picker-btn compare-program-option ${isSelected ? 'selected' : ''}`}
                   type="button"
                   title={prog.name}
                 >
-                  <div className={`checkbox-icon ${isSelected ? 'checked' : ''}`} style={{ 
-                    width: '18px', height: '18px', borderRadius: '4px', border: isSelected ? '0' : '1px solid var(--border)', 
-                    backgroundColor: isSelected ? 'var(--bg)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '8px', flexShrink: 0 
-                  }}>
+                  <div className={`checkbox-icon compare-checkbox ${isSelected ? 'checked' : ''}`}>
                     {isSelected && <IconCheck size={14} stroke={2.2} color="var(--green)" aria-hidden="true" />}
                   </div>
-                  <span className="picker-program-title"><ProgramIcon id={prog.id} className="picker-program-icon" size={18} /> {prog.name}</span>
+                  <span className="picker-program-title"><ProgramIcon id={prog.id} className="picker-program-icon" size={18} /> <span>{prog.name}</span></span>
                 </button>
               )
             })}

@@ -251,7 +251,7 @@ export const PROGRAMS = {
     medium: "سيتم إعلان التفاصيل لاحقًا",
     officialUrl: "",
     telegramUrl: "",
-    registrationStatus: "يفتح التسجيل خلال الأيام القادمة، في حدود 10 أيام تقريبًا، قرابة 10/6/2026.",
+    registrationStatus: "تقريباً 10/6/2026.",
     selectivity: "سيتم إعلان التفاصيل لاحقًا",
     color: "#7a4f1d",
     soft: "#fff4df",

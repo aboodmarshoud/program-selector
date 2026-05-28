@@ -974,6 +974,73 @@ li { margin: 8px 0; line-height: 1.8; }
 .picker-btn { font-family: inherit; font-size: 14px; background: white; border: 1px solid var(--border); border-radius: 99px; padding: 10px 18px; white-space: nowrap; cursor: pointer; color: var(--ink); display: flex; align-items: center; gap: 8px; transition: 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.03); max-width: 100%; min-width: 0; }
 .picker-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
 .picker-btn.selected { background: var(--green); color: white; border-color: var(--green-2); }
+.compare-dropdown-wrap { position: relative; margin-bottom: 24px; z-index: 50; }
+.compare-dropdown-trigger {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: var(--paper);
+}
+.compare-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 10px;
+  max-height: min(440px, 62vh);
+  overflow-y: auto;
+  margin-top: 8px;
+  padding: 14px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 18px 42px rgba(39,32,20,.14);
+}
+.compare-program-option {
+  width: 100%;
+  min-height: 58px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  white-space: normal;
+  text-align: right;
+  border-radius: 14px;
+  padding: 12px 14px;
+  line-height: 1.45;
+}
+.compare-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+  margin-top: 2px;
+  flex: 0 0 18px;
+}
+.compare-checkbox.checked {
+  border-color: transparent;
+  background: var(--bg);
+}
+.picker-program-title {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.picker-program-icon {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
 .creative-compare-board { display: flex; align-items: stretch; gap: 16px; margin-bottom: 24px; position: relative; justify-content: center; flex-wrap: wrap; }
 .cc-card { flex: 1; min-width: 300px; background: white; border: 1.5px solid var(--border); border-radius: 24px; padding: 24px; display: flex; flex-direction: column; box-shadow: 0 12px 30px rgba(0,0,0,0.05); }
 .cc-card.empty-card { background: transparent; border: 2px dashed var(--border); align-items: center; justify-content: center; color: var(--muted); padding: 40px; box-shadow: none; min-height: 250px; }
