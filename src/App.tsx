@@ -1578,7 +1578,7 @@ export default function ProgramSelector() {
   }
 
   return (
-    <div className={`selector-root ${darkMode ? 'dark' : ''}`} dir="rtl">
+    <div className={`selector-root notranslate ${darkMode ? 'dark' : ''}`} dir="rtl" lang="ar" translate="no">
       <button 
         className="theme-toggle" 
         onClick={() => setDarkMode(!darkMode)}
