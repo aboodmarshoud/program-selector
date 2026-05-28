@@ -1324,18 +1324,13 @@ function AnalyticsDashboard({ onBack }: any) {
   const knownProgramsData = countAnswerChoices(completedEvents, "knownPrograms").map((item) => ({ ...item, name: programNameById(item.name) }));
   const graduatedProgramsData = countAnswerChoices(completedEvents, "graduatedPrograms").map((item) => ({ ...item, name: programNameById(item.name) }));
   const currentProgramsData = countAnswerChoices(completedEvents, "currentPrograms").map((item) => ({ ...item, name: programNameById(item.name) }));
-  const programData = countBy(completedEvents, (event) => event.recommendations?.[0]?.name || event.resultProgramId);
-  const recommendationCounterData = countBy(
+  const programData = countBy(
     completedEvents.flatMap((event) => {
       const recommendations = event.recommendations || [];
       const primary = recommendations[0] ? [recommendations[0]] : [];
       const companions = recommendations.filter((program) => isCompanionRecommendation(program) && program.id !== recommendations[0]?.id);
       return [...primary, ...companions];
     }),
-    (program) => program.name || programNameById(program.id)
-  );
-  const companionProgramData = countBy(
-    completedEvents.flatMap((event) => (event.recommendations || []).filter(isCompanionRecommendation)),
     (program) => program.name || programNameById(program.id)
   );
   const alternativeProgramData = countBy(completedEvents.flatMap((event) => (event.recommendations || []).slice(1, 5)), (program) => program.name || program.id);
@@ -1411,9 +1406,7 @@ function AnalyticsDashboard({ onBack }: any) {
         <h3>تحليلات مجمعة</h3>
         <div className="analytics-charts-grid">
           <AnalyticsInsightList title="أهم المؤشرات السريعة" items={insightItems} />
-          <AnalyticsBarSection title="البرامج الأكثر ترشيحاً" description="أكثر نتيجة أولى ظهرت للمستخدمين." data={programData} wide height={360} />
-          <AnalyticsBarSection title="عداد الترشيحات مع الردائف" description="يحسب النتيجة الأولى، ويضيف +1 لخارطة الثغور عندما تظهر كرديف لا كبديل." data={recommendationCounterData} wide height={360} />
-          <AnalyticsBarSection title="الردائف الصريحة" description="ما ظهر للمستخدم كمسار رديف ممكن، لا كنتيجة أولى." data={companionProgramData} />
+          <AnalyticsBarSection title="البرامج الأكثر ترشيحاً" description="يحسب النتيجة الأولى، ويضيف خارطة الثغور أيضًا عندما تظهر كرديفًا واضحًا." data={programData} wide height={360} />
           <AnalyticsBarSection title="الاحتياجات الأكثر اختياراً" description="كل اختيارات سؤال الاحتياج، لذلك قد يتكرر المستخدم في أكثر من بند." data={needPatternData} wide height={360} />
           <AnalyticsBarSection title="متوسط ملف الاحتياج" description="متوسط الأبعاد الخمسة لمن أتموا الاختبار." data={profileData} />
           <AnalyticsBarSection title="وضوح الحاجة" description="هل جاء الطالب لحاجة عامة أم محددة؟" data={needClarityData} />
