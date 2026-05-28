@@ -78,6 +78,7 @@ function isEligible(programId, a) {
     case "fikri":
     case "bard_yaqin":
     case "hadith":
+    case "arqam":
     case "kharitat_thughur":
       return adult;
     case "mashrou_al_omr":
@@ -145,6 +146,7 @@ function recommendationRole(programId: string, a: any) {
   if (programId === "kharitat_thughur") {
     return hasCompletedReformFoundation(a) ? "مسار قصير بعد أصل سابق" : "رديف بعد التأسيس";
   }
+  if (programId === "arqam") return "تخصص في السيرة النبوية";
   if (OMR_TRACK_IDS.includes(programId)) return "خطوة لاحقة متقدمة";
   if (programId === "ithmar") return "خطوة لاحقة";
   return "برنامج أساسي";
@@ -174,6 +176,31 @@ function chooseAcademyTrack(a) {
   }
   if (a.age === "17_20" && !completedJuthurOrIshraq(a) && !hasKnown(a, "ishraq")) return "ishraq";
   return null;
+}
+
+const SPECIALIZATION_SUBJECT_LABELS: Record<string, string> = {
+  hadith: "الحديث",
+  fiqh: "الفقه",
+  usul_fiqh: "أصول الفقه",
+  mustalah_hadith: "مصطلح الحديث",
+  tafsir: "التفسير",
+  sirah: "السيرة النبوية",
+};
+
+function selectedSpecializationSubject(a: any) {
+  return typeof a.specializationSubject === "string" ? a.specializationSubject : "";
+}
+
+function specializationSubjectLabel(subject: string) {
+  return SPECIALIZATION_SUBJECT_LABELS[subject] || "التخصص العلمي";
+}
+
+function isHadithSubject(subject: string) {
+  return subject === "hadith" || subject === "mustalah_hadith";
+}
+
+function isFoundationSubject(subject: string) {
+  return subject === "fiqh" || subject === "usul_fiqh" || subject === "tafsir";
 }
 
 function applyStudentHistoryLogic(scores, a) {
@@ -241,16 +268,18 @@ function applyStudentHistoryLogic(scores, a) {
 function applyDecisionRules(scores, a) {
   const femaleAdult = a.gender === "female" && isAgeAtLeast15(a);
   const primaryNeed = asArray(a.needPattern)[0];
+  const priority = a.prioritySignal;
+  const specializationSubject = selectedSpecializationSubject(a);
 
   const needsGeneralFoundation = a.needClarity === "general_foundation" || a.needClarity === "unsure";
-  const wantsWomenSpace = femaleAdult && (primaryNeed === "women_space" || a.prioritySignal === "women_priority");
-  const wantsCurriculum = primaryNeed === "structured_path" || a.prioritySignal === "curriculum_priority";
-  const wantsEnvironment = primaryNeed === "relational_growth" || a.prioritySignal === "environment_priority";
+  const wantsWomenSpace = femaleAdult && (priority ? priority === "women_priority" : primaryNeed === "women_space");
+  const wantsCurriculum = priority ? priority === "curriculum_priority" : primaryNeed === "structured_path";
+  const wantsEnvironment = priority ? priority === "environment_priority" : primaryNeed === "relational_growth";
   const wantsGentle = a.prioritySignal === "gentle_priority" || a.dailyTime === "light" || a.struggleReason === "difficulty";
-  const wantsSpecialization = primaryNeed === "specialized_track" || a.prioritySignal === "depth_priority";
-  const wantsReform = primaryNeed === "reform_project" || a.prioritySignal === "reform_priority";
-  const highDoubt = a.doubtImpact === "high" || primaryNeed === "certainty";
-  const theoreticalDoubt = a.doubtImpact === "ideological_environment" || a.doubtImpact === "theoretical" || primaryNeed === "intellectual_depth";
+  const wantsSpecialization = priority ? priority === "depth_priority" : primaryNeed === "specialized_track";
+  const wantsReform = priority ? priority === "reform_priority" : primaryNeed === "reform_project";
+  const highDoubt = a.doubtImpact === "high" || (priority ? priority === "certainty_priority" : primaryNeed === "certainty");
+  const theoreticalDoubt = a.doubtImpact === "ideological_environment" || a.doubtImpact === "theoretical" || (priority ? priority === "intellectual_priority" : primaryNeed === "intellectual_depth");
 
   if (needsGeneralFoundation && !wantsWomenSpace && !highDoubt && !theoreticalDoubt) {
     const bina = chooseBinaTrack(a);
@@ -262,7 +291,7 @@ function applyDecisionRules(scores, a) {
         : "لأن حاجتك عامة وتحتاج بناءً شاملًا؛ فالبناء المنهجي هو الأصل عند عدم تحديد حاجة دقيقة",
       36
     );
-    softenScores(scores, ["kharitat_thughur", ...OMR_TRACK_IDS, "hadith"], 18, "هذا المسار أنسب بعد وضوح الحاجة أو بعد أصل سابق");
+    softenScores(scores, ["kharitat_thughur", ...OMR_TRACK_IDS, "hadith", "arqam"], 18, "هذا المسار أنسب بعد وضوح الحاجة أو بعد أصل سابق");
     return;
   }
 
@@ -308,8 +337,35 @@ function applyDecisionRules(scores, a) {
   }
 
   if (wantsSpecialization) {
+    const subjectName = specializationSubjectLabel(specializationSubject);
     if (a.dailyTime === "formation_project") {
-      ensurePriority(scores, "alim", "تخصيصك لـ 4-6 ساعات يدل على استعداد لالتزام قوي يناسب برنامج عالم بالدرجة الأولى، فهو برنامج تأصيلي واسع", 50);
+      ensurePriority(
+        scores,
+        "alim",
+        specializationSubject
+          ? `لأنك اخترت التخصص في ${subjectName} ومعك 4–6 ساعات يوميًا؛ فبرنامج عالِم هو الطريق الأوسع للتخصص العلمي الطويل`
+          : "تخصيصك لـ 4-6 ساعات يدل على استعداد لالتزام قوي يناسب برنامج عالم بالدرجة الأولى، فهو برنامج تأصيلي واسع",
+        50
+      );
+      if (specializationSubject === "sirah") addScore(scores, "arqam", 12, "مدرسة الأرقم تبقى خيارًا مستقلًا للسيرة إذا لم تتيسر شروط برنامج عالِم");
+      if (isHadithSubject(specializationSubject)) addScore(scores, "hadith", 12, "أكاديمية الحديث تبقى خيارًا مختصًا إذا لم تتيسر شروط برنامج عالِم");
+      return;
+    }
+    if (specializationSubject === "sirah") {
+      ensurePriority(scores, "arqam", "لأن مادة التخصص المختارة هي السيرة النبوية، ووقتك أقل من تفرغ برنامج عالِم؛ فمدرسة الأرقم هي البرنامج الأقرب لهذا الباب", 48);
+      addScore(scores, "hadith", 8, "الحديث يخدم السيرة من جهة الرواية، لكنه ليس محور التخصص هنا");
+      addScore(scores, chooseBinaTrack(a), 8, "التأسيس العام يبقى معينًا إن لم تكن القاعدة العلمية مستقرة");
+      return;
+    }
+    if (isHadithSubject(specializationSubject)) {
+      ensurePriority(scores, "hadith", `لأن مادة التخصص المختارة هي ${subjectName} ووقتك أقل من تفرغ برنامج عالِم؛ فأكاديمية الحديث هي البرنامج المختص الأقرب`, 48);
+      addScore(scores, chooseBinaTrack(a), 10, "التأسيس العام يبقى معينًا قبل التخصص أو معه");
+      return;
+    }
+    if (isFoundationSubject(specializationSubject)) {
+      const bina = chooseBinaTrack(a);
+      ensurePriority(scores, bina, `لأنك تريد التخصص في ${subjectName} ولا يوجد ضمن الدليل برنامج مستقل لهذا الباب الآن؛ ومع وقت أقل من 4 ساعات فالأقرب بناء أساس شرعي عبر البناء المنهجي`, 46);
+      addScore(scores, "alim", 10, "برنامج عالِم يبقى الطريق الأوسع لهذا التخصص إذا اتسع وقتك لاحقًا إلى 4–6 ساعات");
       return;
     }
     if (completedJuthurOrIshraq(a)) {
@@ -411,7 +467,7 @@ function buildStageInfo(a, primary) {
   if (primary?.id === "kharitat_thughur") {
     return { label: "مرحلتك الآن: عطاء موجّه", summary: "سؤال الثغر حاضر، والترشيح هنا لتوجيه العطاء لا للاستغناء عن أصل البناء." };
   }
-  if (primary?.id === "ithmar" || primary?.id === "hadith" || primary?.id === "fikri") {
+  if (primary?.id === "ithmar" || primary?.id === "hadith" || primary?.id === "fikri" || primary?.id === "arqam") {
     return { label: "مرحلتك الآن: تخصص", summary: "الترشيح يميل إلى تعميق باب محدد بعد تحقق قدر من الأهلية أو وضوح الحاجة." };
   }
   if (primary?.recommendationRole?.includes("رديف")) {
@@ -480,6 +536,7 @@ export function calculateRecommendations(a: any) {
     addScore(scores, "bina_muyassar", 14, "يمكن اختيار النسخة الأخف بحسب الوقت");
     addScore(scores, "fikri", 8, "العمر مناسب للمعالجة الفكرية الأوسع");
     addScore(scores, "hadith", 8, "العمر مناسب للتخصص العلمي");
+    addScore(scores, "arqam", 6, "العمر مناسب لتخصص متوسط في السيرة النبوية");
   }
 
   // --- Impact of new adaptive questions ---
@@ -510,11 +567,12 @@ export function calculateRecommendations(a: any) {
   if (a.dailyTime === "light") {
     addScore(scores, "bina_muyassar", 28, "الالتزام الخفيف يرجّح البداية الميسرة");
     addScore(scores, "bard_yaqin", 16, "الالتزام الخفيف قد يناسب مسارًا أقرب لليقين والتزكية");
-    softenScores(scores, ["bina_asasi", "fikri", "hadith", "ithmar", "alim", "kharitat_thughur"], 80, "تنبيه: حجم هذا البرنامج ومتطلباته قد تفوق مساحة الوقت المتاح لك حالياً"); 
+    softenScores(scores, ["bina_asasi", "fikri", "hadith", "arqam", "ithmar", "alim", "kharitat_thughur"], 80, "تنبيه: حجم هذا البرنامج ومتطلباته قد تفوق مساحة الوقت المتاح لك حالياً"); 
   }
   if (a.dailyTime === "standard") {
     addScore(scores, "bina_asasi", 22, "الالتزام المتوسط المنتظم مناسب للبناء المنهجي");
     addScore(scores, "fikri", 14, "الالتزام المتوسط مناسب للبناء الفكري");
+    addScore(scores, "arqam", 12, "الالتزام المتوسط قد يناسب برنامجًا متوسط المدة في السيرة");
     addScore(scores, "ishraq", 14, "الالتزام المتوسط مناسب لبيئة إشراق");
     addScore(scores, "juthur", 10, "الالتزام المتوسط مناسب لمسارات الأكاديمية الخاصة");
     addScore(scores, "bard_yaqin", 10, "برد اليقين يبقى مناسبًا للالتزام المتوسط");
@@ -523,18 +581,20 @@ export function calculateRecommendations(a: any) {
     addScore(scores, "bina_asasi", 24, "لديك سعة نسبية للمسار الأساسي");
     addScore(scores, "fikri", 18, "السعة النسبية تناسب المسار الفكري الأطول");
     addScore(scores, "hadith", 16, "السعة النسبية تناسب التخصص الحديثي");
+    addScore(scores, "arqam", 18, "السعة النسبية تناسب التخصص في السيرة النبوية");
     addScore(scores, "ithmar", 16, "السعة النسبية تناسب التخصص الدقيق إذا توفرت الأهلية");
   }
   if (a.dailyTime === "formation_project") {
     addScore(scores, "bina_asasi", 18, "الاستعداد العالي يساعد في المسارات الطويلة");
     addScore(scores, "fikri", 16, "الاستعداد العالي يناسب العمق الفكري");
     addScore(scores, "hadith", 14, "الاستعداد العالي يناسب التخصص العلمي");
+    addScore(scores, "arqam", 14, "الاستعداد العالي يمكن أن يخدم التخصص في السيرة");
     addScore(scores, "ithmar", 18, "الاستعداد العالي يناسب إثمار إذا توفرت الأهلية");
   }
 
   if (a.needClarity === "general_foundation") {
     addScore(scores, chooseBinaTrack(a), 46, "عند عدم وجود حاجة دقيقة فالأصل مسار تأسيسي شامل كالبناء المنهجي");
-    softenScores(scores, ["kharitat_thughur", ...OMR_TRACK_IDS, "hadith"], 18, "هذا الخيار يحتاج حاجة أدق أو أصلًا سابقًا");
+    softenScores(scores, ["kharitat_thughur", ...OMR_TRACK_IDS, "hadith", "arqam"], 18, "هذا الخيار يحتاج حاجة أدق أو أصلًا سابقًا");
   }
   if (a.needClarity === "unsure") {
     addScore(scores, chooseBinaTrack(a), 38, "لأن الحاجة غير محسومة، فالترشيح الآمن هو بداية بنائية واسعة");
@@ -544,12 +604,14 @@ export function calculateRecommendations(a: any) {
   if (a.needClarity === "specific_need") {
     addScore(scores, "fikri", 4, "وضوح الحاجة يسمح بترجيح مسار أدق إذا وافق بقية الإجابات");
     addScore(scores, "hadith", 4, "وضوح الحاجة يسمح بالتخصص عند وجود ميل علمي محدد");
+    addScore(scores, "arqam", 4, "وضوح الحاجة يسمح بتخصص في السيرة إذا كان هو الباب المقصود");
     addScore(scores, "kharitat_thughur", 4, "وضوح الحاجة يسمح بدورة قصيرة إذا كانت لخدمة عطاء قائم");
   }
 
   addRankedScore(scores, a.needPattern, "structured_path", "bina_asasi", 44, "تحتاج مسارًا علميًا منهجيًا مرتبًا");
   addRankedScore(scores, a.needPattern, "structured_path", "bina_muyassar", 34, "تحتاج ترتيبًا علميًا مع احتمال البداية الأخف");
   addRankedScore(scores, a.needPattern, "structured_path", "hadith", 10, "المسارات المتخصصة المنظمة قد تناسبك لاحقًا");
+  addRankedScore(scores, a.needPattern, "structured_path", "arqam", 8, "قد يناسبك مسار متوسط منظم في السيرة لاحقًا");
 
   addRankedScore(scores, a.needPattern, "relational_growth", "ishraq", 38, "احتياجك بيئة تربوية وصحبة ومتابعة");
   addRankedScore(scores, a.needPattern, "relational_growth", "juthur", 34, "احتياجك بيئة تربوية خاصة");
@@ -563,8 +625,24 @@ export function calculateRecommendations(a: any) {
   addRankedScore(scores, a.needPattern, "intellectual_depth", "bard_yaqin", 10, "قد تحتاج جانبًا يقينيًا وتزكويًا مساعدًا");
 
   addRankedScore(scores, a.needPattern, "specialized_track", "hadith", 28, "تميل إلى تخصص علمي واضح");
+  addRankedScore(scores, a.needPattern, "specialized_track", "arqam", 18, "من مسارات التخصص المحتملة: السيرة النبوية");
   addRankedScore(scores, a.needPattern, "specialized_track", "ithmar", 22, "التخصص الدقيق يناسبك إذا كنت من خريجي جذور أو إشراق");
   addRankedScore(scores, a.needPattern, "specialized_track", "alim", 14, "قد يناسبك مسار تكويني طويل إذا توفرت شروطه");
+
+  const specializationSubject = selectedSpecializationSubject(a);
+  if (specializationSubject === "sirah") {
+    addScore(scores, "arqam", 70, "مادة التخصص المختارة هي السيرة النبوية");
+    addScore(scores, "alim", 16, "برنامج عالِم طريق أوسع للتخصص في السيرة عند سعة الوقت");
+    addScore(scores, "hadith", 8, "علوم الحديث تخدم السيرة لكنها ليست محور الترشيح");
+  }
+  if (isHadithSubject(specializationSubject)) {
+    addScore(scores, "hadith", 70, `مادة التخصص المختارة هي ${specializationSubjectLabel(specializationSubject)}`);
+    addScore(scores, "alim", 16, "برنامج عالِم طريق أوسع للتخصص الحديثي عند سعة الوقت");
+  }
+  if (isFoundationSubject(specializationSubject)) {
+    addScore(scores, chooseBinaTrack(a), 48, `مادة التخصص المختارة هي ${specializationSubjectLabel(specializationSubject)}، والأقرب عند الوقت المحدود بناء قاعدة شرعية واسعة`);
+    addScore(scores, "alim", 18, "برنامج عالِم هو الطريق الأوسع لهذا التخصص عند سعة الوقت");
+  }
 
   addRankedScore(scores, a.needPattern, "reform_project", "kharitat_thughur", 58, "تريد معرفة ثغرك وتحويل التعلم إلى مشروع");
   addRankedScore(scores, a.needPattern, "reform_project", "bina_asasi", 8, "قد تحتاج أساسًا شرعيًا قبل العمل الإصلاحي");
@@ -584,6 +662,7 @@ export function calculateRecommendations(a: any) {
   if (a.prioritySignal === "depth_priority") {
     addScore(scores, "ithmar", 26, "تبحث عن عمق أو تخصص لاحق إن توفرت الأهلية");
     addScore(scores, "hadith", 22, "التخصص العلمي من مسارات العمق المحتملة");
+    addScore(scores, "arqam", 16, "مدرسة الأرقم من مسارات العمق المتوسطة في السيرة");
     addScore(scores, "fikri", 18, "العمق الفكري قد يكون مناسبًا بحسب ميولك");
   }
   if (a.prioritySignal === "certainty_priority") {
@@ -858,11 +937,39 @@ function buildContextAdvice(a, list) {
 
   const primary = list[0];
   const primaryScore = primary?.score || 0;
+  const current = getCurrentPrograms(a);
+  const graduated = getGraduatedPrograms(a);
+  const currentPrograms = current.map((id) => PROGRAMS[id]).filter(Boolean);
+  const graduatedProgramItems = graduated.map((id) => PROGRAMS[id]).filter(Boolean);
   const currentItems = list.filter((program) => known.includes(program.id));
   const bestKnown = currentItems[0] || known.map((id) => PROGRAMS[id]).filter(Boolean)[0];
   const bestKnownScore = currentItems[0]?.score || 0;
   const ratio = primaryScore ? bestKnownScore / primaryScore : 0;
   const wantsReform = hasChoice(a.needPattern, "reform_project") || a.prioritySignal === "reform_priority";
+  const hasMultipleCurrent = currentPrograms.length > 1;
+  const hasCurrentAndGraduated = currentPrograms.length > 0 && graduatedProgramItems.length > 0;
+
+  if (hasMultipleCurrent || hasCurrentAndGraduated) {
+    return {
+      type: "multi_current",
+      title: "تنبيه مهم: أنت بين أكثر من برنامج، فلا تجعل النتيجة تختزل حالتك",
+      program: list.find((program) => current.includes(program.id)) || currentPrograms[0] || primary,
+      programs: currentPrograms,
+      graduatedPrograms: graduatedProgramItems,
+      message:
+        "إجاباتك لا تعني تثبيت برنامج واحد وإسقاط البقية. بما أنك تدرس أكثر من برنامج أو تجمع بين التخرج والدراسة الحالية، فالأصل أن ننظر إلى الحمل كاملًا: ما الذي يستحق الاستمرار، وما الذي لا يزاحم، وما الذي لا يعاد بعد التخرج.",
+      points: [
+        currentPrograms.length > 1
+          ? `برامجك الحالية هي: ${currentPrograms.map((program) => program.name).join("، ")}؛ رتّبها كالتزام واحد كبير لا كقرارات منفصلة.`
+          : "برنامجك الحالي يبقى حاضرًا في التقدير، ولا ينبغي أن تسقطه النتيجة لمجرد ظهور احتياج جديد.",
+        graduatedProgramItems.length
+          ? `ما تخرجت منه أو أوشكت عليه (${graduatedProgramItems.map((program) => program.name).join("، ")}) لا نعيد ترشيحه كبداية جديدة، بل نبني على ثمرته.`
+          : "إذا كان عندك أكثر من برنامج حالي، فالسؤال العملي ليس: ماذا أضيف؟ بل: هل أستطيع حفظ الموجود بلا تشتت؟",
+        "إن كان الوقت لا يكفي للجميع، فخفف أو جمّد الأضعف مؤقتًا بعد استشارة، ولا تجعل اختبار الترشيح وحده قرار ترك برنامج قائم.",
+        "الترشيحات في الأسفل تُقرأ كبدائل أو متممات محتملة، لا كأمر بترك برامجك الحالية.",
+      ],
+    };
+  }
 
   if (isCurrentStatus(a)) {
     if (!bestKnown) return null;

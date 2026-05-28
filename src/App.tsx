@@ -139,6 +139,7 @@ function AdviceCard({ advice, onOpen }: any) {
   const tone = {
     repair: "amber",
     continue: "green",
+    multi_current: "blue",
     switch: "rose",
     caution: "amber",
     graduate: "blue",
@@ -154,6 +155,18 @@ function AdviceCard({ advice, onOpen }: any) {
       {advice.currentProgram && advice.type === "switch" && (
         <div className="advice-compare-line">
           تذكر، برنامجك الحالي هو: <strong>{advice.currentProgram.name}</strong>
+        </div>
+      )}
+
+      {advice.programs?.length > 0 && (
+        <div className="advice-compare-line">
+          البرامج الحالية: <strong>{advice.programs.map((program) => program.name).join("، ")}</strong>
+        </div>
+      )}
+
+      {advice.graduatedPrograms?.length > 0 && (
+        <div className="advice-compare-line">
+          برامج أنجزتها: <strong>{advice.graduatedPrograms.map((program) => program.name).join("، ")}</strong>
         </div>
       )}
 
@@ -296,6 +309,7 @@ const PROGRAM_ICON_MAP: Record<string, any> = {
   fikri: IconBrain,
   bard_yaqin: IconDroplet,
   hadith: IconScript,
+  arqam: IconBook2,
   kharitat_thughur: IconMap,
   mashrou_al_omr: IconTargetArrow,
   omr_mufakkir: IconBrain,
@@ -324,7 +338,9 @@ function optionIconForValue(value = "", questionId = "") {
   if (["female", "women_space", "women_priority"].includes(value)) return IconUserHeart;
   if (value.includes("bina") || value.includes("talib") || value.includes("structured") || value.includes("curriculum")) return IconBooks;
   if (value.includes("fikri") || value.includes("mufakkir") || value.includes("intellectual") || value.includes("theoretical")) return IconBrain;
+  if (value.includes("arqam") || value.includes("sirah")) return IconBook2;
   if (value.includes("hadith") || value.includes("specialized")) return IconScript;
+  if (value.includes("fiqh") || value.includes("tafsir")) return IconMosque;
   if (value.includes("omr") || value.includes("reform") || value.includes("depth") || value.includes("kharitat")) return IconTargetArrow;
   if (value.includes("yaqin") || value.includes("certainty")) return IconDroplet;
   if (value.includes("khadija")) return IconUserHeart;
@@ -797,10 +813,12 @@ function DimensionChart({ profile, program }: any) {
 function bridgeReason(item, primary, answers) {
   const title = item.title || "";
   if (answers.dailyTime === "light") return "لأن الوقت محدود؛ اجعلها مادة واحدة خفيفة لا خطة مزدحمة.";
+  if (title.includes("الآباء والأمهات")) return "لأن الترشيح لطفل أو ناشئ، فالأقرب أن تكون المادة الرديفة معينة للوالدين في التربية والمتابعة.";
   if (title.includes("التزكية") || title.includes("الاستهداء")) return "لأن إجاباتك تشير إلى حاجة إيمانية أو تثبيت قلبي.";
   if (title.includes("الفكرية") || title.includes("احتلالين")) return "لأن في إجاباتك ميلًا لفهم الأفكار والواقع المعاصر.";
   if (title.includes("مركزيات") || title.includes("بوصلة")) return "لأن النتيجة تميل إلى العمل الإصلاحي وفهم الثغر.";
   if (title.includes("المربي") || title.includes("التربوية")) return "لأن الاحتياج قريب من التربية والبيئة والمتابعة.";
+  if (answers.specializationSubject === "sirah" && title.includes("خير القرون")) return "لأن مادة التخصص المختارة هي السيرة النبوية، وهذه مادة رديفة قريبة من باب السيرة والاقتداء.";
   if (title.includes("حجية السنة") || title.includes("خير القرون")) return "لأن المسار المقترح يحتاج تعميقًا علميًا منضبطًا.";
   if (title.includes("المنهاج")) return "لأنها مادة تأسيسية نافعة قبل أو أثناء كثير من المسارات.";
   if (OMR_TRACK_IDS.includes(primary.id)) return "لتهيئة المسار قبل فتح دفعات مشروع العمر.";
@@ -831,11 +849,23 @@ function bridgeScore(item, primary, answers, index) {
   if (needs.includes("relational_growth") || answers.prioritySignal === "environment_priority" || primary.id === "khadija") {
     if (title.includes("المربي") || title.includes("التربوية") || title.includes("التزكية")) score += 38;
   }
+  if (answers.forWhom === "child" || ["jeel_new", "buthur"].includes(primary.id)) {
+    if (title.includes("الآباء والأمهات")) score += 90;
+  }
   if (needs.includes("structured_path") || answers.prioritySignal === "curriculum_priority" || primary.id.includes("bina")) {
     if (title.includes("المنهاج") || title.includes("خير القرون")) score += 34;
   }
-  if (needs.includes("specialized_track") || answers.prioritySignal === "depth_priority" || primary.id === "hadith") {
+  if (needs.includes("specialized_track") || answers.prioritySignal === "depth_priority" || primary.id === "hadith" || primary.id === "arqam") {
     if (title.includes("حجية السنة") || title.includes("المنهاج")) score += 34;
+    if (title.includes("خير القرون")) score += 42;
+  }
+  if (answers.specializationSubject === "sirah") {
+    if (title.includes("خير القرون")) score += 90;
+    if (title.includes("المنهاج")) score += 32;
+  }
+  if (["hadith", "mustalah_hadith"].includes(answers.specializationSubject)) {
+    if (title.includes("حجية السنة")) score += 80;
+    if (title.includes("المنهاج")) score += 24;
   }
   if (answers.dailyTime === "light") score -= index * 8;
 
@@ -859,6 +889,14 @@ function getBridgePlan(primary, answers) {
     ? SELF_STUDY_BRIDGES.kharitat_thughur || []
     : [];
   const needItems = asArray(answers.needPattern).flatMap((need) => NEED_BRIDGE_ITEMS[need] || []);
+  const subjectItems = {
+    hadith: NEED_BRIDGE_ITEMS.specialized_track,
+    mustalah_hadith: NEED_BRIDGE_ITEMS.specialized_track,
+    sirah: NEED_BRIDGE_ITEMS.sirah_specialization,
+    fiqh: NEED_BRIDGE_ITEMS.structured_path,
+    usul_fiqh: NEED_BRIDGE_ITEMS.structured_path,
+    tafsir: NEED_BRIDGE_ITEMS.structured_path,
+  }[answers.specializationSubject] || [];
   const priorityItems = {
     curriculum_priority: NEED_BRIDGE_ITEMS.structured_path,
     certainty_priority: NEED_BRIDGE_ITEMS.certainty,
@@ -868,7 +906,7 @@ function getBridgePlan(primary, answers) {
     environment_priority: NEED_BRIDGE_ITEMS.relational_growth,
     women_priority: NEED_BRIDGE_ITEMS.women_space,
   }[answers.prioritySignal] || [];
-  const items = uniqueBridgeItems([...kharitatCompanionItems, ...baseItems, ...needItems, ...priorityItems]);
+  const items = uniqueBridgeItems([...kharitatCompanionItems, ...baseItems, ...needItems, ...subjectItems, ...priorityItems]);
   if (!items.length) return null;
 
   let note = "هذه ليست بديلًا عن البرنامج، بل مسار خفيف ريثما تفتح الدفعة القادمة أو لتتهيأ قبل الدخول.";
@@ -1318,6 +1356,7 @@ function AnalyticsDashboard({ onBack }: any) {
   const needClarityData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "needClarity"));
   const needPatternData = countAnswerChoices(completedEvents, "needPattern");
   const prioritySignalData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "prioritySignal"));
+  const specializationSubjectData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "specializationSubject"));
   const doubtImpactData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "doubtImpact"));
   const selectivityData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "selectivity"));
   const struggleReasonData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "struggleReason"));
@@ -1408,6 +1447,7 @@ function AnalyticsDashboard({ onBack }: any) {
           <AnalyticsInsightList title="أهم المؤشرات السريعة" items={insightItems} />
           <AnalyticsBarSection title="البرامج الأكثر ترشيحاً" description="يحسب النتيجة الأولى، ويضيف خارطة الثغور أيضًا عندما تظهر كرديفًا واضحًا." data={programData} wide height={360} />
           <AnalyticsBarSection title="الاحتياجات الأكثر اختياراً" description="كل اختيارات سؤال الاحتياج، لذلك قد يتكرر المستخدم في أكثر من بند." data={needPatternData} wide height={360} />
+          <AnalyticsBarSection title="مواد التخصص المطلوبة" description="تظهر لمن جعل التخصص العلمي أولوية واختار مادة محددة." data={specializationSubjectData} />
           <AnalyticsBarSection title="متوسط ملف الاحتياج" description="متوسط الأبعاد الخمسة لمن أتموا الاختبار." data={profileData} />
           <AnalyticsBarSection title="وضوح الحاجة" description="هل جاء الطالب لحاجة عامة أم محددة؟" data={needClarityData} />
           <AnalyticsBarSection title="طبيعة الشبهات والأسئلة الفكرية" description="تمييز بين الطمأنينة، البيئة الفكرية، والحاجة العامة." data={doubtImpactData} />
@@ -1626,7 +1666,13 @@ export default function ProgramSelector() {
                   <div className="question-head">
                     <h2>{questionTitle(current, answers)}</h2>
                     {questionSubtitle(current, answers) && <p>{questionSubtitle(current, answers)}</p>}
-                    {current.multi && <p className="multi-hint">يمكنك اختيار أكثر من خيار.</p>}
+                    {current.multi && (
+                      <p className="multi-hint">
+                        {current.id === "needPattern"
+                          ? "انتبه: اختر حسب الأولوية. أول خيار تضغطه سيُحسب كأعلى احتياج عندك، ثم الثاني، ثم ما بعده؛ وهذا الترتيب يؤثر في الترشيح."
+                          : "يمكنك اختيار أكثر من خيار."}
+                      </p>
+                    )}
                   </div>
 
                   {current.inputType === "text" ? (

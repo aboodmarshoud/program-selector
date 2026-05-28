@@ -54,6 +54,7 @@ export const PROGRAM_OPTIONS = [
   option("fikri", "البناء الفكري", "", ""),
   option("bard_yaqin", "برد اليقين", "", ""),
   option("hadith", "أكاديمية الحديث الإلكترونية", "", ""),
+  option("arqam", "مدرسة الأرقم", "", ""),
   option("omr_mufakkir", "مشروع العمر - مسار المفكر", "", ""),
   option("omr_bahith", "مشروع العمر - مسار الباحث", "", ""),
   option("omr_talib_ilm", "مشروع العمر - مسار طالب العلم", "", ""),
@@ -71,6 +72,15 @@ export const PROGRAM_OPTIONS = [
 ];
 
 export const OMR_TRACK_IDS = ["omr_mufakkir", "omr_bahith", "omr_talib_ilm", "omr_daiya", "omr_murabbi"];
+
+export const SPECIALIZATION_SUBJECT_OPTIONS = [
+  option("hadith", "الحديث", "أريد التخصص في علوم الحديث رواية ودراية", ""),
+  option("fiqh", "الفقه", "أريد التخصص في الفقه وبناء الملكة الفقهية", ""),
+  option("usul_fiqh", "أصول الفقه", "أريد التخصص في أصول الفقه ومناهج الاستدلال", ""),
+  option("mustalah_hadith", "مصطلح الحديث", "أريد التخصص في قواعد نقد الحديث ومصطلحه", ""),
+  option("tafsir", "التفسير", "أريد التخصص في تفسير القرآن وعلومه", ""),
+  option("sirah", "السيرة النبوية", "أريد التخصص في السيرة النبوية وهداياتها", ""),
+];
 
 export const SELF_STUDY_BRIDGES = {
   bina_asasi: [
@@ -95,6 +105,10 @@ export const SELF_STUDY_BRIDGES = {
   ],
   hadith: [
     { title: "دورة حجية السنة", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/19" },
+    { title: "شرح متن المنهاج من ميراث النبوة", source: "مورد", url: "https://mawred.io/details/courses/9" },
+  ],
+  arqam: [
+    { title: "سلسلة خير القرون", source: "مورد", url: "https://mawred.io/details/courses/3" },
     { title: "شرح متن المنهاج من ميراث النبوة", source: "مورد", url: "https://mawred.io/details/courses/9" },
   ],
   kharitat_thughur: [
@@ -133,11 +147,10 @@ export const SELF_STUDY_BRIDGES = {
     { title: "حقيبة إحياء منهاج النبوة", source: "مورد", url: "https://mawred.io/details/courses/10" },
   ],
   jeel_new: [
-    { title: "حقيبة الصيام ورمضان للأسرة", source: "مورد", url: "https://mawred.io/page/12" },
-    { title: "مواد تربوية قصيرة مناسبة للأسرة", source: "مورد" },
+    { title: "الدورة التربوية للآباء والأمهات", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/20" },
   ],
   buthur: [
-    { title: "حقيبة الصيام ورمضان للأسرة", source: "مورد", url: "https://mawred.io/page/12" },
+    { title: "الدورة التربوية للآباء والأمهات", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/20" },
     { title: "حقيبة إحياء منهاج النبوة", source: "مورد", url: "https://mawred.io/details/courses/10" },
   ],
   ghiras: [
@@ -180,6 +193,10 @@ export const NEED_BRIDGE_ITEMS = {
     { title: "دورة حجية السنة", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/19" },
     { title: "شرح متن المنهاج من ميراث النبوة", source: "مورد", url: "https://mawred.io/details/courses/9" },
   ],
+  sirah_specialization: [
+    { title: "سلسلة خير القرون", source: "مورد", url: "https://mawred.io/details/courses/3" },
+    { title: "شرح متن المنهاج من ميراث النبوة", source: "مورد", url: "https://mawred.io/details/courses/9" },
+  ],
   reform_project: [
     { title: "مركزيات الإصلاح", source: "مورد", url: "https://mawred.io/details/courses/8" },
     { title: "دورة بوصلة المصلح", source: "الأنشطة العامة", url: "https://anshitah1.com/student/courses/28?tab=lessons" },
@@ -213,6 +230,13 @@ function canConsiderOmrTracks(a) {
     ["expanded", "formation_project"].includes(a.dailyTime) &&
     (hasChoice(a.needPattern, "reform_project") || a.prioritySignal === "reform_priority")
   );
+}
+
+function shouldAskSpecializationSubject(a) {
+  const needs = asArray(a.needPattern);
+  if (!isAgeAtLeast15(a) || !needs.includes("specialized_track")) return false;
+  if (needs.length === 1) return true;
+  return a.prioritySignal === "depth_priority";
 }
 
 export const QUESTIONS = [
@@ -396,6 +420,13 @@ export const QUESTIONS = [
     },
   },
   {
+    id: "specializationSubject",
+    title: "أي مادة تريد التخصص فيها؟",
+    subtitle: "لأن ترشيح التخصص يختلف بحسب المادة والوقت المتاح: بعض المواد لها برنامج مستقل، وبعضها يحتاج مسارًا أوسع.",
+    condition: (a) => shouldAskSpecializationSubject(a),
+    options: () => SPECIALIZATION_SUBJECT_OPTIONS,
+  },
+  {
     id: "omrTrack",
     title: "أي مسار من مشروع العمر أقرب لعطائك؟",
     subtitle: "لا يظهر هذا السؤال إلا إذا ظهرت قرائن قوية: أصل سابق كالبناء المنهجي، ووقت واسع، واحتياج إصلاحي.",
@@ -439,12 +470,21 @@ export function cleanAnswers(answers) {
   if (!next.needClarity || next.needClarity === "general_foundation") {
     delete next.needPattern;
     delete next.prioritySignal;
+    delete next.specializationSubject;
     delete next.omrTrack;
+  }
+  if (hasChoice(next.needPattern, "sirah_specialization") || next.prioritySignal === "sirah_priority") {
+    const needs = asArray(next.needPattern).filter((value) => value !== "sirah_specialization");
+    if (!needs.includes("specialized_track")) needs.push("specialized_track");
+    next.needPattern = needs;
+    if (next.prioritySignal === "sirah_priority") next.prioritySignal = "depth_priority";
+    if (!next.specializationSubject) next.specializationSubject = "sirah";
   }
   if (next.gender !== "female" && hasChoice(next.needPattern, "women_space")) {
     next.needPattern = asArray(next.needPattern).filter((value) => value !== "women_space");
   }
   if (next.gender !== "female" && next.prioritySignal === "women_priority") delete next.prioritySignal;
+  if (!shouldAskSpecializationSubject(next)) delete next.specializationSubject;
   if (!canConsiderOmrTracks(next)) delete next.omrTrack;
   if (canConsiderOmrTracks(next)) delete next.selectivity;
   if (next.programStatus === "none" || !next.programStatus) delete next.knownPrograms;
@@ -454,6 +494,7 @@ export function cleanAnswers(answers) {
     delete next.needPattern;
     delete next.doubtImpact;
     delete next.prioritySignal;
+    delete next.specializationSubject;
   }
   return next;
 }

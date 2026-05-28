@@ -121,6 +121,196 @@ const scenarios: Scenario[] = [
     },
   },
   {
+    name: "student in multiple programs gets multi-program advice",
+    answers: {
+      forWhom: "self",
+      gender: "female",
+      age: "23_plus",
+      programStatus: "studying_and_graduated",
+      graduatedPrograms: ["bina_asasi"],
+      currentPrograms: ["hadith", "fikri"],
+      dailyTime: "standard",
+      needClarity: "specific_need",
+      needPattern: ["intellectual_depth", "specialized_track"],
+      prioritySignal: "intellectual_priority",
+      selectivity: "ok_test",
+      doubtImpact: "ideological_environment",
+    },
+    expect: (result) => {
+      const ids = topIds(result, 4);
+      assert(ids.includes("fikri"), `expected current fikri to stay visible, got ${ids.join(", ")}`);
+      assert(ids.includes("hadith"), `expected current hadith to stay visible, got ${ids.join(", ")}`);
+      assert(!ids.includes("bina_asasi"), "completed bina_asasi should not be recommended again");
+      assert(result.advice?.type === "multi_current", "expected multi-current advice");
+      assert(result.advice?.programs?.length === 2, "expected both current programs in advice");
+      assert(result.advice?.graduatedPrograms?.some((program: any) => program.id === "bina_asasi"), "expected graduated bina in advice");
+    },
+  },
+  {
+    name: "sirah is a specialization subject, not a top-level need",
+    answers: {
+      forWhom: "self",
+      gender: "male",
+      age: "23_plus",
+      programStatus: "none",
+      dailyTime: "standard",
+      needClarity: "specific_need",
+    },
+    expect: () => {
+      const needQuestion = visibleQuestions({
+        forWhom: "self",
+        gender: "male",
+        age: "23_plus",
+        programStatus: "none",
+        dailyTime: "standard",
+        needClarity: "specific_need",
+      }).find((question: any) => question.id === "needPattern");
+      assert(needQuestion?.options({}).some((option: any) => option.value === "specialized_track"), "expected specialized_track in needPattern");
+      assert(!needQuestion?.options({}).some((option: any) => option.value === "sirah_specialization"), "sirah should not be a top-level needPattern option");
+    },
+  },
+  {
+    name: "specialization subject appears when specialization is the priority",
+    answers: {},
+    expect: () => {
+      const singleSpecialization = visibleQuestions({
+        gender: "male",
+        forWhom: "self",
+        age: "23_plus",
+        programStatus: "none",
+        dailyTime: "standard",
+        needClarity: "specific_need",
+        needPattern: ["specialized_track"],
+      }).map((question: any) => question.id);
+      const multiSpecializationPriority = visibleQuestions({
+        gender: "male",
+        forWhom: "self",
+        age: "23_plus",
+        programStatus: "none",
+        dailyTime: "standard",
+        needClarity: "specific_need",
+        needPattern: ["intellectual_depth", "specialized_track"],
+        prioritySignal: "depth_priority",
+      }).map((question: any) => question.id);
+      const multiOtherPriority = visibleQuestions({
+        gender: "male",
+        forWhom: "self",
+        age: "23_plus",
+        programStatus: "none",
+        dailyTime: "standard",
+        needClarity: "specific_need",
+        needPattern: ["intellectual_depth", "specialized_track"],
+        prioritySignal: "intellectual_priority",
+      }).map((question: any) => question.id);
+      assert(singleSpecialization.includes("specializationSubject"), "expected specialization subject when specialization is the only need");
+      assert(multiSpecializationPriority.includes("specializationSubject"), "expected specialization subject when depth is priority");
+      assert(!multiOtherPriority.includes("specializationSubject"), "specialization subject should hide when another need is priority");
+    },
+  },
+  {
+    name: "sirah subject recommends arqam below four hours",
+    answers: {
+      forWhom: "self",
+      gender: "male",
+      age: "23_plus",
+      programStatus: "none",
+      dailyTime: "standard",
+      needClarity: "specific_need",
+      needPattern: ["specialized_track"],
+      specializationSubject: "sirah",
+      selectivity: "open",
+      doubtImpact: "low",
+    },
+    expect: (result) => {
+      const ids = topIds(result);
+      assert(ids[0] === "arqam", `expected arqam first for sirah below four hours, got ${ids.join(", ")}`);
+      assert(result.stageInfo?.label === "مرحلتك الآن: تخصص", "expected sirah result to be specialization stage");
+    },
+  },
+  {
+    name: "sirah subject with formation time recommends alim first",
+    answers: {
+      forWhom: "self",
+      gender: "female",
+      age: "23_plus",
+      programStatus: "none",
+      dailyTime: "formation_project",
+      needClarity: "specific_need",
+      needPattern: ["specialized_track"],
+      specializationSubject: "sirah",
+      selectivity: "high_selective",
+      doubtImpact: "low",
+    },
+    expect: (result) => {
+      const ids = topIds(result);
+      assert(ids[0] === "alim", `expected alim first for sirah with formation time, got ${ids.join(", ")}`);
+    },
+  },
+  {
+    name: "hadith subject routes by available time",
+    answers: {},
+    expect: () => {
+      const standard = calculateRecommendations({
+        forWhom: "self",
+        gender: "male",
+        age: "23_plus",
+        programStatus: "none",
+        dailyTime: "standard",
+        needClarity: "specific_need",
+        needPattern: ["specialized_track"],
+        specializationSubject: "hadith",
+        selectivity: "open",
+        doubtImpact: "low",
+      });
+      const formation = calculateRecommendations({
+        forWhom: "self",
+        gender: "male",
+        age: "23_plus",
+        programStatus: "none",
+        dailyTime: "formation_project",
+        needClarity: "specific_need",
+        needPattern: ["specialized_track"],
+        specializationSubject: "hadith",
+        selectivity: "high_selective",
+        doubtImpact: "low",
+      });
+      assert(topIds(standard)[0] === "hadith", `expected hadith academy below four hours, got ${topIds(standard).join(", ")}`);
+      assert(topIds(formation)[0] === "alim", `expected alim for hadith with formation time, got ${topIds(formation).join(", ")}`);
+    },
+  },
+  {
+    name: "fiqh subject routes to bina unless formation time is available",
+    answers: {},
+    expect: () => {
+      const standard = calculateRecommendations({
+        forWhom: "self",
+        gender: "male",
+        age: "23_plus",
+        programStatus: "none",
+        dailyTime: "standard",
+        needClarity: "specific_need",
+        needPattern: ["specialized_track"],
+        specializationSubject: "fiqh",
+        selectivity: "open",
+        doubtImpact: "low",
+      });
+      const formation = calculateRecommendations({
+        forWhom: "self",
+        gender: "male",
+        age: "23_plus",
+        programStatus: "none",
+        dailyTime: "formation_project",
+        needClarity: "specific_need",
+        needPattern: ["specialized_track"],
+        specializationSubject: "fiqh",
+        selectivity: "high_selective",
+        doubtImpact: "low",
+      });
+      assert(["bina_asasi", "bina_muyassar"].includes(topIds(standard)[0]), `expected a bina track for fiqh below four hours, got ${topIds(standard).join(", ")}`);
+      assert(topIds(formation)[0] === "alim", `expected alim for fiqh with formation time, got ${topIds(formation).join(", ")}`);
+    },
+  },
+  {
     name: "programStatus none does not ask struggle reason",
     answers: {
       age: "23_plus",
