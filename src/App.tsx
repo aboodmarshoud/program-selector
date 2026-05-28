@@ -337,6 +337,7 @@ function optionIconForValue(value = "", questionId = "") {
   if (["child", "friend"].includes(value)) return IconUsers;
   if (["female", "women_space", "women_priority"].includes(value)) return IconUserHeart;
   if (value.includes("bina") || value.includes("talib") || value.includes("structured") || value.includes("curriculum")) return IconBooks;
+  if (value.includes("arabic_language")) return IconNotebook;
   if (value.includes("fikri") || value.includes("mufakkir") || value.includes("intellectual") || value.includes("theoretical")) return IconBrain;
   if (value.includes("arqam") || value.includes("sirah")) return IconBook2;
   if (value.includes("hadith") || value.includes("specialized")) return IconScript;
@@ -891,6 +892,7 @@ function getBridgePlan(primary, answers) {
     fiqh: NEED_BRIDGE_ITEMS.structured_path,
     usul_fiqh: NEED_BRIDGE_ITEMS.structured_path,
     tafsir: NEED_BRIDGE_ITEMS.structured_path,
+    arabic_language: NEED_BRIDGE_ITEMS.structured_path,
   }[answers.specializationSubject] || [];
   const priorityItems = {
     curriculum_priority: NEED_BRIDGE_ITEMS.structured_path,

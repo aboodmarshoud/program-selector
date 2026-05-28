@@ -184,6 +184,7 @@ const SPECIALIZATION_SUBJECT_LABELS: Record<string, string> = {
   usul_fiqh: "أصول الفقه",
   mustalah_hadith: "مصطلح الحديث",
   tafsir: "التفسير",
+  arabic_language: "علوم اللغة العربية",
   sirah: "السيرة النبوية",
 };
 
@@ -200,7 +201,7 @@ function isHadithSubject(subject: string) {
 }
 
 function isFoundationSubject(subject: string) {
-  return subject === "fiqh" || subject === "usul_fiqh" || subject === "tafsir";
+  return subject === "fiqh" || subject === "usul_fiqh" || subject === "tafsir" || subject === "arabic_language";
 }
 
 function applyStudentHistoryLogic(scores, a) {

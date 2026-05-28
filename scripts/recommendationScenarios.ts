@@ -279,35 +279,37 @@ const scenarios: Scenario[] = [
     },
   },
   {
-    name: "fiqh subject routes to bina unless formation time is available",
+    name: "foundation subjects route to bina unless formation time is available",
     answers: {},
     expect: () => {
-      const standard = calculateRecommendations({
-        forWhom: "self",
-        gender: "male",
-        age: "23_plus",
-        programStatus: "none",
-        dailyTime: "standard",
-        needClarity: "specific_need",
-        needPattern: ["specialized_track"],
-        specializationSubject: "fiqh",
-        selectivity: "open",
-        doubtImpact: "low",
+      ["fiqh", "usul_fiqh", "tafsir", "arabic_language"].forEach((subject) => {
+        const standard = calculateRecommendations({
+          forWhom: "self",
+          gender: "male",
+          age: "23_plus",
+          programStatus: "none",
+          dailyTime: "standard",
+          needClarity: "specific_need",
+          needPattern: ["specialized_track"],
+          specializationSubject: subject,
+          selectivity: "open",
+          doubtImpact: "low",
+        });
+        const formation = calculateRecommendations({
+          forWhom: "self",
+          gender: "male",
+          age: "23_plus",
+          programStatus: "none",
+          dailyTime: "formation_project",
+          needClarity: "specific_need",
+          needPattern: ["specialized_track"],
+          specializationSubject: subject,
+          selectivity: "high_selective",
+          doubtImpact: "low",
+        });
+        assert(["bina_asasi", "bina_muyassar"].includes(topIds(standard)[0]), `expected a bina track for ${subject} below four hours, got ${topIds(standard).join(", ")}`);
+        assert(topIds(formation)[0] === "alim", `expected alim for ${subject} with formation time, got ${topIds(formation).join(", ")}`);
       });
-      const formation = calculateRecommendations({
-        forWhom: "self",
-        gender: "male",
-        age: "23_plus",
-        programStatus: "none",
-        dailyTime: "formation_project",
-        needClarity: "specific_need",
-        needPattern: ["specialized_track"],
-        specializationSubject: "fiqh",
-        selectivity: "high_selective",
-        doubtImpact: "low",
-      });
-      assert(["bina_asasi", "bina_muyassar"].includes(topIds(standard)[0]), `expected a bina track for fiqh below four hours, got ${topIds(standard).join(", ")}`);
-      assert(topIds(formation)[0] === "alim", `expected alim for fiqh with formation time, got ${topIds(formation).join(", ")}`);
     },
   },
   {
