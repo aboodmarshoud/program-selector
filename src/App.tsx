@@ -1684,17 +1684,21 @@ export default function ProgramSelector() {
                       />
                     </div>
                   ) : current.inputType === "select" ? (
-                    <div className="text-answer-wrap">
-                      <select
-                        className="text-answer-input select-answer-input"
-                        value={answers[current.id] || ""}
-                        onChange={(event) => choose(current.id, event.target.value)}
-                      >
-                        <option value="" disabled>{current.placeholder || "اختر..."}</option>
-                        {currentOptions.map((opt) => (
-                          <option key={opt.value} value={opt.value}>{opt.title}</option>
-                        ))}
-                      </select>
+                    <div className="select-options-panel" role="radiogroup" aria-label={questionTitle(current, answers)}>
+                      {currentOptions.map((opt) => (
+                        <button
+                          className={`option-card select-option-card ${hasChoice(answers[current.id], opt.value) ? "selected" : ""}`}
+                          type="button"
+                          key={opt.value}
+                          onClick={() => choose(current.id, opt.value)}
+                          aria-pressed={hasChoice(answers[current.id], opt.value)}
+                        >
+                          <span className="option-icon">
+                            <OptionGlyph option={opt} questionId={current.id} />
+                          </span>
+                          <span className="option-copy"><strong>{opt.title}</strong>{opt.sub && <small>{opt.sub}</small>}</span>
+                        </button>
+                      ))}
                     </div>
                   ) : (
                     <div className="options-grid">
