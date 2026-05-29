@@ -121,6 +121,26 @@ const scenarios: Scenario[] = [
     },
   },
   {
+    name: "juthur graduate in early teens moves to ithmar, not lower academy tracks",
+    answers: {
+      forWhom: "friend",
+      gender: "male",
+      country: "تونس",
+      age: "13_14",
+      programStatus: "graduated_or_near",
+      knownPrograms: ["juthur"],
+      dailyTime: "standard",
+      selectivity: "high_selective",
+    },
+    expect: (result) => {
+      const ids = topIds(result, 4);
+      assert(ids[0] === "ithmar", `expected ithmar first after graduating from juthur, got ${ids.join(", ")}`);
+      assert(!ids.includes("buthur"), `buthur should not appear after graduating from juthur, got ${ids.join(", ")}`);
+      assert(!ids.includes("juthur") && !ids.includes("ghiras"), `lower academy tracks should not appear after graduating from juthur, got ${ids.join(", ")}`);
+      assert(result.stageInfo?.label === "مرحلتك الآن: تخصص", "expected ithmar to explain a specialization stage");
+    },
+  },
+  {
     name: "student in multiple programs gets multi-program advice",
     answers: {
       forWhom: "self",

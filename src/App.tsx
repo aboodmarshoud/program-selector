@@ -373,6 +373,10 @@ function AdviceToneIcon({ tone }: any) {
 
 function ProgramDetail({ program, onBack, onHome }: any) {
   if (!program) return null;
+  const hasOfficialUrl = Boolean(program.officialUrl);
+  const hasTelegramLink = Boolean(program.telegramUrl);
+  const showsTelegramChannel = hasTelegramLink || String(program.medium || "").includes("تلجرام");
+  const showLinksBox = hasOfficialUrl || showsTelegramChannel;
   return (
     <section className="program-detail">
       <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
@@ -399,24 +403,28 @@ function ProgramDetail({ program, onBack, onHome }: any) {
       <DetailSection title="ماذا ستكتسب؟" items={program.outcomes} icon={<IconSparkles size={24} stroke={1.8} />} colorClass="green" />
       <DetailSection title="يناسبك إذا…" items={program.suitable} icon={<IconCheck size={24} stroke={1.8} />} colorClass="green" />
       <DetailSection title="انتبه قبل التسجيل…" items={program.caution} icon={<IconAlertTriangle size={24} stroke={1.8} />} colorClass="rose" />
-      <div className="links-box">
-        <div>
-          <small>رابط الموقع الرسمي</small>
-          <strong>
-            {program.officialUrl ? (
-               <a href={program.officialUrl} target="_blank" rel="noopener noreferrer" className="program-link">{program.officialUrl.replace('https://', '')}</a>
-            ) : "سيُحدّث لاحقًا"}
-          </strong>
+      {showLinksBox && (
+        <div className={`links-box ${hasOfficialUrl && showsTelegramChannel ? "" : "links-box-single"}`}>
+          {hasOfficialUrl && (
+            <div>
+              <small>رابط الموقع الرسمي</small>
+              <strong>
+                <a href={program.officialUrl} target="_blank" rel="noopener noreferrer" className="program-link">{program.officialUrl.replace('https://', '')}</a>
+              </strong>
+            </div>
+          )}
+          {showsTelegramChannel && (
+            <div>
+              <small>قناة تلجرام</small>
+              <strong>
+                {hasTelegramLink ? (
+                  <a href={program.telegramUrl} target="_blank" rel="noopener noreferrer" className="program-link">{program.telegramUrl.replace('https://t.me/', '')}</a>
+                ) : "سيُحدّث لاحقًا"}
+              </strong>
+            </div>
+          )}
         </div>
-        <div>
-          <small>رابط قناة تلجرام</small>
-          <strong>
-            {program.telegramUrl ? (
-              <a href={program.telegramUrl} target="_blank" rel="noopener noreferrer" className="program-link">{program.telegramUrl.replace('https://t.me/', '')}</a>
-            ) : "سيُحدّث لاحقًا"}
-          </strong>
-        </div>
-      </div>
+      )}
     </section>
   );
 }

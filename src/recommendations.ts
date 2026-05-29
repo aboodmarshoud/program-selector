@@ -61,14 +61,14 @@ function isEligible(programId, a) {
     case "jeel_new":
       return age === "7_9";
     case "buthur":
-      return ["10_12", "13_14"].includes(age);
+      return ["10_12", "13_14"].includes(age) && !completedJuthurOrIshraq(a);
     case "juthur":
     case "ghiras":
       return ["10_12", "13_14", "15_16", "17_20"].includes(age) && !isGraduatedStatus(a) && !completedJuthurOrIshraq(a);
     case "ishraq":
       return ["15_16", "17_20", "21_22"].includes(age) && !completedJuthurOrIshraq(a) && !hasKnown(a, "ishraq");
     case "ithmar":
-      return adult && completedJuthurOrIshraq(a);
+      return ["13_14", "15_16", "17_20", "21_22", "23_plus"].includes(age) && completedJuthurOrIshraq(a);
     case "khadija":
       return a.gender === "female" && adult;
     case "alim":
@@ -169,6 +169,7 @@ function chooseBinaTrack(a) {
 }
 
 function chooseAcademyTrack(a) {
+  if (completedJuthurOrIshraq(a)) return "ithmar";
   if (a.age === "7_9") return "jeel_new";
   if (a.age === "10_12") return "buthur";
   if (a.age === "13_14" || a.age === "15_16") {
@@ -211,7 +212,7 @@ function applyStudentHistoryLogic(scores, a) {
   if (!known.length) return;
 
   if (current.length > 0 && a.programStatus !== "studying_struggling") {
-    current.forEach((id) => addScore(scores, id, 28, "أنت تدرس هذا البرنامج الآن؛ والأصل أن نختبر هل الاستمرار فيه أولى من فتح مسار جديد"));
+    current.forEach((id) => addScore(scores, id, 28, "هذا برنامج قائم عندك الآن؛ لذلك نقرأ حاجتك الجديدة مع المحافظة على أصل الاستمرار، ولا نفتح مسارًا آخر إلا لسبب واضح"));
     Object.keys(scores).forEach((id) => {
       if (!current.includes(id) && !graduated.includes(id) && isRecommendable(scores, id)) scores[id].score -= 5;
     });
@@ -236,7 +237,7 @@ function applyStudentHistoryLogic(scores, a) {
     }
     if (graduated.includes("juthur") || graduated.includes("ishraq")) {
       addScore(scores, "ithmar", 72, "تخرجك من جذور أو إشراق يفتح احتمال إثمار");
-      ["juthur", "ghiras", "ishraq"].forEach((id) => {
+      ["buthur", "juthur", "ghiras", "ishraq"].forEach((id) => {
         if (scores[id]) scores[id].score = -999;
       });
     }
@@ -508,11 +509,11 @@ export function calculateRecommendations(a: any) {
 
     // Curriculum insights for Ghiras/Juthur (Tazkiyah, Fikri, and Foundational)
     if (a.needPattern?.includes("certainty") || a.doubtImpact) {
-      addScore(scores, "juthur", 15, "مقررات مثل 'لأنك الله' و'القيامة' تبني الإيمان وتثبت اليقين في هذا العمر");
-      addScore(scores, "ghiras", 12, "مقررات هذا المسار تؤسس لليقين والإيمان في هذا العمر المتقدم");
+      addScore(scores, "juthur", 15, "المسار الخاص في هذه المرحلة يعتني بالبناء الإيماني والتثبيت التربوي المناسب للعمر");
+      addScore(scores, "ghiras", 12, "هذا المسار يؤسس لليقين والإيمان بصورة مناسبة لهذه المرحلة العمرية");
     }
     if (a.needPattern?.includes("intellectual_depth")) {
-      addScore(scores, "juthur", 12, "يشتمل جذور وغراس على مواد فكرية تؤسس للوعي المبكر (مثل سابغات والتفكير الناقد)");
+      addScore(scores, "juthur", 12, "يشتمل جذور وغراس على تأسيس فكري مبكر يناسب هذه المرحلة العمرية");
       addScore(scores, "ghiras", 10, "مسار غراس يقدم تأسيساً فكرياً يناسب هذه المرحلة");
     }
   }
@@ -523,10 +524,10 @@ export function calculateRecommendations(a: any) {
 
     // Curriculum insights for Ishraq (Fikri, Reform, Methodology, Complete Intellectual Picture)
     if (a.needPattern?.includes("intellectual_depth") || a.doubtImpact === "theoretical") {
-      addScore(scores, "ishraq", 20, "برنامج إشراق يحتوي على جرعة فكرية ومنهجية قوية (مثل كامل الصورة وينبوع الغواية والتفكير الناقد) تناسب مرحلتك");
+      addScore(scores, "ishraq", 20, "برنامج إشراق يحتوي على جرعة فكرية ومنهجية قوية تناسب هذه المرحلة");
     }
     if (a.needPattern?.includes("reform_project")) {
-      addScore(scores, "ishraq", 20, "يتميز إشراق بمواد منهجية وإصلاحية تبني وعي المصلح (مثل بوصلة المصلح وتجربة تربية المصلحين)");
+      addScore(scores, "ishraq", 20, "يتميز إشراق ببناء منهجي وإصلاحي يساعد على وعي المصلح وموقعه");
     }
     if (a.needPattern?.includes("certainty") || a.doubtImpact === "high") {
       addScore(scores, "ishraq", 15, "في إشراق اهتمام خاص بالبناء الإيماني ومعالجة الشبهات يناسب من يبحث عن اليقين والرقائق");
@@ -695,7 +696,7 @@ export function calculateRecommendations(a: any) {
 
   if (completedJuthurOrIshraq(a)) {
     addScore(scores, "ithmar", 36, "أهلية إثمار موجودة بسبب التخرج من جذور أو إشراق");
-    ["juthur", "ghiras", "ishraq"].forEach((id) => {
+    ["buthur", "juthur", "ghiras", "ishraq"].forEach((id) => {
       if (scores[id]) {
         scores[id].score = -999;
         scores[id].reasons = [];

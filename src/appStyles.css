@@ -854,6 +854,7 @@ li { margin: 8px 0; line-height: 1.8; }
 .ds-rose { background: #fff1f2; border-color: #fecdd3; }
 .ds-rose h3 { color: #be123c; }
 .links-box { padding: 18px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.links-box-single { grid-template-columns: 1fr; }
 .links-box div { background: white; border: 1px solid var(--border); border-radius: 16px; padding: 14px; }
 .links-box small { display: block; color: var(--muted); margin-bottom: 5px; }
 .program-link { color: var(--green); text-decoration: none; transition: .2s; }
