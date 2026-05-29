@@ -1,5 +1,5 @@
 import { useMemo, useState, useRef, useEffect, type CSSProperties } from "react";
-import { Bar, BarChart, CartesianGrid, Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { motion, AnimatePresence } from "motion/react";
 import { Moon, Sun } from "lucide-react";
 import {
@@ -82,6 +82,7 @@ const RADAR_COLORS = [
 
 const RESULT_USER_RADAR = "#f97316";
 const RESULT_PROGRAM_RADAR = "#2563eb";
+const ANALYTICS_COLORS = ["#176b54", "#2563eb", "#b87917", "#a43b59", "#5a2d82", "#0f6b78", "#7a4f1d", "#638b2f"];
 
 function radarColor(index: number) {
   return RADAR_COLORS[index % RADAR_COLORS.length];
@@ -1253,6 +1254,144 @@ function isNoStandaloneSpecialization(event: any) {
   return ["fiqh", "usul_fiqh", "tafsir", "arabic_language"].includes(rawAnalyticsAnswer(event, "specializationSubject"));
 }
 
+function totalDataValue(data: any[]) {
+  return data.reduce((sum, item) => sum + Number(item.value || 0), 0);
+}
+
+function eventDayLabel(event: any) {
+  if (!event.timestamp) return null;
+  const date = new Date(event.timestamp);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString("ar", { month: "short", day: "numeric" });
+}
+
+function countByDay(events: any[]) {
+  const counts = new Map<string, number>();
+  events.forEach((event) => {
+    const label = eventDayLabel(event);
+    if (!label) return;
+    counts.set(label, (counts.get(label) || 0) + 1);
+  });
+  return [...counts.entries()].map(([name, value]) => ({ name, value }));
+}
+
+function AnalyticsSection({ title, description, children }: any) {
+  return (
+    <div className="analytics-section-block">
+      <div className="analytics-section-head">
+        <div>
+          <h3>{title}</h3>
+          {description && <p>{description}</p>}
+        </div>
+      </div>
+      <div className="analytics-charts-grid">{children}</div>
+    </div>
+  );
+}
+
+function AnalyticsFunnel({ data }: any) {
+  const max = Math.max(...data.map((item: any) => Number(item.value || 0)), 1);
+  return (
+    <div className="analytics-chart-card analytics-chart-wide analytics-funnel-card">
+      <div className="chart-header">
+        <h3>مسار الاستخدام</h3>
+        <p>من الدخول إلى بداية الاختبار ثم الوصول للنتيجة.</p>
+      </div>
+      <div className="analytics-funnel">
+        {data.map((item: any, index: number) => {
+          const width = Math.max(6, Math.round((Number(item.value || 0) / max) * 100));
+          return (
+            <div className="analytics-funnel-row" key={item.name}>
+              <div>
+                <strong>{item.name}</strong>
+                <span>{item.value}</span>
+              </div>
+              <div className="analytics-funnel-track">
+                <span style={{ width: `${width}%`, background: ANALYTICS_COLORS[index % ANALYTICS_COLORS.length] }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function AnalyticsTimeline({ title, description, data, wide = true }: any) {
+  return (
+    <div className={`analytics-chart-card ${wide ? "analytics-chart-wide" : ""}`}>
+      <div className="chart-header">
+        <h3>{title}</h3>
+        {description && <p>{description}</p>}
+      </div>
+      {data.length ? (
+        <div className="analytics-chart">
+          <ResponsiveContainer width="100%" height={260}>
+            <AreaChart data={data} margin={{ top: 12, right: 24, left: 10, bottom: 8 }}>
+              <defs>
+                <linearGradient id="analyticsAreaFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#176b54" stopOpacity={0.34} />
+                  <stop offset="95%" stopColor="#176b54" stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="name" tick={{ fill: "var(--muted)", fontSize: 12 }} />
+              <YAxis allowDecimals={false} tick={{ fill: "var(--muted)", fontSize: 12 }} />
+              <Tooltip />
+              <Area type="monotone" dataKey="value" stroke="#176b54" strokeWidth={2.5} fill="url(#analyticsAreaFill)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      ) : (
+        <p className="analytics-empty">لا توجد بيانات زمنية كافية بعد.</p>
+      )}
+    </div>
+  );
+}
+
+function AnalyticsDonutSection({ title, description, data, limit = 6, wide = false }: any) {
+  const chartData = data.slice(0, limit);
+  const total = totalDataValue(chartData);
+  return (
+    <div className={`analytics-chart-card analytics-donut-card ${wide ? "analytics-chart-wide" : ""}`}>
+      <div className="chart-header">
+        <h3>{title}</h3>
+        {description && <p>{description}</p>}
+      </div>
+      {chartData.length ? (
+        <div className="analytics-donut-layout">
+          <div className="analytics-chart analytics-donut-chart">
+            <ResponsiveContainer width="100%" height={230}>
+              <PieChart>
+                <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={58} outerRadius={88} paddingAngle={3}>
+                  {chartData.map((item: any, index: number) => (
+                    <Cell key={item.name} fill={ANALYTICS_COLORS[index % ANALYTICS_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="analytics-donut-total">
+              <strong>{total}</strong>
+              <span>إجمالي</span>
+            </div>
+          </div>
+          <div className="analytics-list analytics-donut-list">
+            {chartData.map((item: any, index: number) => (
+              <div key={item.name}>
+                <span><i style={{ background: ANALYTICS_COLORS[index % ANALYTICS_COLORS.length] }} />{item.name}</span>
+                <strong>{item.value}</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <p className="analytics-empty">لا توجد بيانات كافية بعد.</p>
+      )}
+    </div>
+  );
+}
+
 function AnalyticsBarSection({ title, description, data, limit = 10, height = 300, wide = false }: any) {
   const chartData = data.slice(0, limit);
   return (
@@ -1380,6 +1519,15 @@ function AnalyticsDashboard({ onBack }: any) {
   ];
 
   const completedEvents = (summary?.events || []).filter((event) => event.event === "quiz_completed");
+  const startedEvents = (summary?.events || []).filter((event) => event.event === "quiz_started");
+  const visitEvents = (summary?.events || []).filter((event) => event.event === "visit");
+  const funnelData = [
+    { name: "دخلوا الموقع", value: summary?.visitors ?? 0 },
+    { name: "بدأوا الاختبار", value: summary?.quizStarted ?? 0 },
+    { name: "أتموا الاختبار", value: summary?.quizCompleted ?? 0 },
+    { name: "بدأوا ولم يتموا", value: summary?.quizAbandoned ?? 0 },
+  ];
+  const completionTimelineData = countByDay(completedEvents);
   const countryData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "country"));
   const ageData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "age"));
   const genderData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "gender"));
@@ -1446,6 +1594,12 @@ function AnalyticsDashboard({ onBack }: any) {
     topCountry ? { label: "أكثر بلد حضورًا", value: `${topCountry.name} (${topCountry.value})` } : null,
     { label: "إجمالي النتائج المكتملة", value: completedEvents.length },
   ].filter(Boolean);
+  const usageInsightItems = [
+    { label: "زيارات مسجلة", value: visitEvents.length },
+    { label: "بدايات اختبار", value: startedEvents.length },
+    { label: "نتائج مكتملة", value: completedEvents.length },
+    { label: "نسبة الإتمام", value: `${summary?.completionRate ?? 0}%` },
+  ];
 
   return (
     <section className="analytics-page">
@@ -1487,37 +1641,60 @@ function AnalyticsDashboard({ onBack }: any) {
       </div>
 
       <div className="analytics-panel analytics-note">
-        <h3>تحليلات مجمعة</h3>
-        <div className="analytics-charts-grid">
-          <AnalyticsInsightList title="أهم المؤشرات السريعة" items={insightItems} />
-          <AnalyticsBarSection title="البرامج الأكثر ترشيحاً" description="يحسب النتيجة الأولى، ويضيف خارطة الثغور أيضًا عندما تظهر كرديفًا واضحًا." data={programData} wide height={360} />
-          <AnalyticsBarSection title="الاحتياجات الأكثر اختياراً" description="كل اختيارات سؤال الاحتياج، لذلك قد يتكرر المستخدم في أكثر من بند." data={needPatternData} wide height={360} />
-          <AnalyticsBarSection title="مواد التخصص المطلوبة" description="تظهر لمن جعل التخصص العلمي أولوية واختار مادة محددة." data={specializationSubjectData} />
-          <AnalyticsBarSection title="قرار التوجيه بعد مادة التخصص" description="يربط مادة التخصص بالوقت: عالِم، الأرقم، أكاديمية الحديث، أو البناء المنهجي." data={specializationRouteData} />
-          <AnalyticsBarSection title="سبب توجيه التخصص" description="تفصيل المادة مع سعة الوقت التي أنتجت الترشيح." data={specializationRouteReasonData} wide />
-          <AnalyticsBarSection title="سعة الوقت عند طالبي التخصص" description="هل طالب التخصص يملك 4–6 ساعات أم وقتًا أقل؟" data={specializationTimeData} />
-          <AnalyticsBarSection title="تخصصات بلا برنامج مستقل" description="فقه، أصول، تفسير، ولغة عربية: عند ضيق الوقت توجه إلى البناء المنهجي." data={noStandaloneSpecializationData} />
-          <AnalyticsBarSection title="نتائج طالبي التخصص" description="النتيجة الأولى لمن وصلوا إلى سؤال مادة التخصص." data={specializationResultData} />
-          <AnalyticsBarSection title="متوسط ملف الاحتياج" description="متوسط الأبعاد الخمسة لمن أتموا الاختبار." data={profileData} />
-          <AnalyticsBarSection title="وضوح الحاجة" description="هل جاء الطالب لحاجة عامة أم محددة؟" data={needClarityData} />
-          <AnalyticsBarSection title="طبيعة الشبهات والأسئلة الفكرية" description="تمييز بين الطمأنينة، البيئة الفكرية، والحاجة العامة." data={doubtImpactData} />
-          <AnalyticsBarSection title="حالة الطالب مع البرامج" description="هل هو طالب حالي، خريج، متعثر، أو جديد؟" data={programStatusData} />
-          <AnalyticsBarSection title="الوقت اليومي المتاح" description="مؤشر مهم لفهم قابلية الجمع أو الانقطاع." data={dailyTimeData} />
-          <AnalyticsBarSection title="الدول الأكثر حضوراً" description="حسب إجابات من أتموا الاختبار." data={countryData} />
-          <AnalyticsBarSection title="توزيع الأعمار" description="الفئات العمرية التي وصلت إلى النتيجة." data={ageData} />
-          <AnalyticsBarSection title="توزيع الجنس" description="للتأكد من ملاءمة الترشيحات والمسارات." data={genderData} />
-          <AnalyticsBarSection title="لمن يبحث المستخدم؟" description="نفسه، ابن/ابنة، أو صديق/صديقة." data={forWhomData} />
-          <AnalyticsBarSection title="الأولوية عند تزاحم الاحتياجات" description="ما الذي اختاره المستخدم كأهم حاجة." data={prioritySignalData} />
-          <AnalyticsBarSection title="تفضيل القبول والاختبارات" description="مفتوح، اختبار قبول، أو مسار انتقائي." data={selectivityData} />
-          <AnalyticsBarSection title="أسباب التعثر" description="تظهر فقط لمن قال إنه متعثر في برنامج." data={struggleReasonData} />
-          <AnalyticsBarSection title="البرامج الحالية أو السابقة" description="من سؤال البرامج المعروفة عند الطالب." data={knownProgramsData} wide />
-          <AnalyticsBarSection title="برامج يدرسها المستخدم الآن" description="عند اختيار طالب وخريج معاً." data={currentProgramsData} />
-          <AnalyticsBarSection title="برامج تخرج منها المستخدم" description="عند اختيار طالب وخريج معاً." data={graduatedProgramsData} />
-          <AnalyticsBarSection title="البدائل الأكثر ظهوراً" description="الترشيحات من المرتبة الثانية إلى الخامسة." data={alternativeProgramData} wide />
-          <AnalyticsBarSection title="عدد أسئلة الاختبار المكتمل" description="يفيد في قياس طول المسار حسب الشروط الظاهرة." data={stepCountData} />
-          <AnalyticsBarSection title="لغة المتصفح" description="من سياق الجهاز عند إتمام الاختبار." data={languageData} />
-          <AnalyticsBarSection title="نوع الشاشة التقريبي" description="مصنف من عرض النافذة: هاتف، لوحي، سطح مكتب." data={viewportData} />
-          <AnalyticsBarSection title="مصادر الدخول" description="من أين وصل المستخدمون عند توفر المصدر." data={sourceData} />
+        <div className="analytics-page-title">
+          <h3>تحليلات مجمعة</h3>
+          <p>اللوحة الآن تقرأ البيانات بحسب معناها: مسار استخدام، نسب، ترتيبات، وتفاصيل تخصصية.</p>
+        </div>
+        <div className="analytics-sections">
+          <AnalyticsSection title="نظرة تشغيلية" description="هل الناس يدخلون الاختبار ويكملونه؟">
+            <AnalyticsInsightList title="أهم المؤشرات السريعة" items={usageInsightItems} />
+            <AnalyticsFunnel data={funnelData} />
+            <AnalyticsTimeline title="الإتمام عبر الزمن" description="عدد النتائج المكتملة حسب اليوم." data={completionTimelineData} />
+          </AnalyticsSection>
+
+          <AnalyticsSection title="النتائج والترشيحات" description="ما البرامج التي تقود إليها الخوارزمية؟">
+            <AnalyticsInsightList title="خلاصة النتائج" items={insightItems} />
+            <AnalyticsBarSection title="البرامج الأكثر ترشيحاً" description="يحسب النتيجة الأولى، ويضيف خارطة الثغور أيضًا عندما تظهر كرديفًا واضحًا." data={programData} wide height={380} />
+            <AnalyticsBarSection title="البدائل الأكثر ظهوراً" description="الترشيحات من المرتبة الثانية إلى الخامسة." data={alternativeProgramData} wide />
+          </AnalyticsSection>
+
+          <AnalyticsSection title="الاحتياجات والوقت" description="قراءة نمط الطلب قبل النظر في البرامج.">
+            <AnalyticsBarSection title="الاحتياجات الأكثر اختياراً" description="كل اختيارات سؤال الاحتياج، لذلك قد يتكرر المستخدم في أكثر من بند." data={needPatternData} wide height={360} />
+            <AnalyticsDonutSection title="وضوح الحاجة" description="حاجة عامة، محددة، أو غير محسومة." data={needClarityData} />
+            <AnalyticsDonutSection title="الوقت اليومي المتاح" description="النسبة بين الالتزام الخفيف والمتوسط والواسع." data={dailyTimeData} />
+            <AnalyticsDonutSection title="طبيعة الشبهات والأسئلة الفكرية" description="طمأنينة، بيئة فكرية، أو لا مشكلة محددة." data={doubtImpactData} />
+            <AnalyticsBarSection title="متوسط ملف الاحتياج" description="متوسط الأبعاد الخمسة لمن أتموا الاختبار." data={profileData} />
+            <AnalyticsDonutSection title="الأولوية عند تزاحم الاحتياجات" description="ما الذي اختاره المستخدم كأهم حاجة." data={prioritySignalData} />
+          </AnalyticsSection>
+
+          <AnalyticsSection title="التخصصات العلمية" description="تحليل خاص بالسؤال الجديد: مادة التخصص وسعة الوقت.">
+            <AnalyticsBarSection title="مواد التخصص المطلوبة" description="تظهر لمن جعل التخصص العلمي أولوية واختار مادة محددة." data={specializationSubjectData} wide />
+            <AnalyticsDonutSection title="قرار التوجيه بعد مادة التخصص" description="عالِم، الأرقم، أكاديمية الحديث، أو البناء المنهجي." data={specializationRouteData} />
+            <AnalyticsDonutSection title="سعة الوقت عند طالبي التخصص" description="هل طالب التخصص يملك 4–6 ساعات أم وقتًا أقل؟" data={specializationTimeData} />
+            <AnalyticsBarSection title="سبب توجيه التخصص" description="تفصيل المادة مع سعة الوقت التي أنتجت الترشيح." data={specializationRouteReasonData} wide />
+            <AnalyticsBarSection title="تخصصات بلا برنامج مستقل" description="فقه، أصول، تفسير، ولغة عربية: عند ضيق الوقت توجه إلى البناء المنهجي." data={noStandaloneSpecializationData} />
+            <AnalyticsBarSection title="نتائج طالبي التخصص" description="النتيجة الأولى لمن وصلوا إلى سؤال مادة التخصص." data={specializationResultData} />
+          </AnalyticsSection>
+
+          <AnalyticsSection title="الجمهور والحالة الدراسية" description="من يستخدم الاختبار؟ وما علاقته بالبرامج؟">
+            <AnalyticsDonutSection title="توزيع الجنس" description="للتأكد من ملاءمة الترشيحات والمسارات." data={genderData} />
+            <AnalyticsDonutSection title="لمن يبحث المستخدم؟" description="نفسه، ابن/ابنة، أو صديق/صديقة." data={forWhomData} />
+            <AnalyticsBarSection title="توزيع الأعمار" description="الفئات العمرية التي وصلت إلى النتيجة." data={ageData} />
+            <AnalyticsBarSection title="الدول الأكثر حضوراً" description="حسب إجابات من أتموا الاختبار." data={countryData} />
+            <AnalyticsDonutSection title="حالة الطالب مع البرامج" description="طالب حالي، خريج، متعثر، أو جديد." data={programStatusData} />
+            <AnalyticsBarSection title="البرامج الحالية أو السابقة" description="من سؤال البرامج المعروفة عند الطالب." data={knownProgramsData} wide />
+            <AnalyticsBarSection title="برامج يدرسها المستخدم الآن" description="عند اختيار طالب وخريج معاً." data={currentProgramsData} />
+            <AnalyticsBarSection title="برامج تخرج منها المستخدم" description="عند اختيار طالب وخريج معاً." data={graduatedProgramsData} />
+          </AnalyticsSection>
+
+          <AnalyticsSection title="سلوك إضافي ومصادر" description="مؤشرات تساعد على تحسين تجربة الاختبار لا الترشيح فقط.">
+            <AnalyticsDonutSection title="تفضيل القبول والاختبارات" description="مفتوح، اختبار قبول، أو مسار انتقائي." data={selectivityData} />
+            <AnalyticsBarSection title="أسباب التعثر" description="تظهر فقط لمن قال إنه متعثر في برنامج." data={struggleReasonData} />
+            <AnalyticsDonutSection title="عدد أسئلة الاختبار المكتمل" description="يفيد في قياس طول المسار حسب الشروط الظاهرة." data={stepCountData} />
+            <AnalyticsDonutSection title="نوع الشاشة التقريبي" description="مصنف من عرض النافذة: هاتف، لوحي، سطح مكتب." data={viewportData} />
+            <AnalyticsBarSection title="مصادر الدخول" description="من أين وصل المستخدمون عند توفر المصدر." data={sourceData} />
+            <AnalyticsBarSection title="لغة المتصفح" description="من سياق الجهاز عند إتمام الاختبار." data={languageData} />
+          </AnalyticsSection>
         </div>
       </div>
     </section>
