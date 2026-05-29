@@ -37,13 +37,13 @@ button { font-family: inherit; }
 .app-shell { max-width: 1120px; margin: 0 auto; padding: 28px 16px 56px; }
 .app-shell.analytics-shell {
   width: 100%;
-  max-width: none;
-  padding-inline: clamp(18px, 2.6vw, 46px);
+  max-width: 1500px;
+  padding-inline: clamp(18px, 2.2vw, 34px);
 }
 .selector-root.analytics-mode .site-header {
   width: 100%;
-  max-width: none;
-  padding-inline: clamp(18px, 2.6vw, 46px);
+  max-width: 1500px;
+  padding-inline: clamp(18px, 2.2vw, 34px);
 }
 
 .site-header {
@@ -380,7 +380,7 @@ button { font-family: inherit; }
 .analytics-card strong { display: block; font-size: 34px; color: var(--green); }
 .analytics-panel { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 12px; }
 .analytics-panel strong { font-size: 28px; color: var(--green); }
-.analytics-note { display: block; padding: clamp(18px, 2.2vw, 26px); }
+.analytics-note { display: block; padding: clamp(16px, 1.8vw, 22px); }
 .analytics-note p { margin: 0; color: var(--muted); line-height: 1.9; }
 .analytics-note code { background: #f6efe3; border: 1px solid var(--border); border-radius: 8px; padding: 2px 6px; color: var(--ink); }
 .study-hero {
@@ -467,12 +467,12 @@ button { font-family: inherit; }
 .analytics-event p { font-size: 13px; }
 .analytics-page-title { margin-bottom: 18px; }
 .analytics-page-title h3 { margin: 0 0 4px; font-size: 24px; }
-.analytics-sections { display: grid; gap: 18px; }
+.analytics-sections { display: grid; gap: 20px; }
 .analytics-section-block {
-  background: rgba(248,250,252,.68);
-  border: 1px solid var(--border);
-  border-radius: 22px;
-  padding: clamp(14px, 1.8vw, 20px);
+  background: linear-gradient(180deg, rgba(255,253,248,.92), rgba(248,250,252,.78));
+  border: 1px solid rgba(232, 223, 209, .86);
+  border-radius: 20px;
+  padding: clamp(14px, 1.5vw, 18px);
 }
 .analytics-section-head {
   display: flex;
@@ -490,6 +490,7 @@ button { font-family: inherit; }
 .analytics-chart-card .chart-header h3 { font-size: clamp(20px, 2vw, 25px); line-height: 1.35; }
 .analytics-chart-card .chart-header p { font-size: 14px; }
 .analytics-chart-wide { grid-column: 1 / -1; }
+.analytics-donut-card { grid-column: span 4; }
 .analytics-insight-card { grid-column: 1 / -1; }
 .analytics-insight-card .analytics-list { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .analytics-insight-card .analytics-list div { align-items: flex-start; flex-direction: column; }
@@ -500,8 +501,8 @@ button { font-family: inherit; }
 .analytics-list i { width: 10px; height: 10px; border-radius: 999px; flex: 0 0 10px; }
 .analytics-list strong { color: var(--green); flex: 0 0 auto; font-variant-numeric: tabular-nums; }
 .analytics-empty { color: var(--muted); margin: 0; }
-.analytics-donut-layout { display: grid; grid-template-columns: minmax(220px, .9fr) minmax(220px, 1fr); align-items: center; gap: 14px; }
-.analytics-donut-chart { position: relative; min-height: 230px; }
+.analytics-donut-layout { display: grid; grid-template-columns: 1fr; align-items: center; gap: 8px; }
+.analytics-donut-chart { position: relative; min-height: 210px; }
 .analytics-donut-total {
   position: absolute;
   inset: 50% auto auto 50%;
@@ -513,7 +514,7 @@ button { font-family: inherit; }
 .analytics-donut-total strong { color: var(--green); font-size: 26px; line-height: 1; }
 .analytics-donut-total span { color: var(--muted); font-size: 12px; font-weight: 800; }
 .analytics-donut-list { margin-top: 0; }
-.analytics-donut-list div { min-height: 38px; }
+.analytics-donut-list div { min-height: 34px; }
 .analytics-funnel { display: grid; gap: 14px; }
 .analytics-funnel-row { display: grid; grid-template-columns: minmax(160px, 240px) 1fr; align-items: center; gap: 14px; }
 .analytics-funnel-row > div:first-child { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
@@ -882,7 +883,7 @@ li { margin: 8px 0; line-height: 1.8; }
 }
 
 @media (max-width: 1180px) {
-  .analytics-donut-layout { grid-template-columns: 1fr; }
+  .analytics-donut-card { grid-column: span 6; }
   .analytics-donut-list { margin-top: 4px; }
 }
 
