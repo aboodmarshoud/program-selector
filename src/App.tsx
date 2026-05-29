@@ -1807,8 +1807,10 @@ export default function ProgramSelector() {
     setOpenedProgramId(null);
   }
 
+  const isAnalyticsView = mode === "analytics" && !openedProgram;
+
   return (
-    <div className={`selector-root notranslate ${darkMode ? 'dark' : ''}`} dir="rtl" lang="ar" translate="no">
+    <div className={`selector-root notranslate ${darkMode ? 'dark' : ''} ${isAnalyticsView ? 'analytics-mode' : ''}`} dir="rtl" lang="ar" translate="no">
       <button 
         className="theme-toggle" 
         onClick={() => setDarkMode(!darkMode)}
@@ -1828,7 +1830,7 @@ export default function ProgramSelector() {
         onStart={startQuiz}
       />
 
-      <main className="app-shell">
+      <main className={`app-shell ${isAnalyticsView ? 'analytics-shell' : ''}`}>
         <AnimatePresence mode="wait">
           {openedProgram && (
             <motion.div key="detail" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }}>
