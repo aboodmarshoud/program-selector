@@ -1217,6 +1217,42 @@ function isCompanionRecommendation(program: any) {
   return role.includes("رديف");
 }
 
+function rawAnalyticsAnswer(event: any, id: string) {
+  return event.rawAnswers?.[id];
+}
+
+function hasSpecializationSubject(event: any) {
+  return Boolean(rawAnalyticsAnswer(event, "specializationSubject"));
+}
+
+function specializationTimeGroup(event: any) {
+  if (!hasSpecializationSubject(event)) return null;
+  return rawAnalyticsAnswer(event, "dailyTime") === "formation_project" ? "وقت واسع للتخصص: 4–6 ساعات" : "أقل من 4 ساعات يوميًا";
+}
+
+function specializationRouteLabel(event: any) {
+  const subject = rawAnalyticsAnswer(event, "specializationSubject");
+  if (!subject) return null;
+  if (rawAnalyticsAnswer(event, "dailyTime") === "formation_project") return "برنامج عالِم";
+  if (subject === "sirah") return "مدرسة الأرقم";
+  if (subject === "hadith" || subject === "mustalah_hadith") return "أكاديمية الحديث";
+  return "البناء المنهجي";
+}
+
+function specializationRouteReason(event: any) {
+  const subject = rawAnalyticsAnswer(event, "specializationSubject");
+  if (!subject) return null;
+  const subjectLabel = analyticsAnswerValue(event, "specializationSubject");
+  if (rawAnalyticsAnswer(event, "dailyTime") === "formation_project") return `${subjectLabel} + وقت واسع -> عالِم`;
+  if (subject === "sirah") return `${subjectLabel} + وقت محدود -> الأرقم`;
+  if (subject === "hadith" || subject === "mustalah_hadith") return `${subjectLabel} + وقت محدود -> أكاديمية الحديث`;
+  return `${subjectLabel} + وقت محدود -> البناء المنهجي`;
+}
+
+function isNoStandaloneSpecialization(event: any) {
+  return ["fiqh", "usul_fiqh", "tafsir", "arabic_language"].includes(rawAnalyticsAnswer(event, "specializationSubject"));
+}
+
 function AnalyticsBarSection({ title, description, data, limit = 10, height = 300, wide = false }: any) {
   const chartData = data.slice(0, limit);
   return (
@@ -1354,6 +1390,12 @@ function AnalyticsDashboard({ onBack }: any) {
   const needPatternData = countAnswerChoices(completedEvents, "needPattern");
   const prioritySignalData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "prioritySignal"));
   const specializationSubjectData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "specializationSubject"));
+  const specializationEvents = completedEvents.filter(hasSpecializationSubject);
+  const specializationRouteData = countBy(specializationEvents, specializationRouteLabel);
+  const specializationRouteReasonData = countBy(specializationEvents, specializationRouteReason);
+  const specializationTimeData = countBy(specializationEvents, specializationTimeGroup);
+  const specializationResultData = countBy(specializationEvents, (event) => event.recommendations?.[0]?.name || programNameById(event.recommendations?.[0]?.id));
+  const noStandaloneSpecializationData = countBy(specializationEvents.filter(isNoStandaloneSpecialization), (event) => analyticsAnswerValue(event, "specializationSubject"));
   const doubtImpactData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "doubtImpact"));
   const selectivityData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "selectivity"));
   const struggleReasonData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "struggleReason"));
@@ -1392,9 +1434,15 @@ function AnalyticsDashboard({ onBack }: any) {
   const topResult = programData[0];
   const topNeed = needPatternData[0] || needClarityData[0];
   const topCountry = countryData[0];
+  const topSpecialization = specializationSubjectData[0];
+  const topSpecializationRoute = specializationRouteData[0];
+  const specializationShare = completedEvents.length ? Math.round((specializationEvents.length / completedEvents.length) * 100) : 0;
   const insightItems = [
     topResult ? { label: "أكثر نتيجة ظهورًا", value: `${topResult.name} (${topResult.value})` } : null,
     topNeed ? { label: "أبرز احتياج معلن", value: `${topNeed.name} (${topNeed.value})` } : null,
+    specializationEvents.length ? { label: "اختاروا مادة تخصص", value: `${specializationEvents.length} (${specializationShare}%)` } : null,
+    topSpecialization ? { label: "أكثر مادة تخصص", value: `${topSpecialization.name} (${topSpecialization.value})` } : null,
+    topSpecializationRoute ? { label: "أكثر توجيه بعد التخصص", value: `${topSpecializationRoute.name} (${topSpecializationRoute.value})` } : null,
     topCountry ? { label: "أكثر بلد حضورًا", value: `${topCountry.name} (${topCountry.value})` } : null,
     { label: "إجمالي النتائج المكتملة", value: completedEvents.length },
   ].filter(Boolean);
@@ -1445,6 +1493,11 @@ function AnalyticsDashboard({ onBack }: any) {
           <AnalyticsBarSection title="البرامج الأكثر ترشيحاً" description="يحسب النتيجة الأولى، ويضيف خارطة الثغور أيضًا عندما تظهر كرديفًا واضحًا." data={programData} wide height={360} />
           <AnalyticsBarSection title="الاحتياجات الأكثر اختياراً" description="كل اختيارات سؤال الاحتياج، لذلك قد يتكرر المستخدم في أكثر من بند." data={needPatternData} wide height={360} />
           <AnalyticsBarSection title="مواد التخصص المطلوبة" description="تظهر لمن جعل التخصص العلمي أولوية واختار مادة محددة." data={specializationSubjectData} />
+          <AnalyticsBarSection title="قرار التوجيه بعد مادة التخصص" description="يربط مادة التخصص بالوقت: عالِم، الأرقم، أكاديمية الحديث، أو البناء المنهجي." data={specializationRouteData} />
+          <AnalyticsBarSection title="سبب توجيه التخصص" description="تفصيل المادة مع سعة الوقت التي أنتجت الترشيح." data={specializationRouteReasonData} wide />
+          <AnalyticsBarSection title="سعة الوقت عند طالبي التخصص" description="هل طالب التخصص يملك 4–6 ساعات أم وقتًا أقل؟" data={specializationTimeData} />
+          <AnalyticsBarSection title="تخصصات بلا برنامج مستقل" description="فقه، أصول، تفسير، ولغة عربية: عند ضيق الوقت توجه إلى البناء المنهجي." data={noStandaloneSpecializationData} />
+          <AnalyticsBarSection title="نتائج طالبي التخصص" description="النتيجة الأولى لمن وصلوا إلى سؤال مادة التخصص." data={specializationResultData} />
           <AnalyticsBarSection title="متوسط ملف الاحتياج" description="متوسط الأبعاد الخمسة لمن أتموا الاختبار." data={profileData} />
           <AnalyticsBarSection title="وضوح الحاجة" description="هل جاء الطالب لحاجة عامة أم محددة؟" data={needClarityData} />
           <AnalyticsBarSection title="طبيعة الشبهات والأسئلة الفكرية" description="تمييز بين الطمأنينة، البيئة الفكرية، والحاجة العامة." data={doubtImpactData} />
