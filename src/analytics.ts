@@ -144,18 +144,48 @@ export async function signOutFromAnalytics() {
 
 export async function loadAnalyticsSummary(): Promise<AnalyticsSummary> {
   if (supabase) {
-    const { data, error } = await supabase
-      .from(TABLE_NAME)
-      .select("*")
-      .order("occurred_at", { ascending: true })
-      .limit(5000);
+    const pageSize = 1000;
+    let from = 0;
+    let allRows: any[] = [];
 
-    if (!error && data) return summarizeAnalytics(data.map(rowToEvent));
+    while (true) {
+      const { data, error } = await supabase
+        .from(TABLE_NAME)
+        .select("*")
+        .order("occurred_at", { ascending: true })
+        .range(from, from + pageSize - 1);
+
+      if (error) {
+        console.warn("Supabase analytics read failed", error.message);
+        break;
+      }
+
+      if (!data || data.length === 0) {
+        break;
+      }
+
+      allRows = [...allRows, ...data];
+
+      if (data.length < pageSize) {
+        break;
+      }
+
+      from += pageSize;
+    }
+
+    if (allRows.length > 0) {
+      return summarizeAnalytics(allRows.map(rowToEvent));
+    }
   }
 
   try {
-    const response = await fetch("/api/analytics/summary", { cache: "no-store" });
-    if (response.ok) return response.json();
+    const response = await fetch("/api/analytics/summary", {
+      cache: "no-store",
+    });
+
+    if (response.ok) {
+      return response.json();
+    }
   } catch {
     // Static hosting fallback: show the data collected in this browser.
   }
