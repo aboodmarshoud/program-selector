@@ -54,6 +54,7 @@ import {
 } from "./analytics";
 import { isSupabaseEnabled } from "./supabaseClient";
 import { PROGRAMS } from "./programData";
+import { PREREQUISITES } from "./prerequisites";
 import { calculateRecommendations } from "./recommendations";
 import { asArray, choiceRank, hasAnswer, hasChoice } from "./answerUtils";
 import { NEED_BRIDGE_ITEMS, OMR_TRACK_IDS, QUESTIONS, SELF_STUDY_BRIDGES, cleanAnswers, questionSubtitle, questionTitle, visibleQuestions } from "./quizFlow";
@@ -399,6 +400,7 @@ function ProgramDetail({ program, onBack, onHome }: any) {
         <div><small>الوسيلة</small><strong>{program.medium}</strong></div>
         <div><small>وقت التسجيل</small><strong>{program.registrationStatus}</strong></div>
       </div>
+      <DetailSection title="المتطلبات القبلية — شروط الالتحاق" items={PREREQUISITES[program.id]} icon={<IconAlertTriangle size={24} stroke={1.8} />} colorClass="amber" />
       <DetailSection title="أهداف البرنامج" items={program.goals} icon={<IconTargetArrow size={24} stroke={1.8} />} colorClass="blue" />
       <DetailSection title="ماذا ستكتسب؟" items={program.outcomes} icon={<IconSparkles size={24} stroke={1.8} />} colorClass="green" />
       <DetailSection title="يناسبك إذا…" items={program.suitable} icon={<IconCheck size={24} stroke={1.8} />} colorClass="green" />
