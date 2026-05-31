@@ -54,6 +54,7 @@ import {
 } from "./analytics";
 import { isSupabaseEnabled } from "./supabaseClient";
 import { PROGRAMS } from "./programData";
+import programGuidance from "./programGuidance.json";
 import { calculateRecommendations } from "./recommendations";
 import { asArray, choiceRank, hasAnswer, hasChoice } from "./answerUtils";
 import { NEED_BRIDGE_ITEMS, OMR_TRACK_IDS, QUESTIONS, SELF_STUDY_BRIDGES, cleanAnswers, questionSubtitle, questionTitle, visibleQuestions } from "./quizFlow";
@@ -467,6 +468,40 @@ function ComparisonTable({ onOpen, onBack }: any) {
   );
 }
 
+function SheikhFAQ() {
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const faq = ((programGuidance as any).faq || []) as Array<{ question: string; answer: string; url: string; source: string }>;
+  if (!faq.length) return null;
+  return (
+    <section className="sheikh-faq golden-tips">
+      <div className="golden-title">
+        <IconBulb size={34} stroke={1.7} />
+        <h2>أسئلة الشيخ عن اختيار البرنامج</h2>
+      </div>
+      <p className="sheikh-faq-sub">أسئلة يطرحها الطلبة كثيرًا، أجاب عنها الشيخ بنفسه. اضغط لقراءة مقتطف الجواب، ثم افتح المقطع عند الثانية التي قاله فيها.</p>
+      <ul className="faq-list">
+        {faq.map((item, index) => {
+          const open = openIdx === index;
+          return (
+            <li key={index} className={open ? "open" : ""}>
+              <button type="button" className="faq-q" aria-expanded={open} onClick={() => setOpenIdx(open ? null : index)}>
+                <span>{item.question}</span>
+                <IconChevronDown size={18} stroke={2} aria-hidden="true" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }} />
+              </button>
+              {open && (
+                <div className="faq-answer">
+                  <p>«{item.answer}»</p>
+                  <a href={item.url} target="_blank" rel="noopener noreferrer">شاهد جواب الشيخ — {item.source} <IconExternalLink size={14} /></a>
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
 function HomeView({ onStart, onPrograms, onSelfStudy, onCompare, onCompareDynamic }: any) {
   const programCount = publicProgramsList().length;
   const selfStudyCount = SELF_STUDY_CATALOG.length;
@@ -551,6 +586,7 @@ function HomeView({ onStart, onPrograms, onSelfStudy, onCompare, onCompareDynami
           <div tabIndex={0}><strong>إذا لم تعرف حاجتك بدقة: البناء المنهجي</strong><span>لأنه أصل واسع يصلح لمن يريد تأسيسًا عامًا قبل التخصص أو اختيار مسار أضيق.</span></div>
         </div>
       </section>
+      <SheikhFAQ />
     </>
   );
 }

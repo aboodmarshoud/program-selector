@@ -188,7 +188,19 @@ button { font-family: inherit; }
 .intro-card p { margin: 0; color: var(--muted); line-height: 1.8; }
 .home-secondary-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin: -10px 0 28px; }
 
-.program-map, .golden-tips { margin: 18px auto 0; max-width: 960px; }
+.program-map, .golden-tips, .sheikh-faq { margin: 18px auto 0; max-width: 960px; }
+.sheikh-faq { padding: 12px 0 4px; }
+.sheikh-faq-sub { color: var(--muted); margin: 4px 0 16px; font-size: 15px; line-height: 1.8; }
+.faq-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.faq-list li { border: 1.5px solid var(--border); border-radius: 16px; background: #faf8f3; overflow: hidden; }
+.faq-list li.open { border-color: #d9cba6; }
+.faq-q { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; background: none; border: none; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 16px; color: #6b5d3e; text-align: start; }
+.faq-answer { padding: 0 18px 16px; }
+.faq-answer p { margin: 0 0 10px; line-height: 1.95; color: var(--ink); font-size: 15px; }
+.faq-answer a { display: inline-flex; align-items: center; gap: 6px; color: var(--green); text-decoration: none; font-size: 13px; font-weight: 600; }
+.faq-answer a:hover { text-decoration: underline; }
+html.dark .faq-list li { background: #1e293b; border-color: #334155; }
+html.dark .faq-q { color: #cbb994; }
 .program-map {
   max-width: 1120px;
   margin-top: 34px;
