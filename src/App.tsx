@@ -551,6 +551,9 @@ function HomeView({ onStart, onPrograms, onSelfStudy, onCompare, onCompareDynami
           <div tabIndex={0}><strong>إذا لم تعرف حاجتك بدقة: البناء المنهجي</strong><span>لأنه أصل واسع يصلح لمن يريد تأسيسًا عامًا قبل التخصص أو اختيار مسار أضيق.</span></div>
         </div>
       </section>
+      <p className="privacy-note">
+        ملاحظة الخصوصية: قد نجمع إحصاءات استخدام مجهولة لتحسين الأداة (مثل البلد والفئة العمرية وإجابات الاختبار)، دون اسمك أو بريدك أو أيّ ما يُعرّف بشخصك.
+      </p>
     </>
   );
 }

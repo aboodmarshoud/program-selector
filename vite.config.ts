@@ -7,6 +7,18 @@ export default defineConfig(() => {
   return {
     base: '/program-selector/',
     plugins: [react(), tailwindcss()],
+    build: {
+      rollupOptions: {
+        output: {
+          // فصل المكتبات الثقيلة إلى حزم مستقلة لتحسين التخزين المؤقت والتحميل المتوازي.
+          manualChunks: {
+            recharts: ['recharts'],
+            motion: ['motion'],
+            icons: ['@tabler/icons-react'],
+          },
+        },
+      },
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

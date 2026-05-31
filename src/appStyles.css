@@ -189,6 +189,7 @@ button { font-family: inherit; }
 .home-secondary-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin: -10px 0 28px; }
 
 .program-map, .golden-tips { margin: 18px auto 0; max-width: 960px; }
+.privacy-note { max-width: 960px; margin: 24px auto 8px; text-align: center; color: var(--muted); font-size: 12.5px; line-height: 1.8; padding: 0 16px; }
 .program-map {
   max-width: 1120px;
   margin-top: 34px;
