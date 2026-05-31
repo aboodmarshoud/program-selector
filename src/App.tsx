@@ -371,6 +371,25 @@ function AdviceToneIcon({ tone }: any) {
   return <Icon size={18} stroke={1.9} aria-hidden="true" />;
 }
 
+function ProgramSources({ sources }: any) {
+  if (!sources?.length) return null;
+  return (
+    <div className="detail-section ds-source">
+      <h3><span className="ds-icon" aria-hidden="true"><IconExternalLink size={24} stroke={1.8} /></span> المصدر — من كلام الشيخ</h3>
+      <ul className="source-list">
+        {sources.map((s: any, index: number) => (
+          <li key={index}>
+            <p className="source-quote">«{s.quote}»</p>
+            <a href={s.url} target="_blank" rel="noopener noreferrer" className="source-link">
+              {s.asOf || "المقطع على يوتيوب"} <IconExternalLink size={15} />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function ProgramDetail({ program, onBack, onHome }: any) {
   if (!program) return null;
   const hasOfficialUrl = Boolean(program.officialUrl);
@@ -425,6 +444,7 @@ function ProgramDetail({ program, onBack, onHome }: any) {
           )}
         </div>
       )}
+      <ProgramSources sources={program.sources} />
     </section>
   );
 }
