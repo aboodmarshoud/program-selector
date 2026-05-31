@@ -399,6 +399,10 @@ function ProgramDetail({ program, onBack, onHome }: any) {
         <div><small>الوسيلة</small><strong>{program.medium}</strong></div>
         <div><small>وقت التسجيل</small><strong>{program.registrationStatus}</strong></div>
       </div>
+      <p className="freshness-note">
+        <IconAlertTriangle size={15} stroke={1.9} aria-hidden="true" />
+        المواعيد والشروط قد تتغيّر بين دفعة وأخرى؛ تحقّق دائمًا من الإعلان الرسمي للدفعة قبل التسجيل.
+      </p>
       <DetailSection title="أهداف البرنامج" items={program.goals} icon={<IconTargetArrow size={24} stroke={1.8} />} colorClass="blue" />
       <DetailSection title="ماذا ستكتسب؟" items={program.outcomes} icon={<IconSparkles size={24} stroke={1.8} />} colorClass="green" />
       <DetailSection title="يناسبك إذا…" items={program.suitable} icon={<IconCheck size={24} stroke={1.8} />} colorClass="green" />
