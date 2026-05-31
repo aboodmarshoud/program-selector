@@ -1778,6 +1778,8 @@ export default function ProgramSelector() {
   const [mode, setMode] = useState(initialMode);
   const [darkMode, setDarkMode] = useState(false);
   const completionTrackedRef = useRef(false);
+  const mainRef = useRef<HTMLElement>(null);
+  const firstFocusRef = useRef(true);
 
   useEffect(() => {
     trackAnalyticsEvent("visit");
@@ -1787,6 +1789,12 @@ export default function ProgramSelector() {
     if (darkMode) document.documentElement.classList.add("dark");
     else document.documentElement.classList.remove("dark");
   }, [darkMode]);
+
+  // الوصول: انقل تركيز قارئ الشاشة/لوحة المفاتيح إلى المحتوى عند تبدّل العرض (دون تمرير مفاجئ).
+  useEffect(() => {
+    if (firstFocusRef.current) { firstFocusRef.current = false; return; }
+    mainRef.current?.focus({ preventScroll: true });
+  }, [mode, showResult, openedProgramId]);
 
   const qs = useMemo(() => visibleQuestions(answers), [answers]);
   const current = qs[Math.min(step, qs.length - 1)] || qs[0];
@@ -1872,10 +1880,12 @@ export default function ProgramSelector() {
 
   return (
     <div className={`selector-root notranslate ${darkMode ? 'dark' : ''} ${isAnalyticsView ? 'analytics-mode' : ''}`} dir="rtl" lang="ar" translate="no">
-      <button 
-        className="theme-toggle" 
+      <a href="#main-content" className="skip-link">تخطَّ إلى المحتوى الرئيسي</a>
+      <button
+        className="theme-toggle"
         onClick={() => setDarkMode(!darkMode)}
         title={darkMode ? "الوضع الفاتح" : "الوضع الداكن"}
+        aria-label={darkMode ? "تفعيل الوضع الفاتح" : "تفعيل الوضع الداكن"}
         data-html2canvas-ignore="true"
       >
         {darkMode ? <Sun size={20} /> : <Moon size={20} />}
@@ -1891,7 +1901,7 @@ export default function ProgramSelector() {
         onStart={startQuiz}
       />
 
-      <main className={`app-shell ${isAnalyticsView ? 'analytics-shell' : ''}`}>
+      <main id="main-content" tabIndex={-1} ref={mainRef} className={`app-shell ${isAnalyticsView ? 'analytics-shell' : ''}`}>
         <AnimatePresence mode="wait">
           {openedProgram && (
             <motion.div key="detail" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }}>
