@@ -404,6 +404,7 @@ function ProgramDetail({ program, onBack, onHome }: any) {
       <DetailSection title="ماذا ستكتسب؟" items={program.outcomes} icon={<IconSparkles size={24} stroke={1.8} />} colorClass="green" />
       <DetailSection title="يناسبك إذا…" items={program.suitable} icon={<IconCheck size={24} stroke={1.8} />} colorClass="green" />
       <DetailSection title="انتبه قبل التسجيل…" items={program.caution} icon={<IconAlertTriangle size={24} stroke={1.8} />} colorClass="rose" />
+      <ProgramAdvice programId={program.id} />
       {showLinksBox && (
         <div className={`links-box ${hasOfficialUrl && showsTelegramChannel ? "" : "links-box-single"}`}>
           {hasOfficialUrl && (
@@ -499,6 +500,25 @@ function SheikhFAQ() {
         })}
       </ul>
     </section>
+  );
+}
+
+function ProgramAdvice({ programId }: any) {
+  const items = (((programGuidance as any).perProgram || {})[programId] || []) as Array<{ text: string; type: string; url: string }>;
+  if (!items.length) return null;
+  return (
+    <div className="program-advice">
+      <h3><IconBulb size={22} stroke={1.8} aria-hidden="true" /> نصيحة الشيخ قبل التسجيل</h3>
+      <ul>
+        {items.map((item, index) => (
+          <li key={index}>
+            <span className={`advice-tag ${item.type === "recommend" ? "advice-rec" : "advice-warn"}`}>{item.type === "recommend" ? "يُنصح به" : "تنبيه"}</span>
+            <p>«{item.text}»</p>
+            <a href={item.url} target="_blank" rel="noopener noreferrer">المقطع على يوتيوب <IconExternalLink size={13} /></a>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
