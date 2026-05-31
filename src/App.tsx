@@ -1264,8 +1264,8 @@ function programRecommendationAppearances(events: any[]) {
   return weightedCounts.map((item) => ({
     name: item.name,
     count: item.value,
-    value: Number(((item.value / events.length) * 100).toFixed(1)),
-    displayValue: `${formatMetricValue(item.value)} · ${formatMetricValue((item.value / events.length) * 100)}%`,
+    value: Math.round((item.value / events.length) * 100),
+    displayValue: `${Math.round(item.value).toLocaleString("ar")} · ${Math.round((item.value / events.length) * 100).toLocaleString("ar")}%`,
   }));
 }
 
@@ -1682,12 +1682,14 @@ function AnalyticsDashboard({ onBack }: any) {
           <strong>{loading ? "..." : `${summary?.completionRate ?? 0}%`}</strong>
         </div>
         <div className="analytics-actions">
-          <button className="main-btn" type="button" onClick={refresh}>تحديث البيانات</button>
-          {lastUpdated && (
-            <span className="analytics-updated-at">
-              آخر تحديث: {lastUpdated.toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-            </span>
-          )}
+          <div className="analytics-refresh-stack">
+            <button className="main-btn" type="button" onClick={refresh}>تحديث البيانات</button>
+            {lastUpdated && (
+              <span className="analytics-updated-at">
+                آخر تحديث: {lastUpdated.toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+              </span>
+            )}
+          </div>
           {isSupabaseEnabled && (
             <button className="ghost-btn" type="button" onClick={async () => {
               await signOutFromAnalytics();
@@ -1706,17 +1708,6 @@ function AnalyticsDashboard({ onBack }: any) {
           <p>اللوحة الآن تقرأ البيانات بحسب معناها: مسار استخدام، نسب، ترتيبات، وتفاصيل تخصصية.</p>
         </div>
         <div className="analytics-sections">
-          <AnalyticsSection title="ملحوظة القراءة" description="تُحمّل البيانات عند فتح اللوحة، وبعد ذلك لا تتغير إلا عند الضغط على زر تحديث البيانات. في رسم البرامج: الرقم قبل النقطة هو عدد الظهور الوزني، والنسبة بعد النقطة هي نسبته من النتائج المكتملة.">
-            <AnalyticsInsightList
-              title="طريقة احتساب ظهور البرامج"
-              items={[
-                { label: "النتيجة الأولى", value: "1 ظهور" },
-                { label: "البدائل", value: "1 ظهور" },
-                { label: "خارطة الثغور كرديف فقط", value: "0.5 ظهور" },
-              ]}
-            />
-          </AnalyticsSection>
-
           <AnalyticsSection title="نظرة تشغيلية" description="هل الناس يدخلون الاختبار ويكملونه؟">
             <AnalyticsInsightList title="أهم المؤشرات السريعة" items={usageInsightItems} />
             <AnalyticsFunnel data={funnelData} />
