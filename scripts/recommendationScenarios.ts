@@ -557,6 +557,46 @@ const scenarios: Scenario[] = [
       assert(result.stageInfo?.label === "مرحلتك الآن: عطاء طويل", "expected long-term giving stage");
     },
   },
+  {
+    name: "sinaat al-mahawir graduate is routed to bard yaqeen as the natural next step",
+    answers: {
+      forWhom: "self",
+      gender: "male",
+      age: "23_plus",
+      programStatus: "graduated_or_near",
+      knownPrograms: ["sinaat_mahawir"],
+      dailyTime: "standard",
+      needClarity: "specific_need",
+      needPattern: ["certainty"],
+      selectivity: "open",
+      doubtImpact: "high",
+    },
+    expect: (result) => {
+      const ids = topIds(result);
+      assert(ids[0] === "bard_yaqin", `expected bard_yaqin first for sinaat graduate, got ${ids.join(", ")}`);
+      const bard = result.list.find((p: any) => p.id === "bard_yaqin");
+      assert(bard?.reasons?.some((r: string) => r.includes("صناعة المحاور")), "expected the bard reason to name صناعة المحاور as predecessor");
+    },
+  },
+  {
+    name: "multiple current programs surface the qaleel-daaim rule",
+    answers: {
+      forWhom: "self",
+      gender: "male",
+      age: "23_plus",
+      programStatus: "studying_committed",
+      knownPrograms: ["bina_asasi", "fikri"],
+      dailyTime: "standard",
+      needClarity: "specific_need",
+      needPattern: ["intellectual_depth"],
+      selectivity: "open",
+      doubtImpact: "low",
+    },
+    expect: (result) => {
+      assert(result.advice?.type === "multi_current", `expected multi_current advice, got ${result.advice?.type}`);
+      assert(result.advice?.points?.some((p: string) => p.includes("قليلٌ دائم")), "expected the قليل دائم rule to be surfaced in multi-program advice");
+    },
+  },
 ];
 
 for (const scenario of scenarios) {

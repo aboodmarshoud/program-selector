@@ -53,6 +53,7 @@ export const PROGRAM_OPTIONS = [
   option("bina_muyassar", "البناء المنهجي - المسار الميسّر", "", ""),
   option("fikri", "البناء الفكري", "", ""),
   option("bard_yaqin", "برد اليقين", "", ""),
+  option("sinaat_mahawir", "صناعة المحاور (برنامج سابق)", "", ""),
   option("hadith", "أكاديمية الحديث الإلكترونية", "", ""),
   option("arqam", "مدرسة الأرقم", "", ""),
   option("omr_mufakkir", "مشروع العمر - مسار المفكر", "", ""),
