@@ -83,6 +83,9 @@ function isEligible(programId, a) {
       return adult;
     case "mashrou_al_omr":
       return false;
+    // نمير الحفّاظ مُوثَّق في دليل البرامج لكنه ليس مُرشَّحًا تلقائيًا بعد (تفاصيله التنظيمية بانتظار تعريف رسمي أوفى).
+    case "numayr_huffaz":
+      return false;
     case "omr_mufakkir":
     case "omr_bahith":
     case "omr_talib_ilm":

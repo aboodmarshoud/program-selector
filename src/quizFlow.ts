@@ -69,6 +69,7 @@ export const PROGRAM_OPTIONS = [
   option("khadija", "مدرسة خديجة", "", ""),
   option("kharitat_thughur", "خارطة الثغور", "", ""),
   option("alim", "برنامج عالِم", "", ""),
+  option("numayr_huffaz", "نمير الحفّاظ", "", ""),
 ];
 
 export const OMR_TRACK_IDS = ["omr_mufakkir", "omr_bahith", "omr_talib_ilm", "omr_daiya", "omr_murabbi"];
