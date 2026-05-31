@@ -461,6 +461,7 @@ button { font-family: inherit; }
 .analytics-login form { display: grid; gap: 12px; margin-bottom: 12px; }
 .analytics-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
 .analytics-refresh-stack { display: inline-flex; flex-direction: column; align-items: stretch; gap: 6px; }
+.analytics-export-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .analytics-auth-message { color: var(--green); line-height: 1.8; margin: 0 0 12px; }
 .analytics-event { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; }
 .analytics-event strong, .analytics-event small { display: block; }

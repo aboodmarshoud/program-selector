@@ -1,7 +1,7 @@
 import { useMemo, useState, useRef, useEffect, type CSSProperties } from "react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { motion, AnimatePresence } from "motion/react";
-import { Moon, Sun } from "lucide-react";
+import { Download, Moon, Sun } from "lucide-react";
 import {
   IconBook2,
   IconAlertTriangle,
@@ -1332,6 +1332,84 @@ function countByDay(events: any[]) {
   return [...counts.entries()].map(([name, value]) => ({ name, value }));
 }
 
+function analyticsRows(data: any[]) {
+  const total = totalDataValue(data);
+  return data.map((item) => ({
+    label: item.name || item.label,
+    value: item.value,
+    count: item.count ?? item.value,
+    percent: total ? Math.round((Number(item.value || 0) / total) * 100) : null,
+    displayValue: item.displayValue || formatMetricValue(item.value),
+  }));
+}
+
+function completedEventWideRow(event: any) {
+  const answerColumns = Object.fromEntries(
+    (event.readableAnswers || []).map((answer: any) => [
+      `answer_${answer.id}`,
+      answer.label || answer.value,
+    ])
+  );
+
+  return {
+    sessionId: event.sessionId,
+    timestamp: event.timestamp,
+    resultProgramId: event.resultProgramId,
+    resultProgramName: event.recommendations?.[0]?.name || programNameById(event.resultProgramId),
+    stepCount: event.stepCount,
+    primaryRecommendationScore: event.recommendations?.[0]?.score ?? null,
+    ...answerColumns,
+  };
+}
+
+function buildAnalyticsExport(summary: AnalyticsSummary, sections: any[], completedEvents: any[]) {
+  return {
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    overview: {
+      visitors: summary.visitors,
+      quizStarted: summary.quizStarted,
+      quizCompleted: summary.quizCompleted,
+      quizAbandoned: summary.quizAbandoned,
+      completionRate: summary.completionRate,
+    },
+    sections: sections.map((section) => ({
+      title: section.title,
+      description: section.description,
+      tables: section.tables.map((table: any) => ({
+        title: table.title,
+        description: table.description || "",
+        rows: analyticsRows(table.rows || []),
+      })),
+    })),
+    completedResponseRows: completedEvents.map(completedEventWideRow),
+    completedResponses: completedEvents.map((event) => ({
+      sessionId: event.sessionId,
+      timestamp: event.timestamp,
+      resultProgramId: event.resultProgramId,
+      stepCount: event.stepCount,
+      answers: event.readableAnswers || [],
+      rawAnswers: event.rawAnswers || {},
+      recommendations: event.recommendations || [],
+      profile: event.profile || {},
+      context: event.context || {},
+    })),
+    rawEvents: summary.events,
+  };
+}
+
+function downloadJsonFile(data: any, filename: string) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 function AnalyticsSection({ title, description, children }: any) {
   return (
     <div className="analytics-section-block">
@@ -1655,6 +1733,84 @@ function AnalyticsDashboard({ onBack }: any) {
     { label: "نتائج مكتملة", value: completedEvents.length },
     { label: "نسبة الإتمام", value: `${summary?.completionRate ?? 0}%` },
   ];
+  const reportSections = [
+    {
+      title: "نظرة تشغيلية",
+      description: "مسار الاستخدام من الزيارة إلى إتمام الاختبار.",
+      tables: [
+        { title: "المؤشرات السريعة", rows: usageInsightItems.map((item: any) => ({ name: item.label, value: item.value })) },
+        { title: "مسار الاستخدام", rows: funnelData },
+        { title: "الإتمام عبر الزمن", rows: completionTimelineData },
+      ],
+    },
+    {
+      title: "النتائج والترشيحات",
+      description: "البرامج التي تظهر في النتائج والبدائل.",
+      tables: [
+        { title: "خلاصة النتائج", rows: insightItems.map((item: any) => ({ name: item.label, value: item.value })) },
+        { title: "ظهور البرامج في الترشيحات", rows: programData },
+      ],
+    },
+    {
+      title: "الاحتياجات والوقت",
+      description: "نمط الاحتياج والوقت اليومي المتاح.",
+      tables: [
+        { title: "الاحتياجات الأكثر اختيارا", rows: needPatternData },
+        { title: "وضوح الحاجة", rows: needClarityData },
+        { title: "الوقت اليومي المتاح", rows: dailyTimeData },
+        { title: "طبيعة الشبهات والأسئلة الفكرية", rows: doubtImpactData },
+        { title: "متوسط ملف الاحتياج", rows: profileData },
+        { title: "الأولوية عند تزاحم الاحتياجات", rows: prioritySignalData },
+      ],
+    },
+    {
+      title: "التخصصات العلمية",
+      description: "مادة التخصص وسعة الوقت وقرار التوجيه الناتج.",
+      tables: [
+        { title: "مواد التخصص المطلوبة", rows: specializationSubjectData },
+        { title: "قرار التوجيه بعد مادة التخصص", rows: specializationRouteData },
+        { title: "سعة الوقت عند طالبي التخصص", rows: specializationTimeData },
+        { title: "سبب توجيه التخصص", rows: specializationRouteReasonData },
+        { title: "تخصصات بلا برنامج مستقل", rows: noStandaloneSpecializationData },
+        { title: "نتائج طالبي التخصص", rows: specializationResultData },
+      ],
+    },
+    {
+      title: "الجمهور والحالة الدراسية",
+      description: "خصائص الجمهور وعلاقته بالبرامج.",
+      tables: [
+        { title: "توزيع الجنس", rows: genderData },
+        { title: "لمن يبحث المستخدم", rows: forWhomData },
+        { title: "توزيع الأعمار", rows: ageData },
+        { title: "الدول الأكثر حضورا", rows: countryData },
+        { title: "حالة الطالب مع البرامج", rows: programStatusData },
+        { title: "البرامج الحالية أو السابقة", rows: knownProgramsData },
+        { title: "برامج يدرسها المستخدم الآن", rows: currentProgramsData },
+        { title: "برامج تخرج منها المستخدم", rows: graduatedProgramsData },
+      ],
+    },
+    {
+      title: "سلوك إضافي ومصادر",
+      description: "مصادر الدخول وسياق الجهاز وسلوك الاختبار.",
+      tables: [
+        { title: "تفضيل القبول والاختبارات", rows: selectivityData },
+        { title: "أسباب التعثر", rows: struggleReasonData },
+        { title: "عدد أسئلة الاختبار المكتمل", rows: stepCountData },
+        { title: "نوع الشاشة التقريبي", rows: viewportData },
+        { title: "مصادر الدخول", rows: sourceData },
+        { title: "لغة المتصفح", rows: languageData },
+      ],
+    },
+  ];
+
+  function exportAnalyticsData() {
+    if (!summary) return;
+    const datePart = new Date().toISOString().slice(0, 10);
+    downloadJsonFile(
+      buildAnalyticsExport(summary, reportSections, completedEvents),
+      `program-selector-analytics-${datePart}.json`
+    );
+  }
 
   return (
     <section className="analytics-page">
@@ -1690,6 +1846,10 @@ function AnalyticsDashboard({ onBack }: any) {
               </span>
             )}
           </div>
+          <button className="ghost-btn analytics-export-btn" type="button" onClick={exportAnalyticsData} disabled={loading || !summary}>
+            <Download size={18} />
+            تصدير البيانات
+          </button>
           {isSupabaseEnabled && (
             <button className="ghost-btn" type="button" onClick={async () => {
               await signOutFromAnalytics();
