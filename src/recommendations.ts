@@ -72,7 +72,8 @@ function isEligible(programId, a) {
     case "khadija":
       return a.gender === "female" && adult;
     case "alim":
-      return adult;
+      // شرط قاطع لبرنامج عالِم: حفظ القرآن كاملًا (يُسأل عند سياق التفرّغ). من صرّح بأنه لم يُكمل الحفظ لا يُرشَّح له.
+      return adult && a.quranHifz !== "partial_or_none";
     case "bina_asasi":
     case "bina_muyassar":
     case "fikri":
