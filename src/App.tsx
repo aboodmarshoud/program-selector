@@ -1240,20 +1240,32 @@ function isCompanionRecommendation(program: any) {
 }
 
 function recommendationAppearanceWeight(item: any) {
-  if (item.program?.id === "kharitat_thughur" && item.index > 0 && isCompanionRecommendation(item.program)) return 0.5;
-  return 1;
+  if (item.index === 0) return 1;
+  const score = Number(item.program?.score);
+  const primaryScore = Number(item.primaryScore);
+  if (Number.isFinite(score) && Number.isFinite(primaryScore) && primaryScore > 0) {
+    return Math.max(0, Math.min(1, score / primaryScore));
+  }
+  if (item.program?.id === "kharitat_thughur" && isCompanionRecommendation(item.program)) return 0.5;
+  return 0;
 }
 
 function programRecommendationAppearances(events: any[]) {
   const weightedCounts = countWeighted(
-    events.flatMap((event) => (event.recommendations || []).map((program: any, index: number) => ({ program, index }))),
+    events.flatMap((event) => {
+      const recommendations = event.recommendations || [];
+      const primaryScore = Number(recommendations[0]?.score || 0);
+      return recommendations.map((program: any, index: number) => ({ program, index, primaryScore }));
+    }),
     (item) => item.program.name || programNameById(item.program.id),
     recommendationAppearanceWeight
   );
   if (!events.length) return [];
   return weightedCounts.map((item) => ({
-    ...item,
+    name: item.name,
+    count: item.value,
     value: Number(((item.value / events.length) * 100).toFixed(1)),
+    displayValue: `${formatMetricValue(item.value)} · ${formatMetricValue((item.value / events.length) * 100)}%`,
   }));
 }
 
@@ -1453,7 +1465,9 @@ function AnalyticsBarSection({ title, description, data, limit = 10, height = 30
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                 <XAxis type="number" allowDecimals tick={{ fill: "var(--muted)", fontSize: 12 }} />
                 <YAxis dataKey="name" type="category" width={160} tick={{ fill: "var(--ink)", fontSize: 12 }} />
-                <Tooltip />
+                <Tooltip
+                  formatter={(value: any, _name: any, item: any) => item?.payload?.displayValue || `${formatMetricValue(value)}${valueSuffix}`}
+                />
                 <Bar dataKey="value" fill="#176b54" radius={[0, 8, 8, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -1462,7 +1476,7 @@ function AnalyticsBarSection({ title, description, data, limit = 10, height = 30
             {chartData.map((item: any) => (
               <div key={item.name}>
                 <span>{item.name}</span>
-                <strong>{formatMetricValue(item.value)}{valueSuffix}</strong>
+                <strong>{item.displayValue || `${formatMetricValue(item.value)}${valueSuffix}`}</strong>
               </div>
             ))}
           </div>
@@ -1524,21 +1538,6 @@ function AnalyticsDashboard({ onBack }: any) {
 
   useEffect(() => {
     refresh();
-  }, [authorized]);
-
-  useEffect(() => {
-    if (!authorized) return undefined;
-    const refreshWhenVisible = () => {
-      if (document.visibilityState === "visible") refresh();
-    };
-    const timer = window.setInterval(refreshWhenVisible, 30000);
-    window.addEventListener("focus", refreshWhenVisible);
-    document.addEventListener("visibilitychange", refreshWhenVisible);
-    return () => {
-      window.clearInterval(timer);
-      window.removeEventListener("focus", refreshWhenVisible);
-      document.removeEventListener("visibilitychange", refreshWhenVisible);
-    };
   }, [authorized]);
 
   async function unlock(event: any) {
@@ -1642,7 +1641,7 @@ function AnalyticsDashboard({ onBack }: any) {
   const topSpecializationRoute = specializationRouteData[0];
   const specializationShare = completedEvents.length ? Math.round((specializationEvents.length / completedEvents.length) * 100) : 0;
   const insightItems = [
-    topResult ? { label: "أكثر برنامج ظهورًا", value: `${topResult.name} (${formatMetricValue(topResult.value)}%)` } : null,
+    topResult ? { label: "أكثر برنامج ظهورًا", value: `${topResult.name} (${topResult.displayValue})` } : null,
     topNeed ? { label: "أبرز احتياج معلن", value: `${topNeed.name} (${topNeed.value})` } : null,
     specializationEvents.length ? { label: "اختاروا مادة تخصص", value: `${specializationEvents.length} (${specializationShare}%)` } : null,
     topSpecialization ? { label: "أكثر مادة تخصص", value: `${topSpecialization.name} (${topSpecialization.value})` } : null,
@@ -1707,6 +1706,17 @@ function AnalyticsDashboard({ onBack }: any) {
           <p>اللوحة الآن تقرأ البيانات بحسب معناها: مسار استخدام، نسب، ترتيبات، وتفاصيل تخصصية.</p>
         </div>
         <div className="analytics-sections">
+          <AnalyticsSection title="ملحوظة القراءة" description="تُحمّل البيانات عند فتح اللوحة، وبعد ذلك لا تتغير إلا عند الضغط على زر تحديث البيانات. في رسم البرامج: الرقم قبل النقطة هو عدد الظهور الوزني، والنسبة بعد النقطة هي نسبته من النتائج المكتملة.">
+            <AnalyticsInsightList
+              title="طريقة احتساب ظهور البرامج"
+              items={[
+                { label: "النتيجة الأولى", value: "1 ظهور" },
+                { label: "البدائل", value: "1 ظهور" },
+                { label: "خارطة الثغور كرديف فقط", value: "0.5 ظهور" },
+              ]}
+            />
+          </AnalyticsSection>
+
           <AnalyticsSection title="نظرة تشغيلية" description="هل الناس يدخلون الاختبار ويكملونه؟">
             <AnalyticsInsightList title="أهم المؤشرات السريعة" items={usageInsightItems} />
             <AnalyticsFunnel data={funnelData} />
@@ -1715,7 +1725,7 @@ function AnalyticsDashboard({ onBack }: any) {
 
           <AnalyticsSection title="النتائج والترشيحات" description="ما البرامج التي تقود إليها الخوارزمية؟">
             <AnalyticsInsightList title="خلاصة النتائج" items={insightItems} />
-            <AnalyticsBarSection title="نسبة ظهور البرامج في الترشيحات" description="يجمع النتيجة الأولى والبدائل في رسم واحد؛ وخارطة الثغور إذا ظهرت كرديفًا فقط تُحسب نصف ظهور لا ظهورًا كاملًا." data={programData} wide height={420} valueSuffix="%" />
+            <AnalyticsBarSection title="ظهور البرامج في الترشيحات" description="يجمع النتيجة الأولى والبدائل في رسم واحد؛ وخارطة الثغور إذا ظهرت كرديفًا فقط تُحسب نصف ظهور لا ظهورًا كاملًا. طول الشريط مبني على النسبة، والقائمة تعرض العدد والنسبة معًا." data={programData} wide height={420} valueSuffix="%" />
           </AnalyticsSection>
 
           <AnalyticsSection title="الاحتياجات والوقت" description="قراءة نمط الطلب قبل النظر في البرامج.">

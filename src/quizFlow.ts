@@ -1,4 +1,4 @@
-import { asArray, hasChoice, hasKnown, isAgeAtLeast15, option } from "./answerUtils";
+import { asArray, completedJuthurOrIshraq, hasChoice, hasKnown, isAgeAtLeast15, option } from "./answerUtils";
 
 export const COUNTRY_OPTIONS = [
   option("saudi_arabia", "السعودية", "", ""),
@@ -280,6 +280,7 @@ export const QUESTIONS = [
       option("17_20", "17–20 سنة", "مرحلة الشباب وبدايات الجامعة", ""),
       option("21_22", "21–22 سنة", "مرحلة متقدمة نسبيًا", ""),
       option("23_plus", "أكثر من 22 سنة", "برامج الكبار غالبًا", ""),
+      option("40_plus", "أكثر من 40 سنة", "الأقرب غالبًا مسارات أرفق بحسب الحاجة: البناء الميسّر أو برد اليقين", ""),
     ],
   },
   {
@@ -323,6 +324,22 @@ export const QUESTIONS = [
     multi: true,
     condition: (a) => a.programStatus && a.programStatus !== "none" && a.programStatus !== "studying_and_graduated",
     options: () => PROGRAM_OPTIONS,
+  },
+  {
+    id: "ithmarFit",
+    title: "الأنسب غالبًا بعد جذور أو إشراق هو إكمال الطريق في إثمار؛ هل يناسبك ذلك؟",
+    subtitle: "لا ننتقل عن إثمار إلا إذا كان عندك مانع أو احتياج أوضح لا يغطيه هذا المسار الآن.",
+    condition: (a) => completedJuthurOrIshraq(a),
+    options: () => [
+      option("yes_continue", "نعم، يناسبني إثمار وأريد الإكمال فيه", "أبحث عن الامتداد الطبيعي بعد جذور أو إشراق", ""),
+      option("missed_registration", "لا، فاتتني فرصة التسجيل", "أحتاج خطة مؤقتة أو بديلًا حتى تفتح الفرصة القادمة", ""),
+      option("need_tazkiyah", "أحتاج بناءً تزكويًا مكثفًا", "الأولوية الآن للقلب واليقين والثبات", ""),
+      option("need_sharia", "أحتاج بناءً علميًا شرعيًا مكثفًا", "أحتاج تأسيسًا شرعيًا أوسع من مسار الأكاديمية", ""),
+      option("need_awareness", "أحتاج بناءً فكريًا وتوعويًا", "الأولوية لفهم الأفكار والشبهات والواقع", ""),
+      option("need_reform", "أحتاج تحويل البناء إلى عمل إصلاحي", "الأولوية لمعرفة الثغر والمشروع العملي", ""),
+      option("need_environment", "أحتاج بيئة متابعة أو محضنًا أقرب", "الأولوية للصحبة والمتابعة لا لمجرد المقررات", ""),
+      option("not_suitable_now", "لا يناسبني الآن لسبب خاص", "أحتاج أن تقرأ الخوارزمية بقية إجاباتي", ""),
+    ],
   },
   {
     id: "struggleReason",
@@ -489,6 +506,7 @@ export function cleanAnswers(answers) {
   if (!canConsiderOmrTracks(next)) delete next.omrTrack;
   if (canConsiderOmrTracks(next)) delete next.selectivity;
   if (next.programStatus === "none" || !next.programStatus) delete next.knownPrograms;
+  if (!completedJuthurOrIshraq(next)) delete next.ithmarFit;
   if (next.programStatus !== "studying_struggling") delete next.struggleReason;
   if (!isAgeAtLeast15(next)) {
     delete next.needClarity;

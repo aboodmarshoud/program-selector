@@ -68,7 +68,7 @@ function isEligible(programId, a) {
     case "ishraq":
       return ["15_16", "17_20", "21_22"].includes(age) && !completedJuthurOrIshraq(a) && !hasKnown(a, "ishraq");
     case "ithmar":
-      return ["13_14", "15_16", "17_20", "21_22", "23_plus"].includes(age) && completedJuthurOrIshraq(a);
+      return ["13_14", "15_16", "17_20", "21_22", "23_plus", "40_plus"].includes(age) && completedJuthurOrIshraq(a);
     case "khadija":
       return a.gender === "female" && adult;
     case "alim":
@@ -163,6 +163,9 @@ function softenScores(scores: Record<string, ScoreItem>, ids: string[], amount: 
 
 function chooseBinaTrack(a) {
   if (["light"].includes(a.dailyTime) || a.prioritySignal === "gentle_priority") {
+    return "bina_muyassar";
+  }
+  if (a.age === "40_plus" && a.dailyTime !== "formation_project" && a.prioritySignal !== "curriculum_priority") {
     return "bina_muyassar";
   }
   return "bina_asasi";
@@ -282,6 +285,50 @@ function applyDecisionRules(scores, a) {
   const wantsReform = priority ? priority === "reform_priority" : primaryNeed === "reform_project";
   const highDoubt = a.doubtImpact === "high" || (priority ? priority === "certainty_priority" : primaryNeed === "certainty");
   const theoreticalDoubt = a.doubtImpact === "ideological_environment" || a.doubtImpact === "theoretical" || (priority ? priority === "intellectual_priority" : primaryNeed === "intellectual_depth");
+
+  if (completedJuthurOrIshraq(a)) {
+    if (!a.ithmarFit || a.ithmarFit === "yes_continue") {
+      ensurePriority(scores, "ithmar", "لأنك خريج جذور أو إشراق، فإثمار هو الامتداد الطبيعي ما لم تظهر حاجة أخرى أو مانع واضح", 58);
+      softenScores(scores, ["bina_asasi", "bina_muyassar", "fikri", "hadith", "alim"], 10, "لا نقدّم مسارًا آخر على إثمار لخريج جذور أو إشراق إلا بسبب أصرح");
+      return;
+    }
+    if (a.ithmarFit === "missed_registration") {
+      addScore(scores, "ithmar", 30, "إثمار يبقى الوجهة الأقرب بعد جذور أو إشراق، لكن فاتتك فرصة التسجيل الآن");
+    }
+    if (a.ithmarFit === "need_tazkiyah") {
+      ensurePriority(scores, "bard_yaqin", "اخترت أن الأولوية الآن بناء تزكوي ويقيني مكثف قبل التخصص في إثمار", 42);
+      addScore(scores, "ithmar", 24, "إثمار يبقى خطوة متقدمة لاحقة بعد تثبيت الحاجة التزكوية");
+      return;
+    }
+    if (a.ithmarFit === "need_sharia") {
+      const target = a.dailyTime === "formation_project" ? "alim" : chooseBinaTrack(a);
+      ensurePriority(scores, target, "اخترت أن الأولوية الآن بناء علمي شرعي أوسع من امتداد إثمار", 42);
+      addScore(scores, "ithmar", 20, "إثمار يبقى خيارًا لاحقًا أو موازيًا عند تحقق شروطه وعدم مزاحمة الأصل العلمي");
+      return;
+    }
+    if (a.ithmarFit === "need_awareness") {
+      ensurePriority(scores, "fikri", "اخترت أن الأولوية الآن بناء فكري وتوعوي لا مجرد امتداد تخصصي داخل الأكاديمية", 42);
+      addScore(scores, "ithmar", 20, "إثمار يبقى امتدادًا معتبرًا بعد جذور أو إشراق إذا لم تزاحمه الحاجة الفكرية");
+      return;
+    }
+    if (a.ithmarFit === "need_reform") {
+      ensurePriority(scores, "kharitat_thughur", "اخترت أن الأولوية الآن تحويل البناء إلى عمل إصلاحي ومعرفة الثغر", 40);
+      addScore(scores, "ithmar", 18, "إثمار يبقى امتدادًا علميًا متقدمًا، لكن الحاجة المصرح بها هنا عملية إصلاحية");
+      return;
+    }
+    if (a.ithmarFit === "need_environment") {
+      const target = femaleAdult ? "khadija" : "ithmar";
+      ensurePriority(
+        scores,
+        target,
+        femaleAdult
+          ? "اخترت أن الأولوية الآن بيئة متابعة ومحضن أقرب، ومدرسة خديجة قد تلبي هذا الاحتياج إن انطبقت شروطها"
+          : "اخترت أن الأولوية بيئة متابعة، وإثمار يبقى أقرب امتداد متاح بعد جذور أو إشراق مع الانتباه لحاجتك للمرافقة",
+        38
+      );
+      return;
+    }
+  }
 
   if (needsGeneralFoundation && !wantsWomenSpace && !highDoubt && !theoreticalDoubt) {
     const bina = chooseBinaTrack(a);
@@ -540,6 +587,12 @@ export function calculateRecommendations(a: any) {
     addScore(scores, "hadith", 8, "العمر مناسب للتخصص العلمي");
     addScore(scores, "arqam", 6, "العمر مناسب لتخصص متوسط في السيرة النبوية");
   }
+  if (a.age === "40_plus") {
+    addScore(scores, "bina_muyassar", 34, "العمر فوق الأربعين يرجح مسارًا أرفق يحافظ على الاستمرار دون إثقال");
+    addScore(scores, "bard_yaqin", 24, "برد اليقين مناسب لمن يحتاج تثبيتًا إيمانيًا وتزكويًا في هذه المرحلة");
+    addScore(scores, "bina_asasi", 8, "يبقى التأسيس الشرعي خيارًا ممكنًا إذا اتسع الوقت وقويت الرغبة");
+    softenScores(scores, ["alim", "ithmar", ...OMR_TRACK_IDS], 18, "هذه المسارات طويلة أو انتقائية، فلا تُقدّم غالبًا بعد الأربعين إلا لحاجة واضحة ووقت واسع");
+  }
 
   // --- Impact of new adaptive questions ---
   if (a.struggleReason === "time") {
@@ -754,8 +807,10 @@ export function calculateRecommendations(a: any) {
       ageCaution = "تنبيه: هذا المسار قد يكون متقدماً بعض الشيء على مرحلتك العمرية الحالية.";
     } else if (item.id === "ishraq" && ["21_22", "23_plus"].includes(a.age)) {
       ageCaution = "تنبيه: صممت المرحلة لمن هم ضمن 17-20 سنة. الأفضل اختيار برنامج بمقاس مرحلتك إلا إذا كنت تبحث عن بيئة الشباب تحديداً.";
-    } else if (item.id === "alim" && a.age === "23_plus") {
+    } else if (item.id === "alim" && (a.age === "23_plus" || a.age === "40_plus")) {
       ageCaution = "تنبيه: تم إدراج البرنامج لملائمته العالية لإجاباتك، لكن هذا البرنامج يقبل الأعمار الأصغر في الأصل (مع مرونة يسيرة أحياناً)، فخذ ذلك بعين الاعتبار.";
+    } else if (item.id === "bina_asasi" && a.age === "40_plus") {
+      ageCaution = "تنبيه: المسار الأساسي طويل نسبيًا؛ بعد الأربعين قد يكون المسار الميسّر أرفق إن لم يكن لديك وقت ونفس واضحان.";
     }
     
     if (ageCaution) {

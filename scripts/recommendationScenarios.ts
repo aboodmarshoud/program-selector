@@ -141,6 +141,64 @@ const scenarios: Scenario[] = [
     },
   },
   {
+    name: "juthur graduate with general need keeps ithmar first when it fits",
+    answers: {
+      forWhom: "self",
+      gender: "male",
+      country: "jordan",
+      age: "23_plus",
+      programStatus: "graduated_or_near",
+      knownPrograms: ["juthur"],
+      ithmarFit: "yes_continue",
+      dailyTime: "expanded",
+      needClarity: "general_foundation",
+      selectivity: "ok_test",
+      doubtImpact: "low",
+    },
+    expect: (result) => {
+      const ids = topIds(result, 4);
+      assert(ids[0] === "ithmar", `expected ithmar first for juthur graduate when it fits, got ${ids.join(", ")}`);
+      assert(ids.includes("bina_asasi"), "bina_asasi may remain as an alternative, but should not displace ithmar");
+    },
+  },
+  {
+    name: "juthur graduate can override ithmar for explicit intellectual need",
+    answers: {
+      forWhom: "self",
+      gender: "female",
+      country: "turkey",
+      age: "23_plus",
+      programStatus: "graduated_or_near",
+      knownPrograms: ["juthur"],
+      ithmarFit: "need_awareness",
+      dailyTime: "standard",
+      needClarity: "specific_need",
+      needPattern: ["intellectual_depth"],
+      selectivity: "ok_test",
+      doubtImpact: "ideological_environment",
+    },
+    expect: (result) => {
+      const ids = topIds(result, 4);
+      assert(ids[0] === "fikri", `expected fikri first when graduate says awareness is the need, got ${ids.join(", ")}`);
+      assert(ids.includes("ithmar"), "ithmar should remain visible as the natural next academy step");
+    },
+  },
+  {
+    name: "ithmar fit question appears for juthur or ishraq graduates",
+    answers: {},
+    expect: () => {
+      const ids = visibleQuestions({
+        gender: "male",
+        forWhom: "self",
+        country: "jordan",
+        age: "23_plus",
+        programStatus: "graduated_or_near",
+        knownPrograms: ["juthur"],
+      }).map((question: any) => question.id);
+      assert(ids.includes("ithmarFit"), "expected ithmarFit question for juthur graduate");
+    },
+  },
+  {
     name: "student in multiple programs gets multi-program advice",
     answers: {
       forWhom: "self",
@@ -388,6 +446,41 @@ const scenarios: Scenario[] = [
       assert(!visible.includes("needPattern"), "needPattern should be skipped when the need is general");
       assert(["bina_asasi", "bina_muyassar"].includes(ids[0]), `expected a bina track first, got ${ids.join(", ")}`);
       assert(result.stageInfo?.label === "مرحلتك الآن: بناء", "expected the result to explain the building stage");
+    },
+  },
+  {
+    name: "over forty with general foundation prefers muyassar",
+    answers: {
+      forWhom: "self",
+      gender: "male",
+      age: "40_plus",
+      programStatus: "none",
+      dailyTime: "standard",
+      needClarity: "general_foundation",
+      selectivity: "open",
+      doubtImpact: "low",
+    },
+    expect: (result) => {
+      const ids = topIds(result);
+      assert(ids[0] === "bina_muyassar", `expected bina_muyassar first for over forty general need, got ${ids.join(", ")}`);
+    },
+  },
+  {
+    name: "over forty with strong certainty need prefers bard yaqeen",
+    answers: {
+      forWhom: "self",
+      gender: "female",
+      age: "40_plus",
+      programStatus: "none",
+      dailyTime: "standard",
+      needClarity: "specific_need",
+      needPattern: ["certainty"],
+      selectivity: "open",
+      doubtImpact: "high",
+    },
+    expect: (result) => {
+      const ids = topIds(result);
+      assert(ids[0] === "bard_yaqin", `expected bard_yaqin first for over forty certainty need, got ${ids.join(", ")}`);
     },
   },
   {
