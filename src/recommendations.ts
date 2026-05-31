@@ -214,6 +214,11 @@ function applyStudentHistoryLogic(scores, a) {
   const known = knownPrograms(a);
   if (!known.length) return;
 
+  // صناعة المحاور برنامج سابق توقّف، وبرد اليقين هو امتداده التطويري وبديله الأوسع.
+  if (known.includes("sinaat_mahawir")) {
+    addScore(scores, "bard_yaqin", 60, "برد اليقين هو الامتداد التطويري لبرنامج صناعة المحاور وبديله الأوسع، فهو خطوتك التالية الطبيعية");
+  }
+
   if (current.length > 0 && a.programStatus !== "studying_struggling") {
     current.forEach((id) => addScore(scores, id, 28, "هذا برنامج قائم عندك الآن؛ لذلك نقرأ حاجتك الجديدة مع المحافظة على أصل الاستمرار، ولا نفتح مسارًا آخر إلا لسبب واضح"));
     Object.keys(scores).forEach((id) => {
@@ -1009,13 +1014,16 @@ function buildContextAdvice(a, list) {
   if (hasMultipleCurrent || hasCurrentAndGraduated) {
     return {
       type: "multi_current",
-      title: "تنبيه مهم: أنت بين أكثر من برنامج، فلا تجعل النتيجة تختزل حالتك",
+      title: currentPrograms.length >= 3
+        ? "تنبيه: أنت في ثلاثة برامج أو أكثر — فالأولوية الآن للتثبيت لا للإضافة"
+        : "تنبيه مهم: أنت بين أكثر من برنامج، فلا تجعل النتيجة تختزل حالتك",
       program: list.find((program) => current.includes(program.id)) || currentPrograms[0] || primary,
       programs: currentPrograms,
       graduatedPrograms: graduatedProgramItems,
       message:
         "إجاباتك لا تعني تثبيت برنامج واحد وإسقاط البقية. بما أنك تدرس أكثر من برنامج أو تجمع بين التخرج والدراسة الحالية، فالأصل أن ننظر إلى الحمل كاملًا: ما الذي يستحق الاستمرار، وما الذي لا يزاحم، وما الذي لا يعاد بعد التخرج.",
       points: [
+        "قاعدة الشيخ: «قليلٌ دائم خيرٌ من كثيرٍ منقطع»؛ والأصل لغير المتفرغ برنامجٌ واحد، ولمن عنده وقت لا يزيد على اثنين. فإن كنت في ثلاثة فأكثر فأتمم القائم قبل أيّ إضافة.",
         currentPrograms.length > 1
           ? `برامجك الحالية هي: ${currentPrograms.map((program) => program.name).join("، ")}؛ رتّبها كالتزام واحد كبير لا كقرارات منفصلة.`
           : "برنامجك الحالي يبقى حاضرًا في التقدير، ولا ينبغي أن تسقطه النتيجة لمجرد ظهور احتياج جديد.",
