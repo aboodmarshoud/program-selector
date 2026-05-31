@@ -188,7 +188,30 @@ button { font-family: inherit; }
 .intro-card p { margin: 0; color: var(--muted); line-height: 1.8; }
 .home-secondary-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin: -10px 0 28px; }
 
-.program-map, .golden-tips { margin: 18px auto 0; max-width: 960px; }
+.program-advice { border: 1.5px solid #e2e8f0; border-radius: 18px; background: #f8fafc; padding: 20px 22px; margin-bottom: 16px; }
+.program-advice h3 { margin: 0 0 14px; display: flex; align-items: center; gap: 8px; font-size: 19px; color: #475569; }
+.program-advice ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.program-advice li { background: white; border: 1px solid var(--border); border-radius: 14px; padding: 13px 16px; }
+.program-advice p { margin: 6px 0 8px; line-height: 1.9; color: var(--ink); font-size: 15px; }
+.program-advice a { display: inline-flex; align-items: center; gap: 5px; color: var(--green); text-decoration: none; font-size: 12.5px; font-weight: 600; }
+.advice-tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 999px; }
+.advice-rec { background: #dcfce7; color: #15803d; }
+.advice-warn { background: #fef3c7; color: #92660b; }
+html.dark .program-advice { background: #1e293b; border-color: #334155; }
+html.dark .program-advice li { background: #0f172a; border-color: #334155; }
+.program-map, .golden-tips, .sheikh-faq { margin: 18px auto 0; max-width: 960px; }
+.sheikh-faq { padding: 12px 0 4px; }
+.sheikh-faq-sub { color: var(--muted); margin: 4px 0 16px; font-size: 15px; line-height: 1.8; }
+.faq-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.faq-list li { border: 1.5px solid var(--border); border-radius: 16px; background: #faf8f3; overflow: hidden; }
+.faq-list li.open { border-color: #d9cba6; }
+.faq-q { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; background: none; border: none; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 16px; color: #6b5d3e; text-align: start; }
+.faq-answer { padding: 0 18px 16px; }
+.faq-answer p { margin: 0 0 10px; line-height: 1.95; color: var(--ink); font-size: 15px; }
+.faq-answer a { display: inline-flex; align-items: center; gap: 6px; color: var(--green); text-decoration: none; font-size: 13px; font-weight: 600; }
+.faq-answer a:hover { text-decoration: underline; }
+html.dark .faq-list li { background: #1e293b; border-color: #334155; }
+html.dark .faq-q { color: #cbb994; }
 .program-map {
   max-width: 1120px;
   margin-top: 34px;
