@@ -557,6 +557,19 @@ button { font-family: inherit; }
 }
 .text-answer-input:focus { border-color: var(--green-2); box-shadow: 0 0 0 4px rgba(15, 138, 104, .12); }
 .select-answer-input { cursor: pointer; appearance: auto; }
+.country-select-input {
+  cursor: pointer;
+  appearance: auto;
+  background: white;
+}
+.analytics-updated-at {
+  display: inline-flex;
+  align-items: center;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  padding: 0 4px;
+}
 .select-options-panel {
   display: grid;
   gap: 10px;

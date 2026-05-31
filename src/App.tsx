@@ -1183,6 +1183,19 @@ function countBy(events: any[], getLabel: (event: any) => any) {
     .sort((a, b) => b.value - a.value);
 }
 
+function countWeighted(items: any[], getLabel: (item: any) => any, getWeight: (item: any) => number) {
+  const counts = new Map<string, number>();
+  items.forEach((item) => {
+    const label = getLabel(item);
+    if (!label) return;
+    counts.set(String(label), (counts.get(String(label)) || 0) + getWeight(item));
+  });
+
+  return [...counts.entries()]
+    .map(([name, value]) => ({ name, value: Number(value.toFixed(1)) }))
+    .sort((a, b) => b.value - a.value);
+}
+
 function countAnswerChoices(events: any[], id: string) {
   const counts = new Map<string, number>();
   events.forEach((event) => {
@@ -1224,6 +1237,30 @@ function isCompanionRecommendation(program: any) {
   if (program?.id !== "kharitat_thughur") return false;
   const role = String(program.role || program.recommendationRole || program.badge || "");
   return role.includes("رديف");
+}
+
+function recommendationAppearanceWeight(item: any) {
+  if (item.program?.id === "kharitat_thughur" && item.index > 0 && isCompanionRecommendation(item.program)) return 0.5;
+  return 1;
+}
+
+function programRecommendationAppearances(events: any[]) {
+  const weightedCounts = countWeighted(
+    events.flatMap((event) => (event.recommendations || []).map((program: any, index: number) => ({ program, index }))),
+    (item) => item.program.name || programNameById(item.program.id),
+    recommendationAppearanceWeight
+  );
+  if (!events.length) return [];
+  return weightedCounts.map((item) => ({
+    ...item,
+    value: Number(((item.value / events.length) * 100).toFixed(1)),
+  }));
+}
+
+function formatMetricValue(value: any) {
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue)) return value;
+  return numberValue.toLocaleString("ar", { maximumFractionDigits: 1 });
 }
 
 function rawAnalyticsAnswer(event: any, id: string) {
@@ -1400,7 +1437,7 @@ function AnalyticsDonutSection({ title, description, data, limit = 6, wide = fal
   );
 }
 
-function AnalyticsBarSection({ title, description, data, limit = 10, height = 300, wide = false }: any) {
+function AnalyticsBarSection({ title, description, data, limit = 10, height = 300, wide = false, valueSuffix = "" }: any) {
   const chartData = data.slice(0, limit);
   return (
     <div className={`analytics-chart-card ${wide ? "analytics-chart-wide" : ""}`}>
@@ -1414,7 +1451,7 @@ function AnalyticsBarSection({ title, description, data, limit = 10, height = 30
             <ResponsiveContainer width="100%" height={height}>
               <BarChart data={chartData} layout="vertical" margin={{ top: 8, right: 24, bottom: 8, left: 24 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis type="number" allowDecimals={false} tick={{ fill: "var(--muted)", fontSize: 12 }} />
+                <XAxis type="number" allowDecimals tick={{ fill: "var(--muted)", fontSize: 12 }} />
                 <YAxis dataKey="name" type="category" width={160} tick={{ fill: "var(--ink)", fontSize: 12 }} />
                 <Tooltip />
                 <Bar dataKey="value" fill="#176b54" radius={[0, 8, 8, 0]} />
@@ -1425,7 +1462,7 @@ function AnalyticsBarSection({ title, description, data, limit = 10, height = 30
             {chartData.map((item: any) => (
               <div key={item.name}>
                 <span>{item.name}</span>
-                <strong>{item.value}</strong>
+                <strong>{formatMetricValue(item.value)}{valueSuffix}</strong>
               </div>
             ))}
           </div>
@@ -1465,12 +1502,17 @@ function AnalyticsDashboard({ onBack }: any) {
   const [authorized, setAuthorized] = useState(isLocalAnalyticsPreview || !isSupabaseEnabled);
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   async function refresh() {
     if (!authorized) return;
     setLoading(true);
-    setSummary(await loadAnalyticsSummary());
-    setLoading(false);
+    try {
+      setSummary(await loadAnalyticsSummary());
+      setLastUpdated(new Date());
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -1482,6 +1524,21 @@ function AnalyticsDashboard({ onBack }: any) {
 
   useEffect(() => {
     refresh();
+  }, [authorized]);
+
+  useEffect(() => {
+    if (!authorized) return undefined;
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    const timer = window.setInterval(refreshWhenVisible, 30000);
+    window.addEventListener("focus", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
   }, [authorized]);
 
   async function unlock(event: any) {
@@ -1558,16 +1615,7 @@ function AnalyticsDashboard({ onBack }: any) {
   const knownProgramsData = countAnswerChoices(completedEvents, "knownPrograms").map((item) => ({ ...item, name: programNameById(item.name) }));
   const graduatedProgramsData = countAnswerChoices(completedEvents, "graduatedPrograms").map((item) => ({ ...item, name: programNameById(item.name) }));
   const currentProgramsData = countAnswerChoices(completedEvents, "currentPrograms").map((item) => ({ ...item, name: programNameById(item.name) }));
-  const programData = countBy(
-    completedEvents.flatMap((event) => {
-      const recommendations = event.recommendations || [];
-      const primary = recommendations[0] ? [recommendations[0]] : [];
-      const companions = recommendations.filter((program) => isCompanionRecommendation(program) && program.id !== recommendations[0]?.id);
-      return [...primary, ...companions];
-    }),
-    (program) => program.name || programNameById(program.id)
-  );
-  const alternativeProgramData = countBy(completedEvents.flatMap((event) => (event.recommendations || []).slice(1, 5)), (program) => program.name || program.id);
+  const programData = programRecommendationAppearances(completedEvents);
   const stepCountData = countBy(completedEvents, (event) => event.stepCount ? `${event.stepCount} سؤال` : null);
   const languageData = countBy(completedEvents, (event) => event.context?.language);
   const viewportData = countBy(completedEvents, (event) => {
@@ -1594,7 +1642,7 @@ function AnalyticsDashboard({ onBack }: any) {
   const topSpecializationRoute = specializationRouteData[0];
   const specializationShare = completedEvents.length ? Math.round((specializationEvents.length / completedEvents.length) * 100) : 0;
   const insightItems = [
-    topResult ? { label: "أكثر نتيجة ظهورًا", value: `${topResult.name} (${topResult.value})` } : null,
+    topResult ? { label: "أكثر برنامج ظهورًا", value: `${topResult.name} (${formatMetricValue(topResult.value)}%)` } : null,
     topNeed ? { label: "أبرز احتياج معلن", value: `${topNeed.name} (${topNeed.value})` } : null,
     specializationEvents.length ? { label: "اختاروا مادة تخصص", value: `${specializationEvents.length} (${specializationShare}%)` } : null,
     topSpecialization ? { label: "أكثر مادة تخصص", value: `${topSpecialization.name} (${topSpecialization.value})` } : null,
@@ -1636,6 +1684,11 @@ function AnalyticsDashboard({ onBack }: any) {
         </div>
         <div className="analytics-actions">
           <button className="main-btn" type="button" onClick={refresh}>تحديث البيانات</button>
+          {lastUpdated && (
+            <span className="analytics-updated-at">
+              آخر تحديث: {lastUpdated.toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+            </span>
+          )}
           {isSupabaseEnabled && (
             <button className="ghost-btn" type="button" onClick={async () => {
               await signOutFromAnalytics();
@@ -1662,8 +1715,7 @@ function AnalyticsDashboard({ onBack }: any) {
 
           <AnalyticsSection title="النتائج والترشيحات" description="ما البرامج التي تقود إليها الخوارزمية؟">
             <AnalyticsInsightList title="خلاصة النتائج" items={insightItems} />
-            <AnalyticsBarSection title="البرامج الأكثر ترشيحاً" description="يحسب النتيجة الأولى، ويضيف خارطة الثغور أيضًا عندما تظهر كرديفًا واضحًا." data={programData} wide height={380} />
-            <AnalyticsBarSection title="البدائل الأكثر ظهوراً" description="الترشيحات من المرتبة الثانية إلى الخامسة." data={alternativeProgramData} wide />
+            <AnalyticsBarSection title="نسبة ظهور البرامج في الترشيحات" description="يجمع النتيجة الأولى والبدائل في رسم واحد؛ وخارطة الثغور إذا ظهرت كرديفًا فقط تُحسب نصف ظهور لا ظهورًا كاملًا." data={programData} wide height={420} valueSuffix="%" />
           </AnalyticsSection>
 
           <AnalyticsSection title="الاحتياجات والوقت" description="قراءة نمط الطلب قبل النظر في البرامج.">
@@ -1922,6 +1974,20 @@ export default function ProgramSelector() {
                         placeholder={current.placeholder || ""}
                         autoComplete="country-name"
                       />
+                    </div>
+                  ) : current.id === "country" ? (
+                    <div className="text-answer-wrap">
+                      <select
+                        className="text-answer-input country-select-input"
+                        value={answers[current.id] || ""}
+                        onChange={(event) => choose(current.id, event.target.value)}
+                        autoComplete="country-name"
+                      >
+                        <option value="" disabled>{current.placeholder || "اختر البلد..."}</option>
+                        {currentOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>{opt.title}</option>
+                        ))}
+                      </select>
                     </div>
                   ) : current.inputType === "select" ? (
                     <div className="select-options-panel" role="radiogroup" aria-label={questionTitle(current, answers)}>
