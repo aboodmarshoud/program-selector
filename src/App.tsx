@@ -54,6 +54,7 @@ import {
 } from "./analytics";
 import { isSupabaseEnabled } from "./supabaseClient";
 import { PROGRAMS } from "./programData";
+import { SHEIKH_GUIDANCE } from "./sheikhGuidance";
 import { calculateRecommendations } from "./recommendations";
 import { asArray, choiceRank, hasAnswer, hasChoice } from "./answerUtils";
 import { NEED_BRIDGE_ITEMS, OMR_TRACK_IDS, QUESTIONS, SELF_STUDY_BRIDGES, cleanAnswers, questionSubtitle, questionTitle, visibleQuestions } from "./quizFlow";
@@ -963,6 +964,28 @@ function BridgePlan({ plan }: any) {
   );
 }
 
+function SheikhGuidance() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="sheikh-guidance" data-html2canvas-ignore="true">
+      <button type="button" className="sheikh-guidance-toggle" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
+        <span className="sheikh-guidance-title"><IconScript size={20} stroke={1.8} aria-hidden="true" /> كلمة الشيخ قبل أن تختار</span>
+        <IconChevronDown size={18} stroke={2} aria-hidden="true" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }} />
+      </button>
+      {open && (
+        <ul className="sheikh-guidance-list">
+          {SHEIKH_GUIDANCE.map((item, index) => (
+            <li key={index}>
+              <p>«{item.text}»</p>
+              <a href={item.url} target="_blank" rel="noopener noreferrer">{item.asOf} <IconExternalLink size={14} /></a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
   const list = result.list;
   const primary = list[0];
@@ -1019,6 +1042,7 @@ function ResultView({ result, answers, onOpen, onRestart, onHome }: any) {
 
       <AdviceCard advice={result.advice} onOpen={onOpen} />
       <PathPlanCard plan={showPathPlan ? result.pathPlan : null} />
+      <SheikhGuidance />
 
       <div className="result-main" style={{ borderColor: `${primary.color}55` }}>
         <div className="result-top" style={{ background: `linear-gradient(135deg, ${primary.soft}, #ffffff)` }}>
