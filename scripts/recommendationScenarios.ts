@@ -557,6 +557,59 @@ const scenarios: Scenario[] = [
       assert(result.stageInfo?.label === "مرحلتك الآن: عطاء طويل", "expected long-term giving stage");
     },
   },
+  {
+    name: "quran hifdh question appears only with formation-project time",
+    answers: {},
+    expect: () => {
+      const withTafarrugh = visibleQuestions({ gender: "male", age: "17_20", dailyTime: "formation_project" }).map((q: any) => q.id);
+      const withStandard = visibleQuestions({ gender: "male", age: "17_20", dailyTime: "standard" }).map((q: any) => q.id);
+      assert(withTafarrugh.includes("quranHifz"), "quranHifz should appear for adults with formation-project time");
+      assert(!withStandard.includes("quranHifz"), "quranHifz should not appear outside formation-project time");
+    },
+  },
+  {
+    name: "formation time without quran hifdh excludes alim",
+    answers: {
+      forWhom: "self",
+      gender: "female",
+      age: "23_plus",
+      programStatus: "none",
+      dailyTime: "formation_project",
+      needClarity: "specific_need",
+      needPattern: ["specialized_track"],
+      specializationSubject: "sirah",
+      selectivity: "high_selective",
+      doubtImpact: "low",
+      quranHifz: "partial_or_none",
+    },
+    expect: (result) => {
+      const ids = topIds(result);
+      assert(!ids.includes("alim"), `alim must not be recommended without quran hifdh, got ${ids.join(", ")}`);
+      const alimItem = result.list.find((program: any) => program.id === "alim");
+      assert(!alimItem, "alim should be filtered out of the recommendation list entirely without quran hifdh");
+      assert(result.list[0]?.score > 0, "a real fallback program should be recommended instead of alim");
+    },
+  },
+  {
+    name: "formation time with full quran hifdh allows alim first",
+    answers: {
+      forWhom: "self",
+      gender: "female",
+      age: "23_plus",
+      programStatus: "none",
+      dailyTime: "formation_project",
+      needClarity: "specific_need",
+      needPattern: ["specialized_track"],
+      specializationSubject: "sirah",
+      selectivity: "high_selective",
+      doubtImpact: "low",
+      quranHifz: "full",
+    },
+    expect: (result) => {
+      const ids = topIds(result);
+      assert(ids[0] === "alim", `expected alim first with full quran hifdh, got ${ids.join(", ")}`);
+    },
+  },
 ];
 
 for (const scenario of scenarios) {
