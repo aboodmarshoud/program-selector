@@ -40,5 +40,6 @@ on public.quiz_events
 for select
 to authenticated
 using (
-  lower(auth.jwt() ->> 'email') = lower('YOUR_EMAIL_HERE')
+  -- Replace YOUR_EMAIL_HERE with the same email you set in VITE_ANALYTICS_OWNER_EMAIL.
+  lower(auth.jwt() ->> 'email') = lower('amarshoud2@gmail.com')
 );

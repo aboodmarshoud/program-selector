@@ -52,7 +52,7 @@ import {
   trackAnalyticsEvent,
   type AnalyticsSummary,
 } from "./analytics";
-import { isSupabaseEnabled } from "./supabaseClient";
+import { configuredAnalyticsOwnerEmail, isAnalyticsOwnerSession, isSupabaseEnabled } from "./supabaseClient";
 import { PROGRAMS } from "./programData";
 import { calculateRecommendations } from "./recommendations";
 import { asArray, choiceRank, hasAnswer, hasChoice } from "./answerUtils";
@@ -1591,7 +1591,7 @@ function AnalyticsInsightList({ title, items }: any) {
 function AnalyticsDashboard({ onBack }: any) {
   const [email, setEmail] = useState("");
   const [authMessage, setAuthMessage] = useState("");
-  const [authorized, setAuthorized] = useState(isLocalAnalyticsPreview || !isSupabaseEnabled);
+  const [authorized, setAuthorized] = useState(isLocalAnalyticsPreview);
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -1602,6 +1602,10 @@ function AnalyticsDashboard({ onBack }: any) {
     try {
       setSummary(await loadAnalyticsSummary());
       setLastUpdated(new Date());
+      setAuthMessage("");
+    } catch (error) {
+      setSummary(null);
+      setAuthMessage(`لا يمكن قراءة الإحصائيات بهذا الحساب: ${error instanceof Error ? error.message : "تحقق من صلاحيات Supabase"}`);
     } finally {
       setLoading(false);
     }
@@ -1609,8 +1613,16 @@ function AnalyticsDashboard({ onBack }: any) {
 
   useEffect(() => {
     getAnalyticsSession().then((session) => {
-      if (session) setAuthorized(true);
+      if (isAnalyticsOwnerSession(session)) setAuthorized(true);
+      else if (session) {
+        setAuthMessage("هذا البريد لا يملك صلاحية قراءة الإحصائيات.");
+        setLoading(false);
+      }
       else if (isSupabaseEnabled) setLoading(false);
+      else {
+        setAuthMessage("الإحصائيات الخاصة تحتاج إعداد Supabase في نسخة GitHub Pages.");
+        setLoading(false);
+      }
     });
   }, []);
 
@@ -1621,8 +1633,13 @@ function AnalyticsDashboard({ onBack }: any) {
   async function unlock(event: any) {
     event.preventDefault();
     setAuthMessage("");
+    const normalizedEmail = email.trim().toLowerCase();
+    if (configuredAnalyticsOwnerEmail && normalizedEmail !== configuredAnalyticsOwnerEmail) {
+      setAuthMessage("هذا البريد غير مسموح له بدخول لوحة الإحصائيات.");
+      return;
+    }
     try {
-      await signInToAnalytics(email.trim());
+      await signInToAnalytics(normalizedEmail);
       setAuthMessage("تم إرسال رابط الدخول إلى بريدك. افتحه من نفس الجهاز أو المتصفح.");
     } catch (error) {
       setAuthMessage(`لم نستطع إرسال رابط الدخول: ${error instanceof Error ? error.message : "خطأ غير معروف"}`);

@@ -157,7 +157,7 @@ export async function loadAnalyticsSummary(): Promise<AnalyticsSummary> {
 
       if (error) {
         console.warn("Supabase analytics read failed", error.message);
-        break;
+        throw error;
       }
 
       if (!data || data.length === 0) {
@@ -176,6 +176,8 @@ export async function loadAnalyticsSummary(): Promise<AnalyticsSummary> {
     if (allRows.length > 0) {
       return summarizeAnalytics(allRows.map(rowToEvent));
     }
+
+    return summarizeAnalytics([]);
   }
 
   try {
