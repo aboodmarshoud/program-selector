@@ -24,6 +24,35 @@ create index if not exists quiz_events_result_program_idx on public.quiz_events 
 
 alter table public.quiz_events enable row level security;
 
+create table if not exists public.app_config (
+  key text primary key,
+  value text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.app_config enable row level security;
+
+revoke all on table public.app_config from anon;
+revoke all on table public.app_config from authenticated;
+grant select, insert, update, delete on table public.app_config to service_role;
+
+create or replace function public.get_admin_email()
+returns text
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select lower(value)
+  from public.app_config
+  where key = 'admin_email'
+  limit 1
+$$;
+
+revoke all on function public.get_admin_email() from public;
+grant execute on function public.get_admin_email() to authenticated;
+
 grant insert on public.quiz_events to anon, authenticated;
 grant select on public.quiz_events to authenticated;
 
@@ -40,6 +69,5 @@ on public.quiz_events
 for select
 to authenticated
 using (
-  -- Replace YOUR_EMAIL_HERE with the same email you set in VITE_ANALYTICS_OWNER_EMAIL.
-  lower(auth.jwt() ->> 'email') = lower('amarshoud2@gmail.com')
+  lower(auth.jwt() ->> 'email') = public.get_admin_email()
 );
