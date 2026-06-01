@@ -1378,6 +1378,30 @@ function buildAnalyticsExport(summary: AnalyticsSummary, sections: any[], comple
   };
 }
 
+function buildAnalyticsIndicatorsExport(summary: AnalyticsSummary, sections: any[]) {
+  return {
+    schemaVersion: 1,
+    exportType: "aggregate_indicators",
+    generatedAt: new Date().toISOString(),
+    overview: {
+      visitors: summary.visitors,
+      quizStarted: summary.quizStarted,
+      quizCompleted: summary.quizCompleted,
+      quizAbandoned: summary.quizAbandoned,
+      completionRate: summary.completionRate,
+    },
+    sections: sections.map((section) => ({
+      title: section.title,
+      description: section.description,
+      tables: section.tables.map((table: any) => ({
+        title: table.title,
+        description: table.description || "",
+        rows: analyticsRows(table.rows || []),
+      })),
+    })),
+  };
+}
+
 function downloadJsonFile(data: any, filename: string) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -1774,6 +1798,15 @@ function AnalyticsDashboard({ onBack }: any) {
     },
   ];
 
+  function exportAnalyticsIndicators() {
+    if (!summary) return;
+    const datePart = new Date().toISOString().slice(0, 10);
+    downloadJsonFile(
+      buildAnalyticsIndicatorsExport(summary, reportSections),
+      `program-selector-analytics-indicators-${datePart}.json`
+    );
+  }
+
   function exportAnalyticsData() {
     if (!summary) return;
     const datePart = new Date().toISOString().slice(0, 10);
@@ -1819,7 +1852,11 @@ function AnalyticsDashboard({ onBack }: any) {
           </div>
           <button className="ghost-btn analytics-export-btn" type="button" onClick={exportAnalyticsData} disabled={loading || !summary}>
             <Download size={18} />
-            تصدير البيانات
+            تصدير كل البيانات
+          </button>
+          <button className="ghost-btn analytics-export-btn" type="button" onClick={exportAnalyticsIndicators} disabled={loading || !summary}>
+            <Download size={18} />
+            تصدير المؤشرات العامة
           </button>
           {isSupabaseEnabled && (
             <button className="ghost-btn" type="button" onClick={async () => {

@@ -47,7 +47,6 @@ const LOCAL_EVENTS_KEY = "program_selector_analytics_events";
 const TABLE_NAME = "quiz_events";
 const TRACK_ANALYTICS_FUNCTION = "track-analytics";
 const ANALYTICS_PAGE_SIZE = 1000;
-const ANALYTICS_COMPLETED_DETAILS_LIMIT = 5000;
 
 function getSessionId() {
   let sessionId = sessionStorage.getItem(SESSION_KEY);
@@ -169,17 +168,7 @@ export async function loadAnalyticsSummary(): Promise<AnalyticsSummary> {
       supabase,
       "session_id,event,path,occurred_at,created_at"
     );
-    const { data: completedRows, error: completedError } = await supabase
-      .from(TABLE_NAME)
-      .select("*")
-      .eq("event", "quiz_completed")
-      .order("occurred_at", { ascending: false })
-      .limit(ANALYTICS_COMPLETED_DETAILS_LIMIT);
-
-    if (completedError) {
-      console.warn("Supabase analytics read failed", completedError.message);
-      throw completedError;
-    }
+    const completedRows = await fetchAllAnalyticsRows(supabase, "*", { event: "quiz_completed" });
 
     const completedDetailsByKey = new Map(
       (completedRows || []).map((row: any) => [`${row.session_id}:${row.occurred_at || row.created_at}`, row])
