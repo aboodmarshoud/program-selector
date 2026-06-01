@@ -1946,25 +1946,73 @@ function parseSharedAnswers(): any | null {
 }
 
 export default function ProgramSelector() {
-  const initialMode = () => {
+  const navigationFromUrl = () => {
     const url = new URL(window.location.href);
     if (url.pathname.endsWith("/analytics") || url.searchParams.has("analytics") || url.hash === "#analytics") {
-      return "analytics";
+      return { mode: "analytics", programId: null };
     }
-    return "home";
+    const view = url.searchParams.get("view");
+    const allowedModes = ["programs", "selfStudy", "compare", "compareDynamic", "quiz"];
+    const mode = allowedModes.includes(view || "") ? view : "home";
+    const programId = url.searchParams.get("program");
+    return {
+      mode,
+      programId: programId && PROGRAMS[programId as keyof typeof PROGRAMS] ? programId : null,
+    };
   };
 
   const [sharedAnswers] = useState(() => parseSharedAnswers());
   const [answers, setAnswers] = useState(() => (sharedAnswers ? cleanAnswers(sharedAnswers) : {}));
   const [step, setStep] = useState(() => (sharedAnswers ? 99 : 0));
   const [showResult, setShowResult] = useState(() => Boolean(sharedAnswers));
-  const [openedProgramId, setOpenedProgramId] = useState(null);
-  const [mode, setMode] = useState(() => (sharedAnswers ? "quiz" : initialMode()));
+  const [openedProgramId, setOpenedProgramId] = useState(() => (sharedAnswers ? null : navigationFromUrl().programId));
+  const [mode, setMode] = useState(() => (sharedAnswers ? "quiz" : navigationFromUrl().mode));
   const [darkMode, setDarkMode] = useState(false);
   const completionTrackedRef = useRef(false);
 
+  function navigationUrl(nextMode: string, programId: string | null = null) {
+    const url = new URL(window.location.href);
+    url.hash = "";
+    url.search = "";
+
+    if (nextMode === "analytics") {
+      url.searchParams.set("analytics", "1");
+    } else if (nextMode !== "home") {
+      url.searchParams.set("view", nextMode);
+    }
+
+    if (programId) {
+      url.searchParams.set("program", programId);
+    }
+
+    return `${url.pathname}${url.search}${url.hash}`;
+  }
+
+  function setBrowserNavigation(nextMode: string, programId: string | null = null, replace = false) {
+    const nextUrl = navigationUrl(nextMode, programId);
+    if (window.location.pathname + window.location.search + window.location.hash === nextUrl) return;
+    const method = replace ? "replaceState" : "pushState";
+    window.history[method]({ mode: nextMode, programId }, "", nextUrl);
+  }
+
   useEffect(() => {
     trackAnalyticsEvent("visit");
+  }, []);
+
+  useEffect(() => {
+    setBrowserNavigation(mode, openedProgramId, true);
+  }, []);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const next = navigationFromUrl();
+      setMode(next.mode);
+      setOpenedProgramId(next.programId);
+      if (next.mode !== "quiz") setShowResult(false);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
   useEffect(() => {
@@ -2014,6 +2062,7 @@ export default function ProgramSelector() {
     completionTrackedRef.current = false;
     trackAnalyticsEvent("quiz_started");
     setMode("quiz");
+    setBrowserNavigation("quiz");
   }
 
   function next() {
@@ -2048,22 +2097,31 @@ export default function ProgramSelector() {
     completionTrackedRef.current = false;
     trackAnalyticsEvent("quiz_started");
     setMode("quiz");
+    setBrowserNavigation("quiz");
   }
 
   function goHome() {
     setMode("home");
     setOpenedProgramId(null);
     setShowResult(false);
+    setBrowserNavigation("home");
   }
 
   function navigateMode(nextMode: string) {
     setMode(nextMode);
     setOpenedProgramId(null);
     setShowResult(false);
+    setBrowserNavigation(nextMode);
+  }
+
+  function openProgram(programId: string) {
+    setOpenedProgramId(programId);
+    setBrowserNavigation(mode, programId);
   }
 
   function closeProgram() {
     setOpenedProgramId(null);
+    setBrowserNavigation(mode);
   }
 
   const isAnalyticsView = mode === "analytics" && !openedProgram;
@@ -2099,7 +2157,7 @@ export default function ProgramSelector() {
 
           {mode === "home" && !openedProgram && (
             <motion.div key="home" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }}>
-              <HomeView onStart={startQuiz} onPrograms={() => setMode("programs")} onSelfStudy={() => setMode("selfStudy")} onCompare={() => setMode("compare")} onCompareDynamic={() => setMode("compareDynamic")} />
+              <HomeView onStart={startQuiz} onPrograms={() => navigateMode("programs")} onSelfStudy={() => navigateMode("selfStudy")} onCompare={() => navigateMode("compare")} onCompareDynamic={() => navigateMode("compareDynamic")} />
             </motion.div>
           )}
 
@@ -2111,7 +2169,7 @@ export default function ProgramSelector() {
 
           {mode === "programs" && !openedProgram && (
             <motion.div key="programs" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }}>
-              <ProgramDirectory onOpen={setOpenedProgramId} onBack={goHome} />
+              <ProgramDirectory onOpen={openProgram} onBack={goHome} />
             </motion.div>
           )}
 
@@ -2123,13 +2181,13 @@ export default function ProgramSelector() {
 
           {mode === "compare" && !openedProgram && (
             <motion.div key="compare" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }}>
-              <ComparisonTable onOpen={setOpenedProgramId} onBack={goHome} />
+              <ComparisonTable onOpen={openProgram} onBack={goHome} />
             </motion.div>
           )}
 
           {mode === "compareDynamic" && !openedProgram && (
             <motion.div key="compareDynamic" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }}>
-              <DynamicComparison onOpen={setOpenedProgramId} onBack={goHome} />
+              <DynamicComparison onOpen={openProgram} onBack={goHome} />
             </motion.div>
           )}
 
@@ -2236,7 +2294,7 @@ export default function ProgramSelector() {
 
           {mode === "quiz" && showResult && !openedProgram && (
             <motion.div key="result" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.35 }}>
-              <ResultView result={result} answers={answers} onOpen={setOpenedProgramId} onRestart={restart} onHome={goHome} />
+              <ResultView result={result} answers={answers} onOpen={openProgram} onRestart={restart} onHome={goHome} />
             </motion.div>
           )}
         </AnimatePresence>
