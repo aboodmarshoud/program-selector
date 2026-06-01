@@ -1922,6 +1922,21 @@ function AnalyticsDashboard({ onBack }: any) {
   );
 }
 
+function encodeSharedAnswers(answers: any): string {
+  try { return encodeURIComponent(JSON.stringify(answers)); } catch { return ""; }
+}
+
+function parseSharedAnswers(): any | null {
+  try {
+    const match = window.location.hash.match(/[#&]r=([^&]+)/);
+    if (!match) return null;
+    const obj = JSON.parse(decodeURIComponent(match[1]));
+    return obj && typeof obj === "object" && !Array.isArray(obj) ? obj : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function ProgramSelector() {
   const initialMode = () => {
     const url = new URL(window.location.href);
@@ -1931,11 +1946,12 @@ export default function ProgramSelector() {
     return "home";
   };
 
-  const [answers, setAnswers] = useState({});
-  const [step, setStep] = useState(0);
-  const [showResult, setShowResult] = useState(false);
+  const [sharedAnswers] = useState(() => parseSharedAnswers());
+  const [answers, setAnswers] = useState(() => (sharedAnswers ? cleanAnswers(sharedAnswers) : {}));
+  const [step, setStep] = useState(() => (sharedAnswers ? 99 : 0));
+  const [showResult, setShowResult] = useState(() => Boolean(sharedAnswers));
   const [openedProgramId, setOpenedProgramId] = useState(null);
-  const [mode, setMode] = useState(initialMode);
+  const [mode, setMode] = useState(() => (sharedAnswers ? "quiz" : initialMode()));
   const [darkMode, setDarkMode] = useState(false);
   const completionTrackedRef = useRef(false);
 
@@ -1947,6 +1963,20 @@ export default function ProgramSelector() {
     if (darkMode) document.documentElement.classList.add("dark");
     else document.documentElement.classList.remove("dark");
   }, [darkMode]);
+
+  // مزامنة نتيجة قابلة للمشاركة في رابط الصفحة (hash) دون تلويث سجل التصفح.
+  useEffect(() => {
+    const base = window.location.pathname + window.location.search;
+    if (mode === "quiz" && showResult) {
+      const encoded = encodeSharedAnswers(answers);
+      const nextHash = encoded ? "#r=" + encoded : "";
+      if (nextHash && window.location.hash !== nextHash) {
+        window.history.replaceState(null, "", base + nextHash);
+      }
+    } else if (window.location.hash.startsWith("#r=")) {
+      window.history.replaceState(null, "", base);
+    }
+  }, [mode, showResult, answers]);
 
   const qs = useMemo(() => visibleQuestions(answers), [answers]);
   const current = qs[Math.min(step, qs.length - 1)] || qs[0];
