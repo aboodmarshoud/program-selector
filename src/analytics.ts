@@ -7,6 +7,7 @@ export type AnalyticsEventPayload = {
   event: AnalyticsEventName;
   path: string;
   timestamp: string;
+  detailsLoaded?: boolean;
   resultProgramId?: string;
   stepCount?: number;
   rawAnswers?: Record<string, unknown>;
@@ -45,6 +46,8 @@ const SESSION_KEY = "program_selector_session_id";
 const LOCAL_EVENTS_KEY = "program_selector_analytics_events";
 const TABLE_NAME = "quiz_events";
 const TRACK_ANALYTICS_FUNCTION = "track-analytics";
+const ANALYTICS_PAGE_SIZE = 1000;
+const ANALYTICS_COMPLETED_DETAILS_LIMIT = 5000;
 
 function getSessionId() {
   let sessionId = sessionStorage.getItem(SESSION_KEY);
@@ -91,6 +94,7 @@ function rowToEvent(row: any): AnalyticsEventPayload {
     event: row.event,
     path: row.path,
     timestamp: row.occurred_at || row.created_at,
+    detailsLoaded: row.detailsLoaded,
     resultProgramId: row.result_program_id || undefined,
     stepCount: row.step_count || undefined,
     rawAnswers: row.raw_answers || undefined,
@@ -99,6 +103,38 @@ function rowToEvent(row: any): AnalyticsEventPayload {
     profile: row.profile || undefined,
     context: row.context || undefined,
   };
+}
+
+async function fetchAllAnalyticsRows(supabase: any, select: string, queryOptions: Record<string, unknown> = {}) {
+  let from = 0;
+  let allRows: any[] = [];
+
+  while (true) {
+    let query = supabase
+      .from(TABLE_NAME)
+      .select(select)
+      .order("occurred_at", { ascending: true })
+      .range(from, from + ANALYTICS_PAGE_SIZE - 1);
+
+    Object.entries(queryOptions).forEach(([column, value]) => {
+      query = query.eq(column, value);
+    });
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.warn("Supabase analytics read failed", error.message);
+      throw error;
+    }
+
+    if (!data || data.length === 0) break;
+
+    allRows = [...allRows, ...data];
+    if (data.length < ANALYTICS_PAGE_SIZE) break;
+    from += ANALYTICS_PAGE_SIZE;
+  }
+
+  return allRows;
 }
 
 export async function getAnalyticsSession() {
@@ -129,40 +165,31 @@ export async function signOutFromAnalytics() {
 export async function loadAnalyticsSummary(): Promise<AnalyticsSummary> {
   const supabase = await getSupabaseClient();
   if (supabase) {
-    const pageSize = 1000;
-    let from = 0;
-    let allRows: any[] = [];
+    const lightRows = await fetchAllAnalyticsRows(
+      supabase,
+      "session_id,event,path,occurred_at,created_at"
+    );
+    const { data: completedRows, error: completedError } = await supabase
+      .from(TABLE_NAME)
+      .select("*")
+      .eq("event", "quiz_completed")
+      .order("occurred_at", { ascending: false })
+      .limit(ANALYTICS_COMPLETED_DETAILS_LIMIT);
 
-    while (true) {
-      const { data, error } = await supabase
-        .from(TABLE_NAME)
-        .select("*")
-        .order("occurred_at", { ascending: true })
-        .range(from, from + pageSize - 1);
-
-      if (error) {
-        console.warn("Supabase analytics read failed", error.message);
-        throw error;
-      }
-
-      if (!data || data.length === 0) {
-        break;
-      }
-
-      allRows = [...allRows, ...data];
-
-      if (data.length < pageSize) {
-        break;
-      }
-
-      from += pageSize;
+    if (completedError) {
+      console.warn("Supabase analytics read failed", completedError.message);
+      throw completedError;
     }
 
-    if (allRows.length > 0) {
-      return summarizeAnalytics(allRows.map(rowToEvent));
-    }
+    const completedDetailsByKey = new Map(
+      (completedRows || []).map((row: any) => [`${row.session_id}:${row.occurred_at || row.created_at}`, row])
+    );
+    const mergedRows = lightRows.map((row) => {
+      if (row.event !== "quiz_completed") return { ...row, detailsLoaded: false };
+      return completedDetailsByKey.get(`${row.session_id}:${row.occurred_at || row.created_at}`) || { ...row, detailsLoaded: false };
+    });
 
-    return summarizeAnalytics([]);
+    return summarizeAnalytics(mergedRows.map(rowToEvent));
   }
 
   try {

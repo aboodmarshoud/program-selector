@@ -1630,7 +1630,8 @@ function AnalyticsDashboard({ onBack }: any) {
     { label: "دخلوا ولم يتموا", value: summary?.quizAbandoned ?? 0 },
   ];
 
-  const completedEvents = (summary?.events || []).filter((event) => event.event === "quiz_completed");
+  const allCompletedEvents = (summary?.events || []).filter((event) => event.event === "quiz_completed");
+  const completedEvents = allCompletedEvents.filter((event) => event.detailsLoaded !== false);
   const startedEvents = (summary?.events || []).filter((event) => event.event === "quiz_started");
   const visitEvents = (summary?.events || []).filter((event) => event.event === "visit");
   const funnelData = [
@@ -1639,7 +1640,7 @@ function AnalyticsDashboard({ onBack }: any) {
     { name: "أتموا الاختبار", value: summary?.quizCompleted ?? 0 },
     { name: "بدأوا ولم يتموا", value: summary?.quizAbandoned ?? 0 },
   ];
-  const completionTimelineData = countByDay(completedEvents);
+  const completionTimelineData = countByDay(allCompletedEvents);
   const countryData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "country"));
   const ageData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "age"));
   const genderData = countBy(completedEvents, (event) => analyticsAnswerValue(event, "gender"));
@@ -1695,12 +1696,12 @@ function AnalyticsDashboard({ onBack }: any) {
     topSpecialization ? { label: "أكثر مادة تخصص", value: `${topSpecialization.name} (${topSpecialization.value})` } : null,
     topSpecializationRoute ? { label: "أكثر توجيه بعد التخصص", value: `${topSpecializationRoute.name} (${topSpecializationRoute.value})` } : null,
     topCountry ? { label: "أكثر بلد حضورًا", value: `${topCountry.name} (${topCountry.value})` } : null,
-    { label: "إجمالي النتائج المكتملة", value: completedEvents.length },
+    { label: "إجمالي النتائج المكتملة", value: allCompletedEvents.length },
   ].filter(Boolean);
   const usageInsightItems = [
     { label: "زيارات مسجلة", value: visitEvents.length },
     { label: "بدايات اختبار", value: startedEvents.length },
-    { label: "نتائج مكتملة", value: completedEvents.length },
+    { label: "نتائج مكتملة", value: allCompletedEvents.length },
     { label: "نسبة الإتمام", value: `${summary?.completionRate ?? 0}%` },
   ];
   const reportSections = [
