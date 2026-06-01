@@ -1,5 +1,4 @@
-import { useMemo, useState, useRef, useEffect, type CSSProperties } from "react";
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Suspense, lazy, useMemo, useState, useRef, useEffect, type CSSProperties } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Download, Moon, Sun } from "lucide-react";
 import {
@@ -59,6 +58,12 @@ import { asArray, choiceRank, hasAnswer, hasChoice } from "./answerUtils";
 import { NEED_BRIDGE_ITEMS, OMR_TRACK_IDS, QUESTIONS, SELF_STUDY_BRIDGES, cleanAnswers, questionSubtitle, questionTitle, visibleQuestions } from "./quizFlow";
 
 const isLocalAnalyticsPreview = import.meta.env.DEV;
+
+const MultiProgramRadarChart = lazy(() => import("./LazyCharts").then((module) => ({ default: module.MultiProgramRadarChart })));
+const DimensionRadarChart = lazy(() => import("./LazyCharts").then((module) => ({ default: module.DimensionRadarChart })));
+const AnalyticsTimelineChart = lazy(() => import("./LazyCharts").then((module) => ({ default: module.AnalyticsTimelineChart })));
+const AnalyticsDonutChart = lazy(() => import("./LazyCharts").then((module) => ({ default: module.AnalyticsDonutChart })));
+const AnalyticsBarChart = lazy(() => import("./LazyCharts").then((module) => ({ default: module.AnalyticsBarChart })));
 
 
 function isBinaProgram(program) {
@@ -747,15 +752,9 @@ function DynamicComparison({ onOpen, onBack }: any) {
                 <p>مقارنة البناء العلمي، الوعي، والمهاري بين البرامج المحددة</p>
              </div>
              <div className="chart-visual">
-                <ResponsiveContainer width="100%" height={320}>
-                  <RadarChart cx="50%" cy="50%" outerRadius="75%" data={chartData}>
-                    <PolarGrid stroke="var(--border)" />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: "var(--ink)", fontSize: 13, fontWeight: 700 }} />
-                    {selectedPrograms.map((p, i) => (
-                      <Radar key={p.id} name={p.name} dataKey={`P${i}`} stroke={radarColor(i)} fill={radarColor(i)} fillOpacity={0.22} strokeWidth={2.5} />
-                    ))}
-                  </RadarChart>
-                </ResponsiveContainer>
+                <Suspense fallback={<div className="analytics-empty">...</div>}>
+                  <MultiProgramRadarChart data={chartData} programs={selectedPrograms} radarColor={radarColor} />
+                </Suspense>
              </div>
              <div className="chart-legend">
                 {selectedPrograms.map((p, i) => (
@@ -784,28 +783,9 @@ function DimensionChart({ profile, program }: any) {
         <p>مدى ملاءمة البرنامج لاحتياجك الحالي في ٥ أبعاد</p>
       </div>
       <div className="chart-visual">
-        <ResponsiveContainer width="100%" height={280}>
-          <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
-            <PolarGrid stroke="var(--border)" />
-            <PolarAngleAxis dataKey="subject" tick={{ fill: "var(--ink)", fontSize: 13, fontWeight: 700 }} />
-            <Radar
-              name="احتياجك"
-              dataKey="A"
-              stroke={RESULT_USER_RADAR}
-              fill={RESULT_USER_RADAR}
-              fillOpacity={0.26}
-              strokeWidth={2}
-            />
-            <Radar
-              name={program.name}
-              dataKey="B"
-              stroke={RESULT_PROGRAM_RADAR}
-              fill={RESULT_PROGRAM_RADAR}
-              fillOpacity={0.2}
-              strokeWidth={2.5}
-            />
-          </RadarChart>
-        </ResponsiveContainer>
+        <Suspense fallback={<div className="analytics-empty">...</div>}>
+          <DimensionRadarChart data={data} programName={program.name} userColor={RESULT_USER_RADAR} programColor={RESULT_PROGRAM_RADAR} />
+        </Suspense>
       </div>
       <div className="chart-legend">
         <div className="legend-item"><span className="legend-dot user-dot" /> احتياجك</div>
@@ -1461,21 +1441,9 @@ function AnalyticsTimeline({ title, description, data, wide = true }: any) {
       </div>
       {data.length ? (
         <div className="analytics-chart">
-          <ResponsiveContainer width="100%" height={260}>
-            <AreaChart data={data} margin={{ top: 12, right: 24, left: 10, bottom: 8 }}>
-              <defs>
-                <linearGradient id="analyticsAreaFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#176b54" stopOpacity={0.34} />
-                  <stop offset="95%" stopColor="#176b54" stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="name" tick={{ fill: "var(--muted)", fontSize: 12 }} />
-              <YAxis allowDecimals={false} tick={{ fill: "var(--muted)", fontSize: 12 }} />
-              <Tooltip />
-              <Area type="monotone" dataKey="value" stroke="#176b54" strokeWidth={2.5} fill="url(#analyticsAreaFill)" />
-            </AreaChart>
-          </ResponsiveContainer>
+          <Suspense fallback={<div className="analytics-empty">...</div>}>
+            <AnalyticsTimelineChart data={data} />
+          </Suspense>
         </div>
       ) : (
         <p className="analytics-empty">لا توجد بيانات زمنية كافية بعد.</p>
@@ -1496,16 +1464,9 @@ function AnalyticsDonutSection({ title, description, data, limit = 6, wide = fal
       {chartData.length ? (
         <div className="analytics-donut-layout">
           <div className="analytics-chart analytics-donut-chart">
-            <ResponsiveContainer width="100%" height={230}>
-              <PieChart>
-                <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={58} outerRadius={88} paddingAngle={3}>
-                  {chartData.map((item: any, index: number) => (
-                    <Cell key={item.name} fill={ANALYTICS_COLORS[index % ANALYTICS_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            <Suspense fallback={<div className="analytics-empty">...</div>}>
+              <AnalyticsDonutChart data={chartData} colors={ANALYTICS_COLORS} />
+            </Suspense>
             <div className="analytics-donut-total">
               <strong>{total}</strong>
               <span>إجمالي</span>
@@ -1538,17 +1499,9 @@ function AnalyticsBarSection({ title, description, data, limit = 10, height = 30
       {chartData.length ? (
         <>
           <div className="analytics-chart">
-            <ResponsiveContainer width="100%" height={height}>
-              <BarChart data={chartData} layout="vertical" margin={{ top: 8, right: 24, bottom: 8, left: 24 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis type="number" allowDecimals tick={{ fill: "var(--muted)", fontSize: 12 }} />
-                <YAxis dataKey="name" type="category" width={160} tick={{ fill: "var(--ink)", fontSize: 12 }} />
-                <Tooltip
-                  formatter={(value: any, _name: any, item: any) => item?.payload?.displayValue || `${formatMetricValue(value)}${valueSuffix}`}
-                />
-                <Bar dataKey="value" fill="#176b54" radius={[0, 8, 8, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <Suspense fallback={<div className="analytics-empty">...</div>}>
+              <AnalyticsBarChart data={chartData} height={height} valueSuffix={valueSuffix} formatMetricValue={formatMetricValue} />
+            </Suspense>
           </div>
           <div className="analytics-list">
             {chartData.map((item: any) => (

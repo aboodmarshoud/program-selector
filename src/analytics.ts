@@ -1,4 +1,4 @@
-import { isSupabaseEnabled, supabase } from "./supabaseClient";
+import { getSupabaseClient, isSupabaseEnabled } from "./supabaseClient";
 
 export type AnalyticsEventName = "visit" | "quiz_started" | "quiz_completed";
 
@@ -121,12 +121,14 @@ function rowToEvent(row: any): AnalyticsEventPayload {
 }
 
 export async function getAnalyticsSession() {
+  const supabase = await getSupabaseClient();
   if (!supabase) return null;
   const { data } = await supabase.auth.getSession();
   return data.session;
 }
 
 export async function signInToAnalytics(email: string) {
+  const supabase = await getSupabaseClient();
   if (!supabase) throw new Error("Supabase is not configured");
   const configuredRedirect = import.meta.env.VITE_AUTH_REDIRECT_URL as string | undefined;
   const redirectTo = configuredRedirect || `${window.location.origin}${window.location.pathname}?analytics=1`;
@@ -138,11 +140,13 @@ export async function signInToAnalytics(email: string) {
 }
 
 export async function signOutFromAnalytics() {
+  const supabase = await getSupabaseClient();
   if (!supabase) return;
   await supabase.auth.signOut();
 }
 
 export async function loadAnalyticsSummary(): Promise<AnalyticsSummary> {
+  const supabase = await getSupabaseClient();
   if (supabase) {
     const pageSize = 1000;
     let from = 0;
@@ -206,10 +210,13 @@ export function trackAnalyticsEvent(event: AnalyticsEventName, details: Partial<
 
   saveLocalEvent(payload);
 
-  if (isSupabaseEnabled && supabase) {
-    supabase.from(TABLE_NAME).insert(eventToRow(payload)).then(({ error }) => {
-      if (error) console.warn("Supabase analytics insert failed", error.message);
-    });
+  if (isSupabaseEnabled) {
+    getSupabaseClient()
+      .then((supabase) => supabase?.from(TABLE_NAME).insert(eventToRow(payload)))
+      .then((result) => {
+        if (result?.error) console.warn("Supabase analytics insert failed", result.error.message);
+      })
+      .catch((error) => console.warn("Supabase analytics insert failed", error.message));
   }
 
   const body = JSON.stringify(payload);

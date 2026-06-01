@@ -9,3 +9,9 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </StrictMode>,
 );
+
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/program-selector/sw.js', { scope: '/program-selector/' }).catch(() => undefined);
+  });
+}
