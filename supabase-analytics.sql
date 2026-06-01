@@ -14,13 +14,19 @@ create table if not exists public.quiz_events (
   readable_answers jsonb,
   recommendations jsonb,
   profile jsonb,
-  context jsonb
+  context jsonb,
+  request_fingerprint text
 );
+
+alter table public.quiz_events
+add column if not exists request_fingerprint text;
 
 create index if not exists quiz_events_event_idx on public.quiz_events (event);
 create index if not exists quiz_events_occurred_at_idx on public.quiz_events (occurred_at desc);
 create index if not exists quiz_events_country_idx on public.quiz_events (country);
 create index if not exists quiz_events_result_program_idx on public.quiz_events (result_program_id);
+create index if not exists quiz_events_session_created_idx on public.quiz_events (session_id, created_at desc);
+create index if not exists quiz_events_fingerprint_created_idx on public.quiz_events (request_fingerprint, created_at desc);
 
 alter table public.quiz_events enable row level security;
 
@@ -53,15 +59,11 @@ $$;
 revoke all on function public.get_admin_email() from public;
 grant execute on function public.get_admin_email() to authenticated;
 
-grant insert on public.quiz_events to anon, authenticated;
+revoke insert on public.quiz_events from anon, authenticated;
+grant insert, select on public.quiz_events to service_role;
 grant select on public.quiz_events to authenticated;
 
 drop policy if exists "Anyone can add analytics events" on public.quiz_events;
-create policy "Anyone can add analytics events"
-on public.quiz_events
-for insert
-to public
-with check (true);
 
 drop policy if exists "Only owner can read analytics events" on public.quiz_events;
 create policy "Only owner can read analytics events"

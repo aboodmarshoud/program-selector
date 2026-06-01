@@ -44,6 +44,7 @@ export type AnalyticsSummary = {
 const SESSION_KEY = "program_selector_session_id";
 const LOCAL_EVENTS_KEY = "program_selector_analytics_events";
 const TABLE_NAME = "quiz_events";
+const TRACK_ANALYTICS_FUNCTION = "track-analytics";
 
 function getSessionId() {
   let sessionId = sessionStorage.getItem(SESSION_KEY);
@@ -81,26 +82,6 @@ export function summarizeAnalytics(events: AnalyticsEventPayload[]): AnalyticsSu
     quizAbandoned,
     completionRate: starters.size ? Math.round((completers.size / starters.size) * 100) : 0,
     events,
-  };
-}
-
-function eventToRow(event: AnalyticsEventPayload) {
-  const rawAnswers = event.rawAnswers || {};
-  return {
-    session_id: event.sessionId,
-    event: event.event,
-    path: event.path,
-    occurred_at: event.timestamp,
-    result_program_id: event.resultProgramId || null,
-    step_count: event.stepCount || null,
-    country: typeof rawAnswers.country === "string" ? rawAnswers.country : null,
-    gender: typeof rawAnswers.gender === "string" ? rawAnswers.gender : null,
-    age: typeof rawAnswers.age === "string" ? rawAnswers.age : null,
-    raw_answers: event.rawAnswers || null,
-    readable_answers: event.readableAnswers || null,
-    recommendations: event.recommendations || null,
-    profile: event.profile || null,
-    context: event.context || null,
   };
 }
 
@@ -212,11 +193,11 @@ export function trackAnalyticsEvent(event: AnalyticsEventName, details: Partial<
 
   if (isSupabaseEnabled) {
     getSupabaseClient()
-      .then((supabase) => supabase?.from(TABLE_NAME).insert(eventToRow(payload)))
+      .then((supabase) => supabase?.functions.invoke(TRACK_ANALYTICS_FUNCTION, { body: payload }))
       .then((result) => {
-        if (result?.error) console.warn("Supabase analytics insert failed", result.error.message);
+        if (result?.error) console.warn("Supabase analytics function failed", result.error.message);
       })
-      .catch((error) => console.warn("Supabase analytics insert failed", error.message));
+      .catch((error) => console.warn("Supabase analytics function failed", error.message));
   }
 
   const body = JSON.stringify(payload);
