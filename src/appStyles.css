@@ -589,8 +589,46 @@ button { font-family: inherit; }
 .option-card:hover { border-color: #8fc8b3; transform: translateY(-2px) scale(1.006); box-shadow: 0 10px 24px rgba(39,32,20,.07); }
 .option-card.selected { background: linear-gradient(135deg, #eaf7f1, #f1fbf7); border-color: var(--green-2); box-shadow: var(--shadow-lift); transform: scale(1.01); }
 .select-option-card { min-height: 58px; padding-block: 12px; }
+.program-options-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+  max-height: min(430px, 58vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 2px 2px 10px;
+  scrollbar-width: thin;
+}
+.program-option-card {
+  min-height: 54px;
+  align-items: center;
+  gap: 10px;
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+.program-option-card:hover { transform: translateY(-1px); }
+.program-option-card.selected { transform: none; box-shadow: 0 8px 18px rgba(15, 138, 104, .14); }
+.program-option-card .option-icon {
+  width: 34px;
+  height: 34px;
+  flex-basis: 34px;
+  border-radius: 10px;
+}
+.program-option-card .option-copy strong { font-size: 14px; line-height: 1.45; }
+.program-option-card .option-copy small { display: none; }
 .option-icon { width: 44px; height: 44px; flex: 0 0 44px; display: flex; align-items: center; justify-content: center; line-height: 1; background: #f6efe3; color: var(--green); border-radius: 12px; overflow: hidden; }
 .rank-badge { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: white; background: var(--green); font-size: 14px; line-height: 1.2; margin: auto; }
+.check-badge {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: white;
+  background: var(--green);
+  line-height: 1;
+  margin: auto;
+}
 .option-copy {
   flex: 1 1 auto;
   min-width: 0;

@@ -65,6 +65,11 @@ const AnalyticsTimelineChart = lazy(() => import("./LazyCharts").then((module) =
 const AnalyticsDonutChart = lazy(() => import("./LazyCharts").then((module) => ({ default: module.AnalyticsDonutChart })));
 const AnalyticsBarChart = lazy(() => import("./LazyCharts").then((module) => ({ default: module.AnalyticsBarChart })));
 
+const PROGRAM_MULTI_QUESTION_IDS = new Set(["knownPrograms", "graduatedPrograms", "currentPrograms"]);
+
+function isProgramMultiQuestion(questionId?: string) {
+  return questionId ? PROGRAM_MULTI_QUESTION_IDS.has(questionId) : false;
+}
 
 function isBinaProgram(program) {
   return program?.id === "bina_asasi" || program?.id === "bina_muyassar";
@@ -353,10 +358,10 @@ function optionIconForValue(value = "", questionId = "") {
   if (value.includes("omr") || value.includes("reform") || value.includes("depth") || value.includes("kharitat")) return IconTargetArrow;
   if (value.includes("yaqin") || value.includes("certainty")) return IconDroplet;
   if (value.includes("khadija")) return IconUserHeart;
-  if (value.includes("buthur") || value.includes("none") || value.includes("did_not_try") || value.includes("10_11") || value.includes("age_12") || value.includes("10_12")) return IconSeedling;
+  if (value.includes("buthur") || value.includes("none") || value.includes("did_not_try") || value.includes("10_12")) return IconSeedling;
   if (value.includes("juthur")) return IconPlant;
   if (value.includes("ghiras")) return IconTree;
-  if (value.includes("ishraq") || value.includes("ithmar") || value.includes("light") || value.includes("gentle") || value.includes("17_20")) return IconSun;
+  if (value.includes("ishraq") || value.includes("ithmar") || value.includes("light") || value.includes("gentle") || value.includes("15_18") || value.includes("17_20")) return IconSun;
   if (value.includes("bahith")) return IconSearch;
   if (value.includes("daiya")) return IconSpeakerphone;
   if (value.includes("murabbi") || value.includes("relational")) return IconUsersGroup;
@@ -2039,6 +2044,8 @@ export default function ProgramSelector() {
   const qs = useMemo(() => visibleQuestions(answers), [answers]);
   const current = qs[Math.min(step, qs.length - 1)] || qs[0];
   const currentOptions = current?.options ? current.options(answers).filter(Boolean) : [];
+  const isProgramPicker = isProgramMultiQuestion(current?.id);
+  const selectedProgramCount = isProgramPicker ? asArray(answers[current.id]).length : 0;
   const result = useMemo(() => calculateRecommendations(answers), [answers]);
   const openedProgram = openedProgramId ? result.list.find((p) => p.id === openedProgramId) || PROGRAMS[openedProgramId] : null;
   const progress = qs.length ? Math.round(((Math.min(step, qs.length - 1) + (hasAnswer(answers[current?.id]) ? 1 : 0)) / qs.length) * 100) : 0;
@@ -2216,7 +2223,9 @@ export default function ProgramSelector() {
                     {questionSubtitle(current, answers) && <p>{questionSubtitle(current, answers)}</p>}
                     {current.multi && (
                       <p className="multi-hint">
-                        {current.id === "needPattern"
+                        {isProgramPicker
+                          ? `اختر برنامجًا أو أكثر. المختار: ${selectedProgramCount}`
+                          : current.id === "needPattern"
                           ? "انتبه: اختر حسب الأولوية. أول خيار تضغطه سيُحسب كأعلى احتياج عندك، ثم الثاني، ثم ما بعده؛ وهذا الترتيب يؤثر في الترشيح."
                           : "يمكنك اختيار أكثر من خيار."}
                       </p>
@@ -2266,16 +2275,21 @@ export default function ProgramSelector() {
                       ))}
                     </div>
                   ) : (
-                    <div className="options-grid">
+                    <div className={`options-grid ${isProgramPicker ? "program-options-grid" : ""}`}>
                       {currentOptions.map((opt) => (
                         <button
-                          className={`option-card ${hasChoice(answers[current.id], opt.value) ? "selected" : ""}`}
+                          className={`option-card ${isProgramPicker ? "program-option-card" : ""} ${hasChoice(answers[current.id], opt.value) ? "selected" : ""}`}
                           type="button"
                           key={opt.value}
                           onClick={() => choose(current.id, opt.value)}
+                          aria-pressed={hasChoice(answers[current.id], opt.value)}
                         >
                           <span className="option-icon">
-                            {current.multi && hasChoice(answers[current.id], opt.value) ? <b className="rank-badge">{choiceRank(answers[current.id], opt.value) + 1}</b> : <OptionGlyph option={opt} questionId={current.id} />}
+                            {current.multi && hasChoice(answers[current.id], opt.value) ? (
+                              <b className={isProgramPicker ? "check-badge" : "rank-badge"}>{isProgramPicker ? <IconCheck size={16} stroke={3} /> : choiceRank(answers[current.id], opt.value) + 1}</b>
+                            ) : (
+                              <OptionGlyph option={opt} questionId={current.id} />
+                            )}
                           </span>
                           <span className="option-copy"><strong>{opt.title}</strong>{opt.sub && <small>{opt.sub}</small>}</span>
                         </button>

@@ -55,11 +55,11 @@ const scenarios: Scenario[] = [
     },
   },
   {
-    name: "alim fityan appears for eligible twelve-year-old boys",
+    name: "alim fityan appears for eligible early-teen boys",
     answers: {
       forWhom: "child",
       gender: "male",
-      age: "age_12",
+      age: "13_14",
       programStatus: "none",
       dailyTime: "expanded",
       needClarity: "specific_need",
@@ -77,7 +77,7 @@ const scenarios: Scenario[] = [
     answers: {
       forWhom: "child",
       gender: "female",
-      age: "age_12",
+      age: "13_14",
       programStatus: "none",
       dailyTime: "expanded",
       needClarity: "specific_need",

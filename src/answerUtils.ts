@@ -42,11 +42,11 @@ export function hasAnswer(value: unknown): boolean {
 }
 
 export function isAgeAtLeast15(a: AnswerMap): boolean {
-  return ["15_16", "17_18", "17_20", "19_20", "21_25", "21_22", "26_40", "23_39", "23_plus", "40_plus"].includes(a.age);
+  return ["15_18", "15_16", "17_18", "17_20", "19_20", "21_25", "21_22", "26_40", "23_39", "23_plus", "40_plus"].includes(a.age);
 }
 
 export function isYouthAcademyAge(a: AnswerMap): boolean {
-  return ["7_9", "10_11", "age_12", "10_12", "13_14", "15_16", "17_18", "17_20"].includes(a.age);
+  return ["7_9", "10_12", "13_14", "15_18", "15_16", "17_18", "17_20"].includes(a.age);
 }
 
 export function isCurrentStatus(a: AnswerMap): boolean {

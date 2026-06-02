@@ -61,20 +61,20 @@ function isEligible(programId, a) {
     case "jeel_new":
       return age === "7_9";
     case "buthur":
-      return ["10_11", "age_12", "10_12", "13_14"].includes(age) && !completedJuthurOrIshraq(a);
+      return ["10_12"].includes(age) && !completedJuthurOrIshraq(a);
     case "juthur":
     case "ghiras":
-      return ["10_12", "13_14", "15_16", "17_20"].includes(age) && !isGraduatedStatus(a) && !completedJuthurOrIshraq(a);
+      return ["13_14"].includes(age) && !isGraduatedStatus(a) && !completedJuthurOrIshraq(a);
     case "alim_fityan":
-      return a.gender === "male" && ["age_12", "13_14"].includes(age);
+      return a.gender === "male" && ["10_12", "age_12", "13_14"].includes(age);
     case "ishraq":
-      return ["15_16", "17_18", "17_20"].includes(age) && !completedJuthurOrIshraq(a) && !hasKnown(a, "ishraq");
+      return ["15_18", "15_16", "17_18", "17_20"].includes(age) && !completedJuthurOrIshraq(a) && !hasKnown(a, "ishraq");
     case "ithmar":
-      return ["13_14", "15_16", "17_18", "17_20", "19_20", "21_25", "21_22", "26_40", "23_39", "23_plus", "40_plus"].includes(age) && completedJuthurOrIshraq(a);
+      return ["13_14", "15_18", "15_16", "17_18", "17_20", "19_20", "21_25", "21_22", "26_40", "23_39", "23_plus", "40_plus"].includes(age) && completedJuthurOrIshraq(a);
     case "khadija":
       return a.gender === "female" && adult;
     case "alim":
-      return ["15_16", "17_18", "17_20", "19_20", "21_25", "21_22"].includes(age);
+      return ["15_18", "15_16", "17_18", "17_20", "19_20", "21_25", "21_22"].includes(age);
     case "bina_asasi":
     case "bina_muyassar":
     case "fikri":
@@ -176,13 +176,12 @@ function chooseBinaTrack(a) {
 function chooseAcademyTrack(a) {
   if (completedJuthurOrIshraq(a)) return "ithmar";
   if (a.age === "7_9") return "jeel_new";
-  if (a.age === "10_11" || a.age === "10_12") return "buthur";
-  if (a.gender === "male" && a.age === "age_12") return "alim_fityan";
-  if (a.age === "13_14" || a.age === "15_16") {
+  if (a.age === "10_12") return "buthur";
+  if (a.age === "13_14") {
     if (a.gender === "male" && a.age === "13_14" && (a.selectivity === "ok_test" || a.selectivity === "high_selective")) return "alim_fityan";
     return a.selectivity === "ok_test" || a.selectivity === "high_selective" ? "juthur" : "ghiras";
   }
-  if ((a.age === "17_18" || a.age === "17_20") && !completedJuthurOrIshraq(a) && !hasKnown(a, "ishraq")) return "ishraq";
+  if ((a.age === "15_18" || a.age === "15_16" || a.age === "17_18" || a.age === "17_20") && !completedJuthurOrIshraq(a) && !hasKnown(a, "ishraq")) return "ishraq";
   return null;
 }
 
@@ -549,24 +548,18 @@ export function calculateRecommendations(a: any) {
   });
 
   if (a.age === "7_9") addScore(scores, "jeel_new", 130, "العمر يعطي أولوية للمسار الجديد في أكاديمية الجيل الصاعد المخصص للأعمار 7–9");
-  if (a.age === "10_11" || a.age === "10_12") addScore(scores, "buthur", 120, "العمر يعطي أولوية مطلقة لمسار بذور المخصص لهذه المرحلة");
-  if (a.age === "age_12") {
-    addScore(scores, "buthur", 82, "العمر ما زال مناسبًا لمسار بذور");
+  if (a.age === "10_12") {
+    addScore(scores, "buthur", 120, "العمر يعطي أولوية مطلقة لمسار بذور المخصص لهذه المرحلة");
     if (a.gender === "male") {
-      addScore(scores, "alim_fityan", 90, "العمر والجنس يوافقان شرط مسار الفتيان في برنامج عالِم");
+      addScore(scores, "alim_fityan", 36, "إذا كان العمر 12 سنة ضمن هذه الفئة فقد يناسبه مسار الفتيان في برنامج عالِم");
     }
   }
-  if (a.age === "13_14" || a.age === "15_16") {
+  if (a.age === "13_14") {
     addScore(scores, "ghiras", 36, "العمر يعطي أولوية للمسار العام في الأكاديمية");
     addScore(scores, "juthur", 34, "العمر يسمح بالمسار الخاص عند توفر الجدية والقبول");
     if (a.gender === "male" && a.age === "13_14") {
       addScore(scores, "alim_fityan", 52, "مسار الفتيان في عالِم مخصص للذكور من 12 إلى 14 سنة");
     }
-    if (a.age === "15_16") {
-      addScore(scores, "bina_muyassar", 10, "العمر فوق 15 فيمكن البدء بتأسيس شرعي ميسر");
-      addScore(scores, "bina_asasi", 8, "العمر فوق 15 فيمكن دخول البناء المنهجي");
-    }
-
     // Curriculum insights for Ghiras/Juthur (Tazkiyah, Fikri, and Foundational)
     if (a.needPattern?.includes("certainty") || a.doubtImpact) {
       addScore(scores, "juthur", 15, "المسار الخاص في هذه المرحلة يعتني بالبناء الإيماني والتثبيت التربوي المناسب للعمر");
@@ -577,7 +570,7 @@ export function calculateRecommendations(a: any) {
       addScore(scores, "ghiras", 10, "مسار غراس يقدم تأسيساً فكرياً يناسب هذه المرحلة");
     }
   }
-  if (a.age === "17_18" || a.age === "17_20") {
+  if (a.age === "15_18" || a.age === "15_16" || a.age === "17_18" || a.age === "17_20") {
     addScore(scores, "ishraq", 18, "العمر مناسب لأكاديمية الجيل الصاعد - إشراق");
     addScore(scores, "bina_asasi", 12, "العمر فوق 15 ويناسب البناء الشرعي المنهجي");
     addScore(scores, "bina_muyassar", 10, "العمر فوق 15 مع احتمال الحاجة لبداية أخف");
@@ -818,7 +811,7 @@ export function calculateRecommendations(a: any) {
     let ageCaution = null;
     if (item.id === "buthur" && ["13_14"].includes(a.age)) {
       ageCaution = "تنبيه: هذا المسار مخصص عادة للفئة 10-12 سنة. قد تكون بيئته غير مناسبة تماماً لمرحلتك.";
-    } else if ((item.id === "juthur" || item.id === "ghiras") && ["17_18", "17_20"].includes(a.age)) {
+    } else if ((item.id === "juthur" || item.id === "ghiras") && ["15_18", "15_16", "17_18", "17_20"].includes(a.age)) {
       ageCaution = "تنبيه: هذا المسار مخصص لليافعين. قد لا يكون مناسباً لسنك وتطلعاتك.";
     } else if ((item.id === "juthur" || item.id === "ghiras") && ["10_12"].includes(a.age)) {
       ageCaution = "تنبيه: هذا المسار قد يكون متقدماً بعض الشيء على مرحلتك العمرية الحالية.";
@@ -854,7 +847,7 @@ export function calculateRecommendations(a: any) {
 
   if (a.doubtImpact === "high") profile.tazkiyah += 20;
   if (a.doubtImpact === "theoretical") profile.intellectual += 20;
-  if (a.age === "13_14" || a.age === "15_16") profile.skills += 20;
+  if (a.age === "13_14" || a.age === "15_18" || a.age === "15_16") profile.skills += 20;
 
   // Normalize to max 100
   ["sharia", "intellectual", "tazkiyah", "reform", "skills"].forEach(k => {
