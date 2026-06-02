@@ -69,6 +69,7 @@ const RAW_PROGRAM_OPTIONS = [
   option("khadija", "مدرسة خديجة", "", ""),
   option("kharitat_thughur", "خارطة الثغور", "", ""),
   option("alim", "برنامج عالِم", "", ""),
+  option("alim_fityan", "برنامج عالِم - مسار الفتيان", "", ""),
 ];
 
 const PROGRAM_OPTION_ORDER = [
@@ -86,6 +87,7 @@ const PROGRAM_OPTION_ORDER = [
   "arqam",
   "kharitat_thughur",
   "alim",
+  "alim_fityan",
   "omr_mufakkir",
   "omr_bahith",
   "omr_talib_ilm",
@@ -304,12 +306,14 @@ export const QUESTIONS = [
     subtitle: "",
     options: () => [
       option("7_9", "7–9 سنوات", "", ""),
-      option("10_12", "10–12 سنة", "", ""),
+      option("10_11", "10–11 سنة", "", ""),
+      option("age_12", "12 سنة", "", ""),
       option("13_14", "13–14 سنة", "", ""),
       option("15_16", "15–16 سنة", "", ""),
-      option("17_20", "17–20 سنة", "", ""),
-      option("21_22", "21–22 سنة", "", ""),
-      option("23_plus", "أكثر من 22 سنة", "", ""),
+      option("17_18", "17–18 سنة", "", ""),
+      option("19_20", "19–20 سنة", "", ""),
+      option("21_25", "21–25 سنة", "", ""),
+      option("26_40", "26–40 سنة", "", ""),
       option("40_plus", "أكثر من 40 سنة", "", ""),
     ],
   },
@@ -317,7 +321,7 @@ export const QUESTIONS = [
     id: "programStatus",
     title: "هل سبق أن درست أحد هذه البرامج؟",
     subtitle: "",
-    condition: (a) => a.age && !["7_9", "10_12"].includes(a.age),
+    condition: (a) => a.age && !["7_9", "10_11", "10_12"].includes(a.age),
     options: () => [
       option("none", "لا، لم أبدأ برنامجًا بعد", "", ""),
       option("studying_committed", "نعم، أدرس برنامجًا الآن", "", ""),
@@ -388,7 +392,7 @@ export const QUESTIONS = [
     id: "dailyTime",
     title: "أي وصف أقرب لالتزامك الواقعي خلال الفترة القادمة؟",
     subtitle: "اختر ما تستطيع الاستمرار عليه غالبًا، لا ما تتمناه في أفضل الأيام.",
-    condition: (a) => a.age && !["7_9", "10_12"].includes(a.age),
+    condition: (a) => a.age && !["7_9", "10_11", "10_12"].includes(a.age),
     options: () => [
       option("light", "20–30 دقيقة يوميًا", "التزام خفيف ثابت؛ يناسب البداية الهادئة أو المسارات الأخف", ""),
       option("standard", "45–60 دقيقة يوميًا", "التزام يومي مناسب لغالب البرامج مثل مسارات الأكاديمية والبناء المنهجي والفكري", ""),
@@ -412,7 +416,7 @@ export const QUESTIONS = [
     title: "أي وصف أقرب لاحتياجك الآن؟",
     subtitle: "يمكنك اختيار أكثر من خيار؛ اختر الإجابات بحسب أولويتها بالنسبة لك، فالأهم ثم ما يليه.",
     multi: true,
-    condition: (a) => a.age && !["7_9", "10_12"].includes(a.age) && a.needClarity && a.needClarity !== "general_foundation",
+    condition: (a) => a.age && !["7_9", "10_11", "10_12"].includes(a.age) && a.needClarity && a.needClarity !== "general_foundation",
     options: (a) => {
       const base = [
         option("structured_path", "أحتاج مسارًا علميًا مرتبًا", "مواد واضحة، تدرج، اختبارات، وواجبات", ""),
@@ -492,7 +496,7 @@ export const QUESTIONS = [
     id: "selectivity",
     title: "كيف تتعامل مع الاختبارات والقبول الانتقائي؟",
     subtitle: "ليست الأفضلية دائمًا للأصعب؛ المهم ما يناسب مرحلتك.",
-    condition: (a) => a.age && !["7_9", "10_12"].includes(a.age) && !canConsiderOmrTracks(a),
+    condition: (a) => a.age && !["7_9", "10_11", "10_12"].includes(a.age) && !canConsiderOmrTracks(a),
     options: () => [
       option("open", "أفضل مسارًا مفتوحًا أو أيسر", "لا أريد أن يكون القبول عائقًا الآن", ""),
       option("ok_test", "لا مانع من اختبار قبول", "إن كان البرنامج مناسبًا فأنا مستعد", ""),

@@ -310,6 +310,7 @@ function studyIconForKind(kind = "") {
 
 const PROGRAM_ICON_MAP: Record<string, any> = {
   alim: IconMosque,
+  alim_fityan: IconSchool,
   bina_asasi: IconBooks,
   bina_muyassar: IconBookmark,
   fikri: IconBrain,
@@ -342,6 +343,7 @@ function optionIconForValue(value = "", questionId = "") {
   if (["self", "male"].includes(value)) return IconUser;
   if (["child", "friend"].includes(value)) return IconUsers;
   if (["female", "women_space", "women_priority"].includes(value)) return IconUserHeart;
+  if (value.includes("alim_fityan")) return IconSchool;
   if (value.includes("bina") || value.includes("talib") || value.includes("structured") || value.includes("curriculum")) return IconBooks;
   if (value.includes("arabic_language")) return IconNotebook;
   if (value.includes("fikri") || value.includes("mufakkir") || value.includes("intellectual") || value.includes("theoretical")) return IconBrain;
@@ -351,7 +353,7 @@ function optionIconForValue(value = "", questionId = "") {
   if (value.includes("omr") || value.includes("reform") || value.includes("depth") || value.includes("kharitat")) return IconTargetArrow;
   if (value.includes("yaqin") || value.includes("certainty")) return IconDroplet;
   if (value.includes("khadija")) return IconUserHeart;
-  if (value.includes("buthur") || value.includes("none") || value.includes("did_not_try") || value.includes("10_12")) return IconSeedling;
+  if (value.includes("buthur") || value.includes("none") || value.includes("did_not_try") || value.includes("10_11") || value.includes("age_12") || value.includes("10_12")) return IconSeedling;
   if (value.includes("juthur")) return IconPlant;
   if (value.includes("ghiras")) return IconTree;
   if (value.includes("ishraq") || value.includes("ithmar") || value.includes("light") || value.includes("gentle") || value.includes("17_20")) return IconSun;

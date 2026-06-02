@@ -61,18 +61,20 @@ function isEligible(programId, a) {
     case "jeel_new":
       return age === "7_9";
     case "buthur":
-      return ["10_12", "13_14"].includes(age) && !completedJuthurOrIshraq(a);
+      return ["10_11", "age_12", "10_12", "13_14"].includes(age) && !completedJuthurOrIshraq(a);
     case "juthur":
     case "ghiras":
       return ["10_12", "13_14", "15_16", "17_20"].includes(age) && !isGraduatedStatus(a) && !completedJuthurOrIshraq(a);
+    case "alim_fityan":
+      return a.gender === "male" && ["age_12", "13_14"].includes(age);
     case "ishraq":
-      return ["15_16", "17_20", "21_22"].includes(age) && !completedJuthurOrIshraq(a) && !hasKnown(a, "ishraq");
+      return ["15_16", "17_18", "17_20"].includes(age) && !completedJuthurOrIshraq(a) && !hasKnown(a, "ishraq");
     case "ithmar":
-      return ["13_14", "15_16", "17_20", "21_22", "23_plus", "40_plus"].includes(age) && completedJuthurOrIshraq(a);
+      return ["13_14", "15_16", "17_18", "17_20", "19_20", "21_25", "21_22", "26_40", "23_39", "23_plus", "40_plus"].includes(age) && completedJuthurOrIshraq(a);
     case "khadija":
       return a.gender === "female" && adult;
     case "alim":
-      return adult;
+      return ["15_16", "17_18", "17_20", "19_20", "21_25", "21_22"].includes(age);
     case "bina_asasi":
     case "bina_muyassar":
     case "fikri":
@@ -174,11 +176,13 @@ function chooseBinaTrack(a) {
 function chooseAcademyTrack(a) {
   if (completedJuthurOrIshraq(a)) return "ithmar";
   if (a.age === "7_9") return "jeel_new";
-  if (a.age === "10_12") return "buthur";
+  if (a.age === "10_11" || a.age === "10_12") return "buthur";
+  if (a.gender === "male" && a.age === "age_12") return "alim_fityan";
   if (a.age === "13_14" || a.age === "15_16") {
+    if (a.gender === "male" && a.age === "13_14" && (a.selectivity === "ok_test" || a.selectivity === "high_selective")) return "alim_fityan";
     return a.selectivity === "ok_test" || a.selectivity === "high_selective" ? "juthur" : "ghiras";
   }
-  if (a.age === "17_20" && !completedJuthurOrIshraq(a) && !hasKnown(a, "ishraq")) return "ishraq";
+  if ((a.age === "17_18" || a.age === "17_20") && !completedJuthurOrIshraq(a) && !hasKnown(a, "ishraq")) return "ishraq";
   return null;
 }
 
@@ -545,10 +549,19 @@ export function calculateRecommendations(a: any) {
   });
 
   if (a.age === "7_9") addScore(scores, "jeel_new", 130, "العمر يعطي أولوية للمسار الجديد في أكاديمية الجيل الصاعد المخصص للأعمار 7–9");
-  if (a.age === "10_12") addScore(scores, "buthur", 120, "العمر يعطي أولوية مطلقة لمسار بذور المخصص لهذه المرحلة");
+  if (a.age === "10_11" || a.age === "10_12") addScore(scores, "buthur", 120, "العمر يعطي أولوية مطلقة لمسار بذور المخصص لهذه المرحلة");
+  if (a.age === "age_12") {
+    addScore(scores, "buthur", 82, "العمر ما زال مناسبًا لمسار بذور");
+    if (a.gender === "male") {
+      addScore(scores, "alim_fityan", 90, "العمر والجنس يوافقان شرط مسار الفتيان في برنامج عالِم");
+    }
+  }
   if (a.age === "13_14" || a.age === "15_16") {
     addScore(scores, "ghiras", 36, "العمر يعطي أولوية للمسار العام في الأكاديمية");
     addScore(scores, "juthur", 34, "العمر يسمح بالمسار الخاص عند توفر الجدية والقبول");
+    if (a.gender === "male" && a.age === "13_14") {
+      addScore(scores, "alim_fityan", 52, "مسار الفتيان في عالِم مخصص للذكور من 12 إلى 14 سنة");
+    }
     if (a.age === "15_16") {
       addScore(scores, "bina_muyassar", 10, "العمر فوق 15 فيمكن البدء بتأسيس شرعي ميسر");
       addScore(scores, "bina_asasi", 8, "العمر فوق 15 فيمكن دخول البناء المنهجي");
@@ -564,7 +577,7 @@ export function calculateRecommendations(a: any) {
       addScore(scores, "ghiras", 10, "مسار غراس يقدم تأسيساً فكرياً يناسب هذه المرحلة");
     }
   }
-  if (a.age === "17_20") {
+  if (a.age === "17_18" || a.age === "17_20") {
     addScore(scores, "ishraq", 18, "العمر مناسب لأكاديمية الجيل الصاعد - إشراق");
     addScore(scores, "bina_asasi", 12, "العمر فوق 15 ويناسب البناء الشرعي المنهجي");
     addScore(scores, "bina_muyassar", 10, "العمر فوق 15 مع احتمال الحاجة لبداية أخف");
@@ -580,7 +593,7 @@ export function calculateRecommendations(a: any) {
       addScore(scores, "ishraq", 15, "في إشراق اهتمام خاص بالبناء الإيماني ومعالجة الشبهات يناسب من يبحث عن اليقين والرقائق");
     }
   }
-  if (a.age === "21_22" || a.age === "23_plus") {
+  if (a.age === "19_20" || a.age === "21_25" || a.age === "21_22" || a.age === "26_40" || a.age === "23_39" || a.age === "23_plus") {
     addScore(scores, "bina_asasi", 16, "العمر مناسب لبرامج التأسيس للكبار");
     addScore(scores, "bina_muyassar", 14, "يمكن اختيار النسخة الأخف بحسب الوقت");
     addScore(scores, "fikri", 8, "العمر مناسب للمعالجة الفكرية الأوسع");
@@ -622,7 +635,7 @@ export function calculateRecommendations(a: any) {
   if (a.dailyTime === "light") {
     addScore(scores, "bina_muyassar", 28, "الالتزام الخفيف يرجّح البداية الميسرة");
     addScore(scores, "bard_yaqin", 16, "الالتزام الخفيف قد يناسب مسارًا أقرب لليقين والتزكية");
-    softenScores(scores, ["bina_asasi", "fikri", "hadith", "arqam", "ithmar", "alim", "kharitat_thughur"], 80, "تنبيه: حجم هذا البرنامج ومتطلباته قد تفوق مساحة الوقت المتاح لك حالياً"); 
+    softenScores(scores, ["bina_asasi", "fikri", "hadith", "arqam", "ithmar", "alim", "alim_fityan", "kharitat_thughur"], 80, "تنبيه: حجم هذا البرنامج ومتطلباته قد تفوق مساحة الوقت المتاح لك حالياً"); 
   }
   if (a.dailyTime === "standard") {
     addScore(scores, "bina_asasi", 22, "الالتزام المتوسط المنتظم مناسب للبناء المنهجي");
@@ -638,6 +651,7 @@ export function calculateRecommendations(a: any) {
     addScore(scores, "hadith", 16, "السعة النسبية تناسب التخصص الحديثي");
     addScore(scores, "arqam", 18, "السعة النسبية تناسب التخصص في السيرة النبوية");
     addScore(scores, "ithmar", 16, "السعة النسبية تناسب التخصص الدقيق إذا توفرت الأهلية");
+    addScore(scores, "alim_fityan", 14, "السعة النسبية تناسب مسارًا طويلًا ذا متابعة فردية إذا توفرت شروطه");
   }
   if (a.dailyTime === "formation_project") {
     addScore(scores, "bina_asasi", 18, "الاستعداد العالي يساعد في المسارات الطويلة");
@@ -645,6 +659,7 @@ export function calculateRecommendations(a: any) {
     addScore(scores, "hadith", 14, "الاستعداد العالي يناسب التخصص العلمي");
     addScore(scores, "arqam", 14, "الاستعداد العالي يمكن أن يخدم التخصص في السيرة");
     addScore(scores, "ithmar", 18, "الاستعداد العالي يناسب إثمار إذا توفرت الأهلية");
+    addScore(scores, "alim_fityan", 18, "الاستعداد العالي يناسب مسار الفتيان الطويل إذا توفرت شروطه");
   }
 
   if (a.needClarity === "general_foundation") {
@@ -739,9 +754,11 @@ export function calculateRecommendations(a: any) {
     addScore(scores, "bina_asasi", 10, "لا تمانع اختبارًا أو مرحلة قبول");
     addScore(scores, "juthur", 12, "لا تمانع اختبار القبول للمسار الخاص");
     addScore(scores, "ishraq", 12, "لا تمانع اختبار القبول لإشراق");
+    addScore(scores, "alim_fityan", 12, "لا تمانع اختبار القبول والمقابلة لمسار الفتيان");
   }
   if (a.selectivity === "high_selective") {
     addScore(scores, "alim", 20, "تقبل المسارات العالية الانتقائية");
+    addScore(scores, "alim_fityan", 22, "تقبل المسارات العالية الانتقائية لمسار الفتيان");
     addScore(scores, "ithmar", 22, "تقبل المسارات الخاصة المتقدمة إن توفرت الأهلية");
     addScore(scores, "juthur", 14, "تقبل المسار الخاص والمتابعة الأعلى");
     addScore(scores, "khadija", 10, "لا تمانع عددًا محدودًا وقبولًا انتقائيًا");
@@ -801,14 +818,16 @@ export function calculateRecommendations(a: any) {
     let ageCaution = null;
     if (item.id === "buthur" && ["13_14"].includes(a.age)) {
       ageCaution = "تنبيه: هذا المسار مخصص عادة للفئة 10-12 سنة. قد تكون بيئته غير مناسبة تماماً لمرحلتك.";
-    } else if ((item.id === "juthur" || item.id === "ghiras") && ["17_20"].includes(a.age)) {
+    } else if ((item.id === "juthur" || item.id === "ghiras") && ["17_18", "17_20"].includes(a.age)) {
       ageCaution = "تنبيه: هذا المسار مخصص لليافعين. قد لا يكون مناسباً لسنك وتطلعاتك.";
     } else if ((item.id === "juthur" || item.id === "ghiras") && ["10_12"].includes(a.age)) {
       ageCaution = "تنبيه: هذا المسار قد يكون متقدماً بعض الشيء على مرحلتك العمرية الحالية.";
-    } else if (item.id === "ishraq" && ["21_22", "23_plus"].includes(a.age)) {
-      ageCaution = "تنبيه: صممت المرحلة لمن هم ضمن 17-20 سنة. الأفضل اختيار برنامج بمقاس مرحلتك إلا إذا كنت تبحث عن بيئة الشباب تحديداً.";
-    } else if (item.id === "alim" && (a.age === "23_plus" || a.age === "40_plus")) {
-      ageCaution = "تنبيه: تم إدراج البرنامج لملائمته العالية لإجاباتك، لكن هذا البرنامج يقبل الأعمار الأصغر في الأصل (مع مرونة يسيرة أحياناً)، فخذ ذلك بعين الاعتبار.";
+    } else if (item.id === "alim_fityan" && a.gender !== "male") {
+      ageCaution = "تنبيه: مسار الفتيان في عالِم خاص بالذكور.";
+    } else if (item.id === "ishraq" && ["19_20", "21_25", "21_22", "26_40", "23_39", "23_plus"].includes(a.age)) {
+      ageCaution = "تنبيه: صممت المرحلة لمن هم ضمن 15-18 سنة. الأفضل اختيار برنامج بمقاس مرحلتك إلا إذا كنت تبحث عن بيئة الشباب تحديداً.";
+    } else if (item.id === "alim" && (a.age === "26_40" || a.age === "23_39" || a.age === "23_plus" || a.age === "40_plus")) {
+      ageCaution = "تنبيه: شرط العمر في إعلان عالِم الأخير من 15 إلى 25 سنة، فتأكد من انطباق الشرط قبل التقديم.";
     } else if (item.id === "bina_asasi" && a.age === "40_plus") {
       ageCaution = "تنبيه: المسار الأساسي طويل نسبيًا؛ بعد الأربعين قد يكون المسار الميسّر أرفق إن لم يكن لديك وقت ونفس واضحان.";
     }

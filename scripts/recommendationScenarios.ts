@@ -55,6 +55,42 @@ const scenarios: Scenario[] = [
     },
   },
   {
+    name: "alim fityan appears for eligible twelve-year-old boys",
+    answers: {
+      forWhom: "child",
+      gender: "male",
+      age: "age_12",
+      programStatus: "none",
+      dailyTime: "expanded",
+      needClarity: "specific_need",
+      needPattern: ["structured_path", "relational_growth"],
+      selectivity: "high_selective",
+      doubtImpact: "low",
+    },
+    expect: (result) => {
+      const ids = topIds(result);
+      assert(ids.includes("alim_fityan"), `expected alim_fityan in top results, got ${ids.join(", ")}`);
+    },
+  },
+  {
+    name: "alim fityan is hidden for girls",
+    answers: {
+      forWhom: "child",
+      gender: "female",
+      age: "age_12",
+      programStatus: "none",
+      dailyTime: "expanded",
+      needClarity: "specific_need",
+      needPattern: ["structured_path", "relational_growth"],
+      selectivity: "high_selective",
+      doubtImpact: "low",
+    },
+    expect: (result) => {
+      const ids = result.list.map((program: any) => program.id);
+      assert(!ids.includes("alim_fityan"), `expected alim_fityan to be hidden for girls, got ${ids.join(", ")}`);
+    },
+  },
+  {
     name: "new reform seeker starts with foundation, not kharitat",
     answers: {
       forWhom: "self",
@@ -310,7 +346,7 @@ const scenarios: Scenario[] = [
     answers: {
       forWhom: "self",
       gender: "female",
-      age: "23_plus",
+      age: "21_25",
       programStatus: "none",
       dailyTime: "formation_project",
       needClarity: "specific_need",
@@ -343,7 +379,7 @@ const scenarios: Scenario[] = [
       const formation = calculateRecommendations({
         forWhom: "self",
         gender: "male",
-        age: "23_plus",
+        age: "21_25",
         programStatus: "none",
         dailyTime: "formation_project",
         needClarity: "specific_need",
@@ -376,7 +412,7 @@ const scenarios: Scenario[] = [
         const formation = calculateRecommendations({
           forWhom: "self",
           gender: "male",
-          age: "23_plus",
+          age: "21_25",
           programStatus: "none",
           dailyTime: "formation_project",
           needClarity: "specific_need",
