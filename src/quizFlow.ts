@@ -48,7 +48,7 @@ export function questionSubtitle(q, answers) {
   return typeof q.subtitle === "function" ? q.subtitle(answers) : q.subtitle;
 }
 
-export const PROGRAM_OPTIONS = [
+const RAW_PROGRAM_OPTIONS = [
   option("bina_asasi", "البناء المنهجي - المسار الأساسي", "", ""),
   option("bina_muyassar", "البناء المنهجي - المسار الميسّر", "", ""),
   option("fikri", "البناء الفكري", "", ""),
@@ -70,6 +70,36 @@ export const PROGRAM_OPTIONS = [
   option("kharitat_thughur", "خارطة الثغور", "", ""),
   option("alim", "برنامج عالِم", "", ""),
 ];
+
+const PROGRAM_OPTION_ORDER = [
+  "bina_asasi",
+  "bina_muyassar",
+  "bard_yaqin",
+  "fikri",
+  "khadija",
+  "jeel_new",
+  "buthur",
+  "juthur",
+  "ghiras",
+  "ishraq",
+  "ithmar",
+  "arqam",
+  "kharitat_thughur",
+  "alim",
+  "omr_mufakkir",
+  "omr_bahith",
+  "omr_talib_ilm",
+  "omr_daiya",
+  "omr_murabbi",
+];
+
+const PROGRAM_OPTION_RANK = new Map(PROGRAM_OPTION_ORDER.map((id, index) => [id, index]));
+
+export const PROGRAM_OPTIONS = [...RAW_PROGRAM_OPTIONS].sort((a, b) => {
+  const aRank = PROGRAM_OPTION_RANK.get(a.value) ?? Number.MAX_SAFE_INTEGER;
+  const bRank = PROGRAM_OPTION_RANK.get(b.value) ?? Number.MAX_SAFE_INTEGER;
+  return aRank - bRank;
+});
 
 export const OMR_TRACK_IDS = ["omr_mufakkir", "omr_bahith", "omr_talib_ilm", "omr_daiya", "omr_murabbi"];
 
@@ -271,29 +301,29 @@ export const QUESTIONS = [
   {
     id: "age",
     title: "ما عمر الشخص المستفيد؟",
-    subtitle: "العمر يساعدنا على التفريق بين مسارات الجيل الصاعد وبرامج الكبار.",
+    subtitle: "",
     options: () => [
-      option("7_9", "7–9 سنوات", "المسار الجديد في أكاديمية الجيل الصاعد", ""),
-      option("10_12", "10–12 سنة", "غالبًا مرحلة بذور", ""),
-      option("13_14", "13–14 سنة", "بداية مرحلة اليافعين", ""),
-      option("15_16", "15–16 سنة", "مرحلة مشتركة بين اليافعين وبعض برامج +15", ""),
-      option("17_20", "17–20 سنة", "مرحلة الشباب وبدايات الجامعة", ""),
-      option("21_22", "21–22 سنة", "مرحلة متقدمة نسبيًا", ""),
-      option("23_plus", "أكثر من 22 سنة", "برامج الكبار غالبًا", ""),
-      option("40_plus", "أكثر من 40 سنة", "الأقرب غالبًا مسارات أرفق بحسب الحاجة: البناء الميسّر أو برد اليقين", ""),
+      option("7_9", "7–9 سنوات", "", ""),
+      option("10_12", "10–12 سنة", "", ""),
+      option("13_14", "13–14 سنة", "", ""),
+      option("15_16", "15–16 سنة", "", ""),
+      option("17_20", "17–20 سنة", "", ""),
+      option("21_22", "21–22 سنة", "", ""),
+      option("23_plus", "أكثر من 22 سنة", "", ""),
+      option("40_plus", "أكثر من 40 سنة", "", ""),
     ],
   },
   {
     id: "programStatus",
-    title: "هل أنت طالب بالبرامج الإلكترونية؟",
-    subtitle: "هذا يساعدنا أن نعرف: هل الأنسب أن تبدأ، أو تثبت فيما أنت فيه، أو تبني على برنامج سابق؟",
+    title: "هل سبق أن درست أحد هذه البرامج؟",
+    subtitle: "",
     condition: (a) => a.age && !["7_9", "10_12"].includes(a.age),
     options: () => [
-      option("studying_committed", "نعم، طالب مستمر في الدراسة ومتابِع", "ما زلت أدرس وأحاول الالتزام قدر الإمكان", ""),
-      option("studying_struggling", "نعم، طالب متعثر أو قصّرت سابقًا", "دخلت برنامجًا لكن حصل تراكم أو فتور كبير", ""),
-      option("graduated_or_near", "تخرجت من برنامج أو عدة برامج، أو على وشك التخرج", "أريد أن أبني على ما درست لا أن أكرر نفس الطريق", ""),
-      option("studying_and_graduated", "طالب وخريج معاً", "تخرجت من برنامج وتدرس في آخر الآن", ""),
-      option("none", "لست طالبًا حاليًا ولم أتخرج من برنامج مؤثر", "يشمل من لم يدخل من قبل أو انسحب من تجربة سابقة", ""),
+      option("none", "لا، لم أبدأ برنامجًا بعد", "", ""),
+      option("studying_committed", "نعم، أدرس برنامجًا الآن", "", ""),
+      option("studying_struggling", "بدأت برنامجًا ثم تعثرت أو توقفت", "", ""),
+      option("graduated_or_near", "تخرجت أو قاربت التخرج", "", ""),
+      option("studying_and_graduated", "تخرجت من برنامج وأدرس غيره الآن", "", ""),
     ],
   },
   {
