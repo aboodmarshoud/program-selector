@@ -1519,19 +1519,29 @@ function AnalyticsDonutSection({ title, description, data, limit = 6, wide = fal
   );
 }
 
-function AnalyticsBarSection({ title, description, data, limit = 10, height = 300, wide = false, valueSuffix = "" }: any) {
-  const chartData = data.slice(0, limit);
+function AnalyticsBarSection({ title, description, data, limit = 10, height = 300, wide = false, valueSuffix = "", expandable = false, expandLabel = "عرض الكل", collapseLabel = "إظهار أقل" }: any) {
+  const [expanded, setExpanded] = useState(false);
+  const canExpand = expandable && data.length > limit;
+  const chartData = canExpand && expanded ? data : data.slice(0, limit);
+  const effectiveHeight = canExpand && expanded ? Math.max(height, chartData.length * 34) : height;
   return (
     <div className={`analytics-chart-card ${wide ? "analytics-chart-wide" : ""}`}>
-      <div className="chart-header">
-        <h3>{title}</h3>
-        {description && <p>{description}</p>}
+      <div className="chart-header analytics-chart-header-with-action">
+        <div>
+          <h3>{title}</h3>
+          {description && <p>{description}</p>}
+        </div>
+        {canExpand && (
+          <button className="ghost-btn analytics-chart-toggle" type="button" onClick={() => setExpanded((value) => !value)}>
+            {expanded ? collapseLabel : `${expandLabel} (${data.length})`}
+          </button>
+        )}
       </div>
       {chartData.length ? (
         <>
           <div className="analytics-chart">
             <Suspense fallback={<div className="analytics-empty">...</div>}>
-              <AnalyticsBarChart data={chartData} height={height} valueSuffix={valueSuffix} formatMetricValue={formatMetricValue} />
+              <AnalyticsBarChart data={chartData} height={effectiveHeight} valueSuffix={valueSuffix} formatMetricValue={formatMetricValue} />
             </Suspense>
           </div>
           <div className="analytics-list">
@@ -1916,7 +1926,7 @@ function AnalyticsDashboard({ onBack }: any) {
             <AnalyticsDonutSection title="توزيع الجنس" description="للتأكد من ملاءمة الترشيحات والمسارات." data={genderData} />
             <AnalyticsDonutSection title="لمن يبحث المستخدم؟" description="نفسه، ابن/ابنة، أو صديق/صديقة." data={forWhomData} />
             <AnalyticsBarSection title="توزيع الأعمار" description="الفئات العمرية التي وصلت إلى النتيجة." data={ageData} />
-            <AnalyticsBarSection title="الدول الأكثر حضوراً" description="حسب إجابات من أتموا الاختبار." data={countryData} />
+            <AnalyticsBarSection title="الدول الأكثر حضوراً" description="حسب إجابات من أتموا الاختبار." data={countryData} expandable expandLabel="عرض كل الدول" />
             <AnalyticsDonutSection title="حالة الطالب مع البرامج" description="طالب حالي، خريج، متعثر، أو جديد." data={programStatusData} />
             <AnalyticsBarSection title="البرامج الحالية أو السابقة" description="من سؤال البرامج المعروفة عند الطالب." data={knownProgramsData} wide />
             <AnalyticsBarSection title="برامج يدرسها المستخدم الآن" description="عند اختيار طالب وخريج معاً." data={currentProgramsData} />
