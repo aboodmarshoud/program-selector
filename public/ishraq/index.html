@@ -271,7 +271,7 @@
     <div class="modal-content" style="text-align: center; max-width: 500px; padding: 50px 30px;">
       <h2 style="color: var(--accent-main); font-size: 28px; font-weight: 900; margin-bottom: 15px;"> أشرقت! ✨ </h2>
       <p style="color: var(--text-muted); font-size: 16px; font-weight: 700; line-height: 1.6; margin-bottom: 30px;">
-        ما شاء الله تبارك الله! من سار على الدرب وصل، وقد وصلت بجدارة. لقد أنهيت استدراك الفصل الأول بالكامل، وأصبحت جاهزاً بإذن الله لخوض الاختبار النصفي بثقة، بارك الله فيك يا مُشرق!
+        ما شاء الله تبارك الله! من سار على الدرب وصل، وقد وصلت بجدارة. لقد أنهيت استدراك مقررات الاختبار النهائي للفصل الأول بالكامل، وأصبحت جاهزاً بإذن الله لخوض الاختبار النهائي بثقة، بارك الله فيك يا مُشرق!
       </p>
       <button class="btn-generate" style="margin: 0 auto; max-width: 200px;" onclick="document.getElementById('campCompletedModal').classList.add('hidden')">رائع! إغلاق</button>
     </div>
@@ -281,7 +281,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h2>المقررات واللقاءات التي أنهيتها حتى الآن</h2>
-        <p>حدد ما قمت بإنجازه بدقة لنقوم ببرمجة جدول استدراك يومي مخصص لك قبل الاختبار النصفي</p>
+        <p>حدد ما قمت بإنجازه بدقة لنقوم ببرمجة جدول استدراك يومي مخصص لك قبل الاختبار النهائي</p>
       </div>
       <div class="modal-courses-scroll">
         <div class="courses-grid" id="modal-courses-container"></div>
@@ -302,12 +302,12 @@
       <div class="header-main">
         <div>
           <h1>مخيّم الاستدراك</h1>
-          <p class="hero-desc" id="hero-period-desc">خطة يومية مرنة لتوزيع ومتابعة مواد الاختبار النصفي.</p>
+          <p class="hero-desc" id="hero-period-desc">خطة يومية مرنة لتوزيع ومتابعة مواد الاختبار النهائي.</p>
         </div>
         <div class="deadline-card">
-          <div class="deadline-label">نهاية الفترة</div>
-          <div class="deadline-val" id="deadline-val-text">19 سبتمبر</div>
-          <div id="deadline-dayname-text" style="font-size: 11.5px; color: var(--text-muted); font-weight:600;">السبت</div>
+          <div class="deadline-label">إغلاق الاختبار</div>
+          <div class="deadline-val" id="deadline-val-text">27 نوفمبر</div>
+          <div id="deadline-dayname-text" style="font-size: 11.5px; color: var(--text-muted); font-weight:600;">الجمعة</div>
         </div>
       </div>
     </header>
@@ -359,76 +359,51 @@
   <script>
     const COURSES = [
       {
-        id:'lianak_allah',
-        name:'لأنك الله',
-        items:[
-          { id:'la_1', label:'الاسم الأول' },
-          { id:'la_2', label:'الاسم الثاني' },
-          { id:'la_3', label:'الاسم الثالث' },
-          { id:'la_4', label:'الاسم الرابع' },
-          { id:'la_5', label:'الاسم الخامس' },
-          { id:'la_6', label:'الاسم السادس' },
-          { id:'la_7', label:'الاسم السابع' },
-          { id:'la_8', label:'الاسم الثامن' },
-          { id:'la_9', label:'الاسم التاسع' }
-        ]
-      },
-      {
-        id:'ilm_billah',
-        name:'العلم بالله جل جلاله',
-        items:[
-          { id:'ib_1', label:'المحاضرة كاملة' }
-        ]
-      },
-      {
-        id:'shawq',
-        name:'طريق الشوق إلى الله تعالى',
-        items:[
-          { id:'sh_1', label:'المحاضرة كاملة' }
-        ]
-      },
-      {
-        id:'la_ilaha',
-        name:'لا إله إلا الله',
-        items:[
-          { id:'li_1', label:'المحاضرة كاملة' }
-        ]
-      },
-      {
-        id:'sidq',
-        name:'الصدق مع الله',
-        items:[
-          { id:'sm_1', label:'المحاضرة كاملة' }
-        ]
-      },
-      {
-        id:'la_tansarif',
-        name:'أرجوك لا تنصرف',
-        items:[
-          { id:'lt_1', label:'المحاضرة كاملة' }
-        ]
-      },
-      {
-        id:'sir_azam',
-        name:'السر الأعظم',
-        items:[
-          { id:'sa_1', label:'المحاضرة كاملة' }
-        ]
-      },
-      {
-        id:'haqiba_aqida',
+        id:'aqida',
         name:'الحقيبة الشرعية في العقيدة',
         items:[
-          { id:'ha_1', label:'مقدمات منهجية 1' },
-          { id:'ha_2', label:'مقدمات منهجية 2' },
-          { id:'ha_3', label:'مقدمات منهجية 3' },
-          { id:'ha_4', label:'مقدمات منهجية 4' },
-          { id:'ha_5', label:'مقدمات منهجية 5' },
-          { id:'ha_6', label:'مقدمات منهجية 6' },
-          { id:'ha_7', label:'خارطة علم العقيدة + العلم بالله' },
-          { id:'ha_8', label:'العلم بالله 2' },
-          { id:'ha_9', label:'الإيمان بالملائكة' },
-          { id:'ha_10', label:'الإيمان بالكتب' }
+          { id:'aq_1', label:'الإيمان باليوم الآخر' },
+          { id:'aq_2', label:'الإيمان بالقدر' },
+          { id:'aq_3', label:'الصحابة وآل البيت' },
+          { id:'aq_4', label:'ما يضاد العقيدة' }
+        ]
+      },
+      {
+        id:'manhaj',
+        name:'المنهاج من ميراث النبوة',
+        items:[
+          { id:'mn_1', label:'المدخل' },
+          { id:'mn_2', label:'مرجعية الوحي' },
+          { id:'mn_3', label:'تلقي القرآن' },
+          { id:'mn_4', label:'تعظيم حدود الله' },
+          { id:'mn_5', label:'ضبط الأفهام' },
+          { id:'mn_6', label:'تفاوت مراتب الدين' },
+          { id:'mn_7', label:'التزكية' },
+          { id:'mn_8', label:'شرف العلم' },
+          { id:'mn_9', label:'تربية النبي ﷺ أصحابه على العمل' },
+          { id:'mn_10', label:'صدق النية' },
+          { id:'mn_11', label:'استحضار الغاية' },
+          { id:'mn_12', label:'تحمل مسؤولية التكليف' },
+          { id:'mn_13', label:'المسؤولية العامة' }
+        ]
+      },
+      {
+        id:'maqdis',
+        name:'تحرير بيت المقدس',
+        items:[
+          { id:'bm_1', label:'بيت المقدس في نصوص الوحي' },
+          { id:'bm_2', label:'بيت المقدس في نصوص آخر الزمان' }
+        ]
+      },
+      {
+        id:'jeel',
+        name:'إلى الجيل الصاعد',
+        items:[
+          { id:'jl_1', label:'الجزء الأول من الكتاب' },
+          { id:'jl_2', label:'الجزء الثاني من الكتاب' },
+          { id:'jl_3', label:'الجزء الثالث من الكتاب' },
+          { id:'jl_4', label:'الجزء الرابع من الكتاب' },
+          { id:'jl_5', label:'الجزء الخامس من الكتاب' }
         ]
       }
     ];
@@ -441,19 +416,15 @@
     }
 
     const todayObj = new Date();
-    const currentYear = todayObj.getFullYear();
-    const defaultEndObj = new Date(currentYear, 8, 19); // 19 سبتمبر من العام الحالي
-
+    const EXAM_CLOSE = '2026-11-27'; // إغلاق الاختبار الاستدراكي: الجمعة 27 نوفمبر
     const defaultStartDate = toISODate(todayObj);
-    const defaultEndDate = (todayObj > defaultEndObj)
-      ? toISODate(new Date(currentYear + 1, 8, 19))
-      : toISODate(defaultEndObj);
+    const defaultEndDate = (defaultStartDate > EXAM_CLOSE) ? defaultStartDate : EXAM_CLOSE;
 
     let state = {
-      startDate: localStorage.getItem('ishraq_start_date') || defaultStartDate,
-      endDate: localStorage.getItem('ishraq_end_date') || defaultEndDate,
-      done: JSON.parse(localStorage.getItem('ishraq_done_items') || '{}'),
-      plan: JSON.parse(localStorage.getItem('ishraq_saved_plan') || 'null')
+      startDate: localStorage.getItem('ishraq_final_start_date') || defaultStartDate,
+      endDate: localStorage.getItem('ishraq_final_end_date') || defaultEndDate,
+      done: JSON.parse(localStorage.getItem('ishraq_final_done_items') || '{}'),
+      plan: JSON.parse(localStorage.getItem('ishraq_final_saved_plan') || 'null')
     };
 
     function generateDateRange(startStr, endStr) {
@@ -517,8 +488,8 @@
 
       state.startDate = startVal;
       state.endDate = endVal;
-      localStorage.setItem('ishraq_start_date', state.startDate);
-      localStorage.setItem('ishraq_end_date', state.endDate);
+      localStorage.setItem('ishraq_final_start_date', state.startDate);
+      localStorage.setItem('ishraq_final_end_date', state.endDate);
 
       updatePeriodUI();
       if (state.plan) {
@@ -632,12 +603,11 @@
     }
 
     function toggleItem(id) {
-      if (!state.plan) return;
-
+      const plan = state.plan || [];
       const isCampDoneBefore = COURSES.every(c => c.items.every(it => state.done[it.id]));
-      const daysDoneBefore = state.plan.map(day => day.items.length > 0 && day.items.every(it => state.done[it.id]));
+      const daysDoneBefore = plan.map(day => day.items.length > 0 && day.items.every(it => state.done[it.id]));
       const todayISO = toISODate(new Date());
-      const todayIndex = state.plan.findIndex(d => d.iso === todayISO);
+      const todayIndex = plan.findIndex(d => d.iso === todayISO);
 
       if (state.done[id]) {
         delete state.done[id];
@@ -645,7 +615,7 @@
         state.done[id] = true;
         triggerScreenGlow();
       }
-      localStorage.setItem('ishraq_done_items', JSON.stringify(state.done));
+      localStorage.setItem('ishraq_final_done_items', JSON.stringify(state.done));
 
       const modalChk = document.getElementById(`modal-chk-${id}`);
       const modalText = document.getElementById(`modal-text-${id}`);
@@ -657,13 +627,13 @@
       updateStatsUI();
 
       const isCampDoneAfter = COURSES.every(c => c.items.every(it => state.done[it.id]));
-      const daysDoneAfter = state.plan.map(day => day.items.length > 0 && day.items.every(it => state.done[it.id]));
-      const targetDayIndex = state.plan.findIndex(day => day.items.some(it => it.id === id));
+      const daysDoneAfter = plan.map(day => day.items.length > 0 && day.items.every(it => state.done[it.id]));
+      const targetDayIndex = plan.findIndex(day => day.items.some(it => it.id === id));
 
       if (state.plan) {
         renderPlanGrid();
 
-        if (state.done[id]) {
+        if (state.done[id] && targetDayIndex !== -1) {
           if (!isCampDoneBefore && isCampDoneAfter) {
             showCampCompleted();
             return;
@@ -753,7 +723,7 @@
         state.plan = newPlan;
       }
 
-      localStorage.setItem('ishraq_saved_plan', JSON.stringify(state.plan));
+      localStorage.setItem('ishraq_final_saved_plan', JSON.stringify(state.plan));
       renderPlanGrid();
       if (close) closeModal();
     }
@@ -822,9 +792,9 @@
 
     initCoursesModal();
 
-    if (!localStorage.getItem('ishraq_is_first_visit')) {
+    if (!localStorage.getItem('ishraq_final_is_first_visit')) {
       openModal();
-      localStorage.setItem('ishraq_is_first_visit', 'true');
+      localStorage.setItem('ishraq_final_is_first_visit', 'true');
     }
   </script>
 </body>
