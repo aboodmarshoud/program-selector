@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مخيّم الاستدراك — إشراق</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FFFBF7;
+      --surface: #FFFFFF;
+      --brand-main: #F27A3D;
+      --brand-dark: #C1571F;
+      --brand-light: #FDEEE4;
+      --brand-border: #F8D2B8;
+      --accent-main: #F5A623;
+      --accent-light: #FFF6E5;
+      --success-main: #4CAF50;
+      --success-light: #E8F5E9;
+      --text-dark: #241A12;
+      --text-muted: #8A7566;
+      --border-subtle: #F3E7DC;
+      --radius-lg: 24px;
+      --radius-md: 16px;
+      --radius-sm: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background: var(--bg);
+      color: var(--text-dark);
+      min-height: 100vh;
+      padding: 0 16px 80px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .screen-glow {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none; z-index: 9999;
+    }
+    .screen-glow.active { animation: edgeGlow 0.8s ease-out; }
+    @keyframes edgeGlow {
+      0% { box-shadow: inset 0 0 0px 0px rgba(245, 166, 35, 0); }
+      30% { box-shadow: inset 0 0 50px 15px rgba(245, 166, 35, 0.4); }
+      100% { box-shadow: inset 0 0 0px 0px rgba(245, 166, 35, 0); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .toast-container {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      z-index: 999999; display: flex; flex-direction: column; gap: 10px;
+      align-items: center; pointer-events: none; width: 90%; max-width: 400px;
+    }
+    .toast {
+      background: linear-gradient(135deg, #F5A623 0%, #E8890F 100%);
+      color: #fff; padding: 14px 28px; border-radius: 50px; font-weight: 800; font-size: 15px;
+      box-shadow: 0 10px 30px rgba(245, 166, 35, 0.4);
+      animation: slideDownToast 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), fadeOutToast 0.4s ease 7s forwards;
+      text-align: center; border: 2px solid rgba(255,255,255,0.2); width: 100%;
+    }
+    @keyframes slideDownToast { from { opacity: 0; transform: translateY(-30px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes fadeOutToast { to { opacity: 0; transform: translateY(-20px) scale(0.9); } }
+
+    .setup-modal {
+      position: fixed; inset: 0; z-index: 10000;
+      background: rgba(46, 20, 6, 0.85); backdrop-filter: blur(15px);
+      display: flex; justify-content: center; align-items: center; padding: 20px;
+      opacity: 1; transition: opacity 0.6s ease;
+    }
+    .setup-modal.hidden { opacity: 0; pointer-events: none; }
+    .modal-content {
+      background: var(--surface); width: 100%; max-width: 950px; max-height: 90vh;
+      border-radius: var(--radius-lg); padding: 35px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.4), 0 0 0 2px rgba(255,255,255,0.1);
+      transform: translateY(0) scale(1); transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+      display: flex; flex-direction: column;
+    }
+    .setup-modal.hidden .modal-content { transform: translateY(30px) scale(0.95); }
+    .modal-header { text-align: center; margin-bottom: 20px; flex-shrink: 0; }
+    .modal-header h2 { font-size: clamp(22px, 4vw, 30px); font-weight: 900; color: var(--brand-dark); margin-bottom: 8px; }
+    .modal-header p { color: var(--text-muted); font-size: 15px; font-weight: 600; }
+
+    .modal-courses-scroll { overflow-y: auto; flex: 1; padding: 10px; }
+    .modal-courses-scroll::-webkit-scrollbar { width: 6px; }
+    .modal-courses-scroll::-webkit-scrollbar-track { background: var(--bg); border-radius: 10px; }
+    .modal-courses-scroll::-webkit-scrollbar-thumb { background: var(--brand-border); border-radius: 10px; }
+    .modal-courses-scroll::-webkit-scrollbar-thumb:hover { background: var(--brand-main); }
+
+    .bg-shape {
+      position: absolute; top: 0; left: 0; right: 0; height: 300px;
+      background: linear-gradient(135deg, #F27A3D 0%, #C1571F 100%);
+      border-radius: 0 0 40px 40px; z-index: 0; transition: height 0.3s ease;
+    }
+
+    .container { max-width: 980px; margin: 0 auto; position: relative; z-index: 1; }
+    header { padding: 30px 10px 20px; color: #fff; animation: fadeInUp 0.6s ease-out forwards; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .badge-ishraq {
+      background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3); padding: 6px 16px; border-radius: 99px; font-weight: 800; font-size: 14px;
+    }
+    .academy-tag { font-size: 13px; color: rgba(255, 255, 255, 0.85); font-weight: 500; }
+    .header-main { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 20px; }
+    h1 { font-size: clamp(26px, 5vw, 36px); font-weight: 900; line-height: 1.2; margin-bottom: 4px; }
+    .hero-desc { font-size: 15px; color: rgba(255, 255, 255, 0.9); margin-top: 8px; max-width: 520px; }
+
+    .deadline-card {
+      background: #FFFFFF; color: var(--text-dark); padding: 14px 22px;
+      border-radius: var(--radius-md); box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      border: 1px solid var(--border-subtle); text-align: center; transition: transform 0.3s ease;
+    }
+    .deadline-card:hover { transform: translateY(-5px); }
+    .deadline-label { font-size: 12px; font-weight: 700; color: var(--accent-main); }
+    .deadline-val { font-size: 22px; font-weight: 900; color: var(--brand-main); }
+
+    .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 25px 0; animation: fadeInUp 0.7s ease-out forwards; }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
+      padding: 20px; box-shadow: 0 4px 15px rgba(242, 122, 61, 0.05); display: flex; flex-direction: column; justify-content: center; transition: all 0.3s ease;
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(242, 122, 61, 0.12); }
+    .stat-card.primary { background: linear-gradient(135deg, #FFF6EE 0%, #FFFFFF 100%); border-color: var(--brand-border); }
+    .stat-title { font-size: 13px; font-weight: 700; color: var(--text-muted); }
+    .stat-num { font-size: 36px; font-weight: 900; color: var(--brand-main); margin: 4px 0; }
+    .stat-card.primary .stat-num { color: var(--accent-main); }
+
+    .action-bar {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
+      background: var(--surface); padding: 14px 18px; border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle); animation: fadeInUp 0.8s ease-out forwards; flex-wrap: wrap; gap: 14px;
+    }
+    .action-bar-right {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .date-inputs-wrap {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .date-field {
+      display: flex; align-items: center; gap: 6px; background: var(--bg);
+      border: 1px solid var(--brand-border); padding: 6px 12px; border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 700; color: var(--text-dark);
+    }
+    .date-field input[type="date"] {
+      border: none; background: transparent; font-family: inherit; font-size: 13px;
+      color: var(--brand-dark); font-weight: 800; outline: none; cursor: pointer;
+    }
+    .action-bar-actions {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .btn-outline {
+      border: 1px solid var(--brand-main); background: transparent; color: var(--brand-main);
+      padding: 8px 16px; border-radius: 8px; font-weight: 800; cursor: pointer; transition: all 0.2s ease;
+    }
+    .btn-outline:hover { background: var(--brand-light); transform: scale(1.02); }
+
+    .section-header { display: flex; align-items: center; gap: 10px; margin: 32px 0 16px; animation: fadeInUp 0.9s ease-out forwards; }
+    .section-title { font-size: 20px; font-weight: 900; color: var(--text-dark); }
+
+    .courses-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 18px; }
+    .course-card { position: relative; overflow: hidden; background: var(--bg); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+    .course-card::before { content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 4px; background: var(--accent-main); transform: scaleY(0); transform-origin: top; transition: transform 0.3s ease-in-out; }
+    .course-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(242, 122, 61, 0.1); border-color: var(--brand-border); background: var(--surface); }
+    .course-card:hover::before { transform: scaleY(1); }
+    .course-top { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 12px; }
+    .course-title { font-size: 16px; font-weight: 800; color: var(--brand-main); }
+    .course-counter { font-size: 12px; font-weight: 800; background: var(--brand-light); color: var(--brand-main); padding: 2px 8px; border-radius: 99px; transition: background 0.3s; }
+
+    .lesson-row { display: flex; align-items: center; gap: 12px; padding: 9px 10px; margin-bottom: 6px; border-radius: 8px; background: var(--surface); cursor: pointer; font-size: 14px; font-weight: 600; transition: background 0.2s ease; user-select: none; border: 1px solid transparent; }
+    .lesson-row:hover { background: var(--brand-light); border-color: var(--brand-border); }
+    input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--brand-main); cursor: pointer; transition: transform 0.2s ease; margin: 0; }
+    input[type=checkbox]:checked { transform: scale(1.2); }
+    .checked-text { text-decoration: line-through; opacity: 0.45; }
+
+    .btn-generate {
+      display: flex; align-items: center; justify-content: center; width: 100%; max-width: 400px;
+      margin: 20px auto 10px; background: linear-gradient(135deg, #F5A623 0%, #E8890F 100%);
+      color: #fff; border: none; padding: 18px 28px; border-radius: var(--radius-md); flex-shrink: 0;
+      font-size: 19px; font-weight: 900; cursor: pointer; box-shadow: 0 8px 25px rgba(245, 166, 35, 0.4);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .btn-generate:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 12px 30px rgba(245, 166, 35, 0.6); }
+
+    .plan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 24px; margin-bottom: 40px;}
+
+    .day-box {
+      background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
+      overflow: hidden; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); transition: all 0.3s ease; position: relative;
+    }
+    .day-box:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(242, 122, 61, 0.1); border-color: var(--brand-border); }
+
+    .day-box-header {
+      background: var(--brand-main); color: #fff; padding: 12px 16px;
+      font-weight: 800; font-size: 15px; text-align: center; transition: background 0.3s;
+      display: flex; justify-content: center; align-items: center;
+    }
+
+    .day-box-body { padding: 25px 16px 16px; }
+
+    .day-box.active-day { border: 2px solid var(--accent-main); transform: scale(1.02); box-shadow: 0 8px 25px rgba(245, 166, 35, 0.22); }
+    .day-box.active-day:hover { transform: scale(1.02) translateY(-3px); }
+    .day-box.active-day .day-box-header { background: linear-gradient(135deg, #F5A623 0%, #E8890F 100%); }
+    .today-badge { background: #fff; color: var(--accent-main); font-size: 11px; padding: 3px 8px; border-radius: 4px; margin-right: 8px; font-weight: 900; }
+
+    .day-box.completed-day { border: 2px solid var(--success-main); background: var(--success-light); transform: scale(1.01); box-shadow: 0 8px 25px rgba(76, 175, 80, 0.15); }
+    .day-box.completed-day:hover { transform: scale(1.01) translateY(-3px); border-color: #388E3C; }
+    .day-box.completed-day .day-box-header { background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%); }
+    .completed-badge { background: #fff; color: var(--success-main); font-size: 11px; padding: 3px 8px; border-radius: 4px; margin-right: 8px; font-weight: 900; }
+    .day-box.completed-day .task-item { background: #fff; border-color: #C8E6C9; opacity: 0.75; }
+
+    @keyframes dayCompleteAnim {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+      50% { transform: scale(1.05); box-shadow: 0 0 30px 10px rgba(76, 175, 80, 0.4); border-color: var(--success-main); }
+      100% { transform: scale(1.01); box-shadow: 0 8px 25px rgba(76, 175, 80, 0.15); }
+    }
+    .day-completed-celebration { animation: dayCompleteAnim 0.8s ease-out; }
+
+    .task-item {
+      display: block; background: var(--accent-light); border: 1px solid rgba(245, 166, 35, 0.3);
+      padding: 14px 16px; border-radius: 10px; margin-bottom: 16px;
+      cursor: pointer; user-select: none; transition: transform 0.1s ease, background 0.2s;
+    }
+    .task-item:hover { background: #ffedc7; }
+    .task-item:active { transform: scale(0.97); }
+    .task-tag { font-size: 11px; font-weight: 800; color: #B4670A; margin-bottom: 4px; }
+    .task-name { font-size: 13.5px; font-weight: 700; color: var(--text-dark); transition: all 0.2s; }
+
+    .empty-state { grid-column: 1/-1; text-align: center; padding: 40px 20px; background: var(--surface); border-radius: var(--radius-md); border: 2px dashed var(--border-subtle); color: var(--text-muted); font-weight: 700; }
+
+    .confetti { position: fixed; top: -10px; z-index: 99999; width: 10px; height: 10px; border-radius: 2px; animation: fall linear forwards; }
+    @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
+
+    @media (max-width: 768px) {
+      .header-main { flex-direction: column; align-items: stretch; gap: 15px; text-align: center; }
+      .hero-desc { max-width: 100%; margin: 10px auto; }
+      .deadline-card { display: flex; flex-direction: row; justify-content: space-between; align-items: center; padding: 16px 20px; text-align: right; }
+      .deadline-val { font-size: 20px; }
+      .bg-shape { height: 400px; }
+
+      .stats-container { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .stat-card { padding: 16px 12px; text-align: center; align-items: center; }
+      .stat-num { font-size: 28px; }
+
+      .action-bar { flex-direction: column; text-align: center; }
+      .action-bar-right, .action-bar-actions, .date-inputs-wrap { justify-content: center; width: 100%; }
+      .btn-outline { width: 100%; }
+      .modal-content { padding: 24px 16px; }
+      .modal-header h2 { font-size: 24px; }
+      .toast { font-size: 14px; padding: 12px 20px; width: 90%; }
+    }
+    @media (max-width: 480px) {
+      .bg-shape { height: 420px; }
+      .deadline-card { flex-direction: column; align-items: center; text-align: center; gap: 5px; }
+      .date-inputs-wrap { flex-direction: column; width: 100%; }
+      .date-field { width: 100%; justify-content: space-between; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <div id="campCompletedModal" class="setup-modal hidden" style="z-index: 100001;">
+    <div class="modal-content" style="text-align: center; max-width: 500px; padding: 50px 30px;">
+      <h2 style="color: var(--accent-main); font-size: 28px; font-weight: 900; margin-bottom: 15px;"> أشرقت! ✨ </h2>
+      <p style="color: var(--text-muted); font-size: 16px; font-weight: 700; line-height: 1.6; margin-bottom: 30px;">
+        ما شاء الله تبارك الله! من سار على الدرب وصل، وقد وصلت بجدارة. لقد أنهيت استدراك الفصل الأول بالكامل، وأصبحت جاهزاً بإذن الله لخوض الاختبار النصفي بثقة، بارك الله فيك يا مُشرق!
+      </p>
+      <button class="btn-generate" style="margin: 0 auto; max-width: 200px;" onclick="document.getElementById('campCompletedModal').classList.add('hidden')">رائع! إغلاق</button>
+    </div>
+  </div>
+
+  <div id="setupModal" class="setup-modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>المقررات واللقاءات التي أنهيتها حتى الآن</h2>
+        <p>حدد ما قمت بإنجازه بدقة لنقوم ببرمجة جدول استدراك يومي مخصص لك قبل الاختبار النصفي</p>
+      </div>
+      <div class="modal-courses-scroll">
+        <div class="courses-grid" id="modal-courses-container"></div>
+      </div>
+      <button class="btn-generate" onclick="generatePlan()">توليد وتوزيع الجدول</button>
+    </div>
+  </div>
+
+  <div id="screenGlow" class="screen-glow"></div>
+  <div class="bg-shape"></div>
+
+  <div class="container">
+    <header>
+      <div class="top-bar">
+        <div class="badge-ishraq">إشراق 4</div>
+        <div class="academy-tag">برنامج إشراق — الفصل الأول</div>
+      </div>
+      <div class="header-main">
+        <div>
+          <h1>مخيّم الاستدراك</h1>
+          <p class="hero-desc" id="hero-period-desc">خطة يومية مرنة لتوزيع ومتابعة مواد الاختبار النصفي.</p>
+        </div>
+        <div class="deadline-card">
+          <div class="deadline-label">نهاية الفترة</div>
+          <div class="deadline-val" id="deadline-val-text">19 سبتمبر</div>
+          <div id="deadline-dayname-text" style="font-size: 11.5px; color: var(--text-muted); font-weight:600;">السبت</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="stats-container">
+      <div class="stat-card primary">
+        <div class="stat-title">نسبة الإنجاز الإجمالية</div>
+        <div class="stat-num" id="stat-pct">0%</div>
+        <div style="font-size: 12px; color: var(--brand-main); font-weight:700;">يتم الحفظ تلقائياً</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">الدروس المكتملة</div>
+        <div class="stat-num" id="stat-done">0</div>
+        <div class="stat-title">درساً منجزاً</div>
+      </div>
+      <div class="stat-card" style="grid-column: span 1;">
+        <div class="stat-title">المتبقي حتى الاختبار</div>
+        <div class="stat-num" id="stat-rem">0</div>
+        <div class="stat-title">درساً مطلوباً</div>
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <div class="action-bar-right">
+        <div class="date-inputs-wrap">
+          <label class="date-field">
+            <span>من:</span>
+            <input type="date" id="startDateInput" onchange="handleDateRangeChange()">
+          </label>
+          <label class="date-field">
+            <span>إلى:</span>
+            <input type="date" id="endDateInput" onchange="handleDateRangeChange()">
+          </label>
+        </div>
+        <span id="period-text" style="font-size:13.5px; font-weight:700; color:var(--text-muted);"></span>
+      </div>
+      <div class="action-bar-actions">
+        <button class="btn-outline" onclick="openModal()">تعديل المقررات المنجزة</button>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">جدول الاستدراك اليومي الخاص بك</div>
+    </div>
+
+    <div class="plan-grid" id="plan-container"></div>
+  </div>
+
+  <script>
+    const COURSES = [
+      {
+        id:'lianak_allah',
+        name:'لأنك الله',
+        items:[
+          { id:'la_1', label:'الاسم الأول' },
+          { id:'la_2', label:'الاسم الثاني' },
+          { id:'la_3', label:'الاسم الثالث' },
+          { id:'la_4', label:'الاسم الرابع' },
+          { id:'la_5', label:'الاسم الخامس' },
+          { id:'la_6', label:'الاسم السادس' },
+          { id:'la_7', label:'الاسم السابع' },
+          { id:'la_8', label:'الاسم الثامن' },
+          { id:'la_9', label:'الاسم التاسع' }
+        ]
+      },
+      {
+        id:'ilm_billah',
+        name:'العلم بالله جل جلاله',
+        items:[
+          { id:'ib_1', label:'المحاضرة كاملة' }
+        ]
+      },
+      {
+        id:'shawq',
+        name:'طريق الشوق إلى الله تعالى',
+        items:[
+          { id:'sh_1', label:'المحاضرة كاملة' }
+        ]
+      },
+      {
+        id:'la_ilaha',
+        name:'لا إله إلا الله',
+        items:[
+          { id:'li_1', label:'المحاضرة كاملة' }
+        ]
+      },
+      {
+        id:'sidq',
+        name:'الصدق مع الله',
+        items:[
+          { id:'sm_1', label:'المحاضرة كاملة' }
+        ]
+      },
+      {
+        id:'la_tansarif',
+        name:'أرجوك لا تنصرف',
+        items:[
+          { id:'lt_1', label:'المحاضرة كاملة' }
+        ]
+      },
+      {
+        id:'sir_azam',
+        name:'السر الأعظم',
+        items:[
+          { id:'sa_1', label:'المحاضرة كاملة' }
+        ]
+      },
+      {
+        id:'haqiba_aqida',
+        name:'الحقيبة الشرعية في العقيدة',
+        items:[
+          { id:'ha_1', label:'مقدمات منهجية 1' },
+          { id:'ha_2', label:'مقدمات منهجية 2' },
+          { id:'ha_3', label:'مقدمات منهجية 3' },
+          { id:'ha_4', label:'مقدمات منهجية 4' },
+          { id:'ha_5', label:'مقدمات منهجية 5' },
+          { id:'ha_6', label:'مقدمات منهجية 6' },
+          { id:'ha_7', label:'خارطة علم العقيدة + العلم بالله' },
+          { id:'ha_8', label:'العلم بالله 2' },
+          { id:'ha_9', label:'الإيمان بالملائكة' },
+          { id:'ha_10', label:'الإيمان بالكتب' }
+        ]
+      }
+    ];
+
+    function toISODate(d) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    const todayObj = new Date();
+    const currentYear = todayObj.getFullYear();
+    const defaultEndObj = new Date(currentYear, 8, 19); // 19 سبتمبر من العام الحالي
+
+    const defaultStartDate = toISODate(todayObj);
+    const defaultEndDate = (todayObj > defaultEndObj)
+      ? toISODate(new Date(currentYear + 1, 8, 19))
+      : toISODate(defaultEndObj);
+
+    let state = {
+      startDate: localStorage.getItem('ishraq_start_date') || defaultStartDate,
+      endDate: localStorage.getItem('ishraq_end_date') || defaultEndDate,
+      done: JSON.parse(localStorage.getItem('ishraq_done_items') || '{}'),
+      plan: JSON.parse(localStorage.getItem('ishraq_saved_plan') || 'null')
+    };
+
+    function generateDateRange(startStr, endStr) {
+      const days = [];
+      const curr = new Date(startStr + 'T00:00:00');
+      const end = new Date(endStr + 'T00:00:00');
+
+      if (curr > end) return days;
+
+      const formatter = new Intl.DateTimeFormat('ar-EG', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long'
+      });
+
+      while (curr <= end) {
+        const iso = toISODate(curr);
+        days.push({
+          iso: iso,
+          name: formatter.format(curr)
+        });
+        curr.setDate(curr.getDate() + 1);
+      }
+      return days;
+    }
+
+    function updatePeriodUI() {
+      const activeDays = generateDateRange(state.startDate, state.endDate);
+      const count = activeDays.length;
+
+      const periodTextEl = document.getElementById('period-text');
+      const heroDescEl = document.getElementById('hero-period-desc');
+      const deadlineValEl = document.getElementById('deadline-val-text');
+      const deadlineDayEl = document.getElementById('deadline-dayname-text');
+
+      if (count > 0) {
+        const firstDay = activeDays[0].name;
+        const lastDay = activeDays[activeDays.length - 1].name;
+        if (periodTextEl) periodTextEl.innerText = `الفترة: ${firstDay} — ${lastDay} (${count} ${count === 1 ? 'يوم' : 'أيام'})`;
+        if (heroDescEl) heroDescEl.innerText = `خطة يومية لتوزيع ومتابعة مواد الاستدراك من ${firstDay} حتى ${lastDay}.`;
+
+        const endD = new Date(state.endDate + 'T00:00:00');
+        if (deadlineValEl) deadlineValEl.innerText = `${endD.getDate()} ${new Intl.DateTimeFormat('ar-EG', { month: 'long' }).format(endD)}`;
+        if (deadlineDayEl) deadlineDayEl.innerText = new Intl.DateTimeFormat('ar-EG', { weekday: 'long' }).format(endD);
+      } else {
+        if (periodTextEl) periodTextEl.innerText = 'تاريخ البداية يجب أن يكون قبل أو يساوي تاريخ النهاية';
+      }
+    }
+
+    function handleDateRangeChange() {
+      const startVal = document.getElementById('startDateInput').value;
+      const endVal = document.getElementById('endDateInput').value;
+
+      if (!startVal || !endVal) return;
+      if (startVal > endVal) {
+        alert('تاريخ النهاية يجب أن يكون بعد تاريخ البداية!');
+        document.getElementById('startDateInput').value = state.startDate;
+        document.getElementById('endDateInput').value = state.endDate;
+        return;
+      }
+
+      state.startDate = startVal;
+      state.endDate = endVal;
+      localStorage.setItem('ishraq_start_date', state.startDate);
+      localStorage.setItem('ishraq_end_date', state.endDate);
+
+      updatePeriodUI();
+      if (state.plan) {
+        generatePlan(false);
+      } else {
+        renderPlanGrid();
+      }
+    }
+
+    function showToast(message) {
+      const container = document.getElementById('toastContainer');
+      container.innerHTML = '';
+
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = message;
+      container.appendChild(toast);
+
+      setTimeout(() => toast.remove(), 7500);
+    }
+
+    function openModal() { document.getElementById('setupModal').classList.remove('hidden'); }
+    function closeModal() { document.getElementById('setupModal').classList.add('hidden'); }
+
+    function initCoursesModal() {
+      const startInp = document.getElementById('startDateInput');
+      const endInp = document.getElementById('endDateInput');
+      if (startInp) startInp.value = state.startDate;
+      if (endInp) endInp.value = state.endDate;
+
+      const container = document.getElementById('modal-courses-container');
+      container.innerHTML = '';
+      COURSES.forEach(course => {
+        const card = document.createElement('div');
+        card.className = 'course-card';
+        const cDone = course.items.filter(i => state.done[i.id]).length;
+        card.innerHTML = `
+          <div class="course-top">
+            <span class="course-title">${course.name}</span>
+            <span class="course-counter" id="modal-counter-${course.id}">${cDone}/${course.items.length}</span>
+          </div>
+        `;
+        course.items.forEach(item => {
+          const isDone = !!state.done[item.id];
+          const label = document.createElement('label');
+          label.className = 'lesson-row';
+          label.innerHTML = `
+            <input type="checkbox" id="modal-chk-${item.id}" ${isDone ? 'checked' : ''} onchange="toggleItem('${item.id}')">
+            <span id="modal-text-${item.id}" class="${isDone ? 'checked-text' : ''}">${item.label}</span>
+          `;
+          card.appendChild(label);
+        });
+        container.appendChild(card);
+      });
+      updateStatsUI();
+      updatePeriodUI();
+
+      if (!state.plan) {
+        document.getElementById('plan-container').innerHTML = `
+          <div class="empty-state">
+            لم تقم بتوليد جدول بعد. يرجى تعديل المقررات المنجزة من الزر بالأعلى لتوليد الجدول وتوزيعه.
+          </div>`;
+      } else {
+        renderPlanGrid();
+      }
+    }
+
+    function updateStatsUI() {
+      let total = 0, doneCount = 0;
+      COURSES.forEach(course => {
+        const cDone = course.items.filter(i => state.done[i.id]).length;
+        total += course.items.length;
+        doneCount += cDone;
+        const counterEl = document.getElementById(`modal-counter-${course.id}`);
+        if(counterEl) counterEl.innerText = `${cDone}/${course.items.length}`;
+      });
+      const rem = total - doneCount;
+      const pct = total ? Math.round((doneCount / total) * 100) : 0;
+
+      document.getElementById('stat-pct').innerText = pct + '%';
+      document.getElementById('stat-done').innerText = doneCount;
+      document.getElementById('stat-rem').innerText = rem;
+    }
+
+    function triggerScreenGlow() {
+      const glowEl = document.getElementById('screenGlow');
+      glowEl.classList.remove('active'); void glowEl.offsetWidth; glowEl.classList.add('active');
+    }
+
+    function fireConfetti() {
+      const colors = ['#F5A623', '#F27A3D', '#FDEEE4', '#FFD700', '#4CAF50'];
+      for(let i=0; i<70; i++) {
+        let conf = document.createElement('div');
+        conf.className = 'confetti';
+        conf.style.left = Math.random() * 100 + 'vw';
+        conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        conf.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
+        conf.style.animationDelay = Math.random() * 0.5 + 's';
+        document.body.appendChild(conf);
+        setTimeout(() => conf.remove(), 4000);
+      }
+    }
+
+    function showCampCompleted() {
+      document.getElementById('campCompletedModal').classList.remove('hidden');
+      const end = Date.now() + 3500;
+      const interval = setInterval(function() {
+          if (Date.now() > end) return clearInterval(interval);
+          fireConfetti();
+      }, 300);
+    }
+
+    function toggleItem(id) {
+      if (!state.plan) return;
+
+      const isCampDoneBefore = COURSES.every(c => c.items.every(it => state.done[it.id]));
+      const daysDoneBefore = state.plan.map(day => day.items.length > 0 && day.items.every(it => state.done[it.id]));
+      const todayISO = toISODate(new Date());
+      const todayIndex = state.plan.findIndex(d => d.iso === todayISO);
+
+      if (state.done[id]) {
+        delete state.done[id];
+      } else {
+        state.done[id] = true;
+        triggerScreenGlow();
+      }
+      localStorage.setItem('ishraq_done_items', JSON.stringify(state.done));
+
+      const modalChk = document.getElementById(`modal-chk-${id}`);
+      const modalText = document.getElementById(`modal-text-${id}`);
+      if (modalChk) modalChk.checked = !!state.done[id];
+      if (modalText) {
+        if (state.done[id]) modalText.classList.add('checked-text'); else modalText.classList.remove('checked-text');
+      }
+
+      updateStatsUI();
+
+      const isCampDoneAfter = COURSES.every(c => c.items.every(it => state.done[it.id]));
+      const daysDoneAfter = state.plan.map(day => day.items.length > 0 && day.items.every(it => state.done[it.id]));
+      const targetDayIndex = state.plan.findIndex(day => day.items.some(it => it.id === id));
+
+      if (state.plan) {
+        renderPlanGrid();
+
+        if (state.done[id]) {
+          if (!isCampDoneBefore && isCampDoneAfter) {
+            showCampCompleted();
+            return;
+          }
+
+          if (!daysDoneBefore[targetDayIndex] && daysDoneAfter[targetDayIndex]) {
+            fireConfetti();
+
+            const dayElement = document.getElementById(`daybox-${state.plan[targetDayIndex].iso}`);
+            if(dayElement) {
+              dayElement.classList.remove('day-completed-celebration');
+              void dayElement.offsetWidth;
+              dayElement.classList.add('day-completed-celebration');
+            }
+
+            if (todayIndex !== -1 && targetDayIndex > todayIndex) {
+              showToast("الله يبارك 🔥 يا مُشرق متميز، أنهيت مقرراً إضافياً من مقررات الأيام التالية 🧡");
+            } else {
+              showToast("أحسنت يا مُشرق 🌹 بارك الله فيك 🎉");
+            }
+          }
+        }
+      }
+    }
+
+    function generatePlan(close = true) {
+      const activeDays = generateDateRange(state.startDate, state.endDate);
+      const numDays = activeDays.length;
+
+      if (numDays === 0) {
+        alert('يرجى تحديد فترة زمنية صحيحة أولاً!');
+        return;
+      }
+
+      const courseQueues = COURSES.map(c => ({
+        courseId: c.id,
+        courseName: c.name,
+        items: c.items.filter(it => !state.done[it.id]).map(it => ({
+          id: it.id,
+          course: c.name,
+          courseId: c.id,
+          label: it.label
+        }))
+      }));
+
+      const totalItems = courseQueues.reduce((sum, c) => sum + c.items.length, 0);
+
+      if (totalItems === 0) {
+        if (close) alert("أنت حقاً مُشرق، لقد أنهيت جميع المقررات!");
+        state.plan = [];
+      } else {
+        const masterList = [];
+        let itemsRemaining = true;
+
+        while (itemsRemaining) {
+          itemsRemaining = false;
+          for (let i = 0; i < courseQueues.length; i++) {
+            if (courseQueues[i].items.length > 0) {
+              masterList.push(courseQueues[i].items.shift());
+              itemsRemaining = true;
+            }
+          }
+        }
+
+        const daysDistribution = Array.from({ length: numDays }, () => []);
+        const baseCount = Math.floor(totalItems / numDays);
+        const remainder = totalItems % numDays;
+
+        let currentIndex = 0;
+        for (let d = 0; d < numDays; d++) {
+          let itemsForThisDay = baseCount + (d < remainder ? 1 : 0);
+          for (let k = 0; k < itemsForThisDay; k++) {
+            if (currentIndex < masterList.length) {
+              daysDistribution[d].push(masterList[currentIndex++]);
+            }
+          }
+        }
+
+        const newPlan = [];
+        activeDays.forEach((day, index) => {
+          newPlan.push({
+            iso: day.iso,
+            name: day.name,
+            items: daysDistribution[index]
+          });
+        });
+        state.plan = newPlan;
+      }
+
+      localStorage.setItem('ishraq_saved_plan', JSON.stringify(state.plan));
+      renderPlanGrid();
+      if (close) closeModal();
+    }
+
+    function renderPlanGrid() {
+      const container = document.getElementById('plan-container');
+      container.innerHTML = '';
+
+      if (!state.plan || state.plan.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state" style="border-color: var(--accent-main); background: var(--accent-light); color: var(--accent-main);">
+            لا يوجد مهام متبقية.. راحة واستدراك بالكامل!
+          </div>`;
+        return;
+      }
+
+      const todayISO = toISODate(new Date());
+
+      state.plan.forEach((planDay) => {
+        const isToday = planDay.iso === todayISO;
+        const isDayFullyDone = planDay.items.length > 0 && planDay.items.every(it => state.done[it.id]);
+
+        const card = document.createElement('div');
+        card.id = `daybox-${planDay.iso}`;
+
+        if (isDayFullyDone) {
+          card.className = 'day-box completed-day';
+        } else {
+          card.className = 'day-box' + (isToday ? ' active-day' : '');
+        }
+
+        let itemsHtml = planDay.items.map(it => {
+          const isDone = !!state.done[it.id];
+          return `
+            <label class="task-item">
+              <div class="task-tag">${it.course}</div>
+              <div style="display:flex; align-items:center; gap:10px; margin-top:4px;">
+                <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleItem('${it.id}')">
+                <div class="task-name ${isDone ? 'checked-text' : ''}">${it.label}</div>
+              </div>
+            </label>
+          `;
+        }).join('');
+
+        if (planDay.items.length === 0) {
+          itemsHtml = '<div style="color:var(--text-muted); font-size:13px; text-align:center; padding:12px 0;">مهام هذا اليوم مكتملة</div>';
+        }
+
+        let badgeHtml = '';
+        if (isDayFullyDone) {
+          badgeHtml = '<span class="completed-badge">أحسنت يا مُشرق 🎉</span>';
+        } else if (isToday) {
+          badgeHtml = '<span class="today-badge">مهام اليوم</span>';
+        }
+
+        card.innerHTML = `
+          <div class="day-box-header">
+            <span>${planDay.name}</span>
+            ${badgeHtml}
+          </div>
+          <div class="day-box-body">${itemsHtml}</div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    initCoursesModal();
+
+    if (!localStorage.getItem('ishraq_is_first_visit')) {
+      openModal();
+      localStorage.setItem('ishraq_is_first_visit', 'true');
+    }
+  </script>
+</body>
+</html>
